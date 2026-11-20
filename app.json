@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "Zvedej",
+    "slug": "zvedej",
+    "scheme": "zvedej",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#FFFFFF",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "cz.sladkyvejvoda.zvedej",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "cz.sladkyvejvoda.zvedej",
+      "adaptiveIcon": {
+        "backgroundColor": "#1249D1",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "Zvedej",
+      "shortName": "Zvedej",
+      "themeColor": "#1249D1",
+      "backgroundColor": "#FFFFFF"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-video",
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#1249D1",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "dark": {
+            "backgroundColor": "#081D52",
+            "image": "./assets/splash-icon.png"
+          }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Zvedej potřebuje přístup k fotkám, abys mohl(a) nahrát profilovou fotku a video do výzvy Vzpěrač měsíce.",
+          "cameraPermission": "Zvedej potřebuje fotoaparát, abys mohl(a) natočit video z tréninku.",
+          "microphonePermission": "Zvedej potřebuje mikrofon pro zvuk ve videích z tréninku."
+        }
+      ],
+      "expo-localization",
+      "expo-web-browser",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

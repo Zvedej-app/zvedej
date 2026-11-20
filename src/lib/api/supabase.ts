@@ -1,0 +1,348 @@
+import 'react-native-url-polyfill/auto';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../config';
+import { currentMonthKey } from '../date';
+import { fallbackTheme } from '../../data/themes';
+import type { ChallengeTheme, ChallengeVideo, MonthlyWinner, Profile, TrainingData } from '../types';
+import type { Backend, Session, UploadVideoInput, VideoSort } from './types';
+import { fetchFeedCached } from './feeds';
+
+type Row = Record<string, any>;
+
+const AUTHOR_COLS = 'id, first_name, last_name, avatar_url, club_id';
+
+function mapProfile(r: Row): Profile {
+  return {
+    id: r.id,
+    firstName: r.first_name ?? '',
+    lastName: r.last_name ?? '',
+    avatarUrl: r.avatar_url,
+    motto: r.motto,
+    clubId: r.club_id,
+    gender: r.gender,
+    birthYear: r.birth_year,
+    ageGroup: r.age_group,
+    weightCategory: r.weight_category,
+    prSnatch: r.pr_snatch === null || r.pr_snatch === undefined ? null : Number(r.pr_snatch),
+    prCleanJerk: r.pr_clean_jerk === null || r.pr_clean_jerk === undefined ? null : Number(r.pr_clean_jerk),
+    bodyweight: r.bodyweight === null || r.bodyweight === undefined ? null : Number(r.bodyweight),
+    isPublic: r.is_public ?? true,
+    createdAt: r.created_at,
+  };
+}
+
+function profileToRow(p: Partial<Profile>): Row {
+  const map: [keyof Profile, string][] = [
+    ['firstName', 'first_name'],
+    ['lastName', 'last_name'],
+    ['avatarUrl', 'avatar_url'],
+    ['motto', 'motto'],
+    ['clubId', 'club_id'],
+    ['gender', 'gender'],
+    ['birthYear', 'birth_year'],
+    ['ageGroup', 'age_group'],
+    ['weightCategory', 'weight_category'],
+    ['prSnatch', 'pr_snatch'],
+    ['prCleanJerk', 'pr_clean_jerk'],
+    ['bodyweight', 'bodyweight'],
+    ['isPublic', 'is_public'],
+  ];
+  const out: Row = {};
+  for (const [k, col] of map) if (k in p) out[col] = p[k];
+  return out;
+}
+
+function mapAuthor(r: Row | null) {
+  return {
+    id: r?.id ?? '',
+    firstName: r?.first_name ?? '',
+    lastName: r?.last_name ?? '',
+    avatarUrl: r?.avatar_url ?? null,
+    clubId: r?.club_id ?? null,
+  };
+}
+
+const monthDate = (key: string) => `${key}-01`;
+const monthKey = (date: string) => date.slice(0, 7);
+
+function mapVideo(r: Row, likedIds: Set<string>): ChallengeVideo {
+  return {
+    id: r.id,
+    userId: r.user_id,
+    month: monthKey(r.month),
+    videoUrl: r.video_url,
+    thumbnailUrl: r.thumbnail_url,
+    caption: r.caption,
+    likesCount: r.likes_count,
+    likedByMe: likedIds.has(r.id),
+    createdAt: r.created_at,
+    author: mapAuthor(r.author),
+  };
+}
+
+async function readAsArrayBuffer(uri: string) {
+  const res = await fetch(uri);
+  return await res.arrayBuffer();
+}
+
+function extFromMime(mime: string, fallback: string) {
+  const m = mime.split('/')[1];
+  if (!m) return fallback;
+  if (m === 'quicktime') return 'mov';
+  if (m === 'jpeg') return 'jpg';
+  return m;
+}
+
+export function createSupabaseBackend(): Backend {
+  const sb: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      storage: AsyncStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: Platform.OS === 'web',
+    },
+  });
+
+  const toSession = (s: { user: { id: string; email?: string | null } } | null): Session | null =>
+    s ? { userId: s.user.id, email: s.user.email ?? null } : null;
+
+  async function myId() {
+    const { data } = await sb.auth.getSession();
+    return data.session?.user.id ?? null;
+  }
+
+  async function likedSet(videoIds: string[]) {
+    const me = await myId();
+    if (!me || videoIds.length === 0) return new Set<string>();
+    const { data } = await sb.from('video_likes').select('video_id').eq('user_id', me).in('video_id', videoIds);
+    return new Set((data ?? []).map((r: Row) => r.video_id as string));
+  }
+
+  return {
+    mode: 'supabase',
+
+    async getSession() {
+      const { data } = await sb.auth.getSession();
+      return toSession(data.session);
+    },
+    onAuthChange(cb) {
+      const { data } = sb.auth.onAuthStateChange((_e, s) => cb(toSession(s)));
+      return () => data.subscription.unsubscribe();
+    },
+    async signIn(email, password) {
+      const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) throw error;
+    },
+    async signUp(email, password, firstName, lastName) {
+      const { data, error } = await sb.auth.signUp({
+        email: email.trim(),
+        password,
+        options: { data: { first_name: firstName.trim(), last_name: lastName.trim() } },
+      });
+      if (error) throw error;
+      return { needsConfirmation: !data.session };
+    },
+    async resetPassword(email) {
+      const { error } = await sb.auth.resetPasswordForEmail(email.trim());
+      if (error) throw error;
+    },
+    async signOut() {
+      await sb.auth.signOut();
+    },
+    async deleteAccount() {
+      const me = await myId();
+      if (me) {
+        for (const bucket of ['avatars', 'challenge-videos']) {
+          const { data } = await sb.storage.from(bucket).list(me, { limit: 1000 });
+          if (data?.length) await sb.storage.from(bucket).remove(data.map((f) => `${me}/${f.name}`));
+        }
+      }
+      const { error } = await sb.rpc('delete_my_account');
+      if (error) throw error;
+      await sb.auth.signOut();
+    },
+
+    async getProfile(id) {
+      const { data, error } = await sb.from('profiles').select('*').eq('id', id).maybeSingle();
+      if (error) throw error;
+      return data ? mapProfile(data) : null;
+    },
+    async updateProfile(id, patch) {
+      const { data, error } = await sb
+        .from('profiles')
+        .upsert({ id, ...profileToRow(patch) })
+        .select('*')
+        .single();
+      if (error) throw error;
+      return mapProfile(data);
+    },
+    async uploadAvatar(userId, uri, mimeType) {
+      const body = await readAsArrayBuffer(uri);
+      const path = `${userId}/avatar-${Date.now()}.${extFromMime(mimeType, 'jpg')}`;
+      const { error } = await sb.storage.from('avatars').upload(path, body, { contentType: mimeType, upsert: true });
+      if (error) throw error;
+      return sb.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+    },
+    async searchProfiles(q, clubId) {
+      const { data, error } = await sb.rpc('search_profiles', { q: q || null, p_club: clubId ?? null, p_limit: 40 });
+      if (error) throw error;
+      return (data ?? []).map(mapProfile);
+    },
+    async clubMemberCounts() {
+      const { data, error } = await sb.rpc('club_member_counts');
+      if (error) throw error;
+      const out: Record<number, number> = {};
+      for (const r of data ?? []) out[r.club_id] = Number(r.members);
+      return out;
+    },
+    async userStats(userId) {
+      const { data, error } = await sb.rpc('user_stats', { p_user: userId });
+      if (error) throw error;
+      const r = (data ?? [])[0] ?? {};
+      return { videos: Number(r.videos ?? 0), likes: Number(r.likes ?? 0), wins: Number(r.wins ?? 0) };
+    },
+
+    async getTheme(month): Promise<ChallengeTheme> {
+      const { data } = await sb.from('monthly_challenges').select('*').eq('month', monthDate(month)).maybeSingle();
+      if (!data) return fallbackTheme(month);
+      return {
+        month,
+        title: { cs: data.title_cs, en: data.title_en || data.title_cs, sk: data.title_sk || data.title_cs },
+        description: data.description_cs
+          ? {
+              cs: data.description_cs,
+              en: data.description_en || data.description_cs,
+              sk: data.description_sk || data.description_cs,
+            }
+          : undefined,
+      };
+    },
+    async listVideos(month, sort: VideoSort) {
+      let q = sb
+        .from('challenge_videos')
+        .select(`*, author:profiles!challenge_videos_user_id_fkey(${AUTHOR_COLS})`)
+        .eq('month', monthDate(month))
+        .eq('hidden', false)
+        .limit(200);
+      q =
+        sort === 'new'
+          ? q.order('created_at', { ascending: false })
+          : q.order('likes_count', { ascending: false }).order('created_at');
+      const { data, error } = await q;
+      if (error) throw error;
+      const liked = await likedSet((data ?? []).map((r: Row) => r.id));
+      const list = (data ?? []).map((r: Row) => mapVideo(r, liked));
+      if (sort === 'random') list.sort(() => Math.random() - 0.5);
+      return list;
+    },
+    async listUserVideos(userId) {
+      const { data, error } = await sb
+        .from('challenge_videos')
+        .select(`*, author:profiles!challenge_videos_user_id_fkey(${AUTHOR_COLS})`)
+        .eq('user_id', userId)
+        .order('month', { ascending: false });
+      if (error) throw error;
+      const liked = await likedSet((data ?? []).map((r: Row) => r.id));
+      return (data ?? []).map((r: Row) => mapVideo(r, liked));
+    },
+    async uploadVideo(userId, input: UploadVideoInput) {
+      const month = currentMonthKey();
+      const ext = extFromMime(input.mimeType, 'mp4');
+      const base = `${userId}/${month}-${Date.now()}`;
+      input.onProgress?.(0.05);
+      const body = await readAsArrayBuffer(input.uri);
+      input.onProgress?.(0.2);
+      const up = await sb.storage
+        .from('challenge-videos')
+        .upload(`${base}.${ext}`, body, { contentType: input.mimeType, upsert: false });
+      if (up.error) throw up.error;
+      input.onProgress?.(0.85);
+      let thumbUrl: string | null = null;
+      if (input.thumbnailUri) {
+        try {
+          const tb = await readAsArrayBuffer(input.thumbnailUri);
+          const tu = await sb.storage.from('challenge-videos').upload(`${base}.jpg`, tb, { contentType: 'image/jpeg' });
+          if (!tu.error) thumbUrl = sb.storage.from('challenge-videos').getPublicUrl(`${base}.jpg`).data.publicUrl;
+        } catch {}
+      }
+      const videoUrl = sb.storage.from('challenge-videos').getPublicUrl(`${base}.${ext}`).data.publicUrl;
+      const { data, error } = await sb
+        .from('challenge_videos')
+        .insert({
+          user_id: userId,
+          storage_path: `${base}.${ext}`,
+          video_url: videoUrl,
+          thumbnail_url: thumbUrl,
+          caption: input.caption.trim() || null,
+        })
+        .select(`*, author:profiles!challenge_videos_user_id_fkey(${AUTHOR_COLS})`)
+        .single();
+      if (error) {
+        await sb.storage.from('challenge-videos').remove([`${base}.${ext}`, `${base}.jpg`]);
+        throw error;
+      }
+      input.onProgress?.(1);
+      return mapVideo(data, new Set());
+    },
+    async deleteVideo(video) {
+      const { data } = await sb.from('challenge_videos').select('storage_path').eq('id', video.id).maybeSingle();
+      const { error } = await sb.from('challenge_videos').delete().eq('id', video.id);
+      if (error) throw error;
+      if (data?.storage_path) {
+        const p = data.storage_path as string;
+        await sb.storage.from('challenge-videos').remove([p, p.replace(/\.[^.]+$/, '.jpg')]);
+      }
+    },
+    async setLike(videoId, liked) {
+      const me = await myId();
+      if (!me) throw new Error('not signed in');
+      if (liked) {
+        const { error } = await sb.from('video_likes').insert({ video_id: videoId, user_id: me });
+        if (error && error.code !== '23505') throw error;
+      } else {
+        const { error } = await sb.from('video_likes').delete().eq('video_id', videoId).eq('user_id', me);
+        if (error) throw error;
+      }
+    },
+    async reportVideo(videoId, reason) {
+      const me = await myId();
+      if (!me) return;
+      const { error } = await sb.from('video_reports').insert({ video_id: videoId, reporter_id: me, reason });
+      if (error && error.code !== '23505') throw error;
+    },
+    async listWinners(): Promise<MonthlyWinner[]> {
+      const { data, error } = await sb
+        .from('monthly_winners')
+        .select(
+          `month, likes, video_id, video:challenge_videos!monthly_winners_video_id_fkey(video_url, thumbnail_url), author:profiles!monthly_winners_user_id_fkey(${AUTHOR_COLS})`,
+        )
+        .order('month', { ascending: false })
+        .limit(36);
+      if (error) throw error;
+      return (data ?? []).map((r: Row) => ({
+        month: monthKey(r.month),
+        videoId: r.video_id,
+        likes: r.likes,
+        author: mapAuthor(r.author),
+        videoUrl: r.video?.video_url ?? '',
+        thumbnailUrl: r.video?.thumbnail_url ?? null,
+      }));
+    },
+
+    async loadTraining(userId) {
+      const { data, error } = await sb.from('user_training').select('data').eq('user_id', userId).maybeSingle();
+      if (error) throw error;
+      return (data?.data as TrainingData) ?? null;
+    },
+    async saveTraining(userId, data) {
+      const { error } = await sb.from('user_training').upsert({ user_id: userId, data, updated_at: new Date().toISOString() });
+      if (error) throw error;
+    },
+
+    async fetchFeed(kind) {
+      return (await fetchFeedCached(kind)).items;
+    },
+  };
+}

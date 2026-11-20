@@ -1,0 +1,5 @@
+# Minimální konfigurace Supabase CLI (supabase link / db push / functions deploy)
+project_id = "zvedej"
+
+[functions.csv-feed]
+verify_jwt = false

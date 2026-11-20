@@ -1,0 +1,238 @@
+import Constants from 'expo-constants';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
+import React, { useState } from 'react';
+import { Platform, Share, View } from 'react-native';
+import { AppIcon } from '../../components/Logo';
+import { Banner, Button, Header, ListGroup, ListItem, Row, Screen, Segmented, Sheet, T } from '../../components/ui';
+import { range, Wheel } from '../../components/WheelPicker';
+import { api } from '../../lib/api';
+import { clearFeedCache } from '../../lib/api/feeds';
+import { CSV_BASE, FEEDBACK_EMAIL } from '../../lib/config';
+import { confirm, notify } from '../../lib/dialog';
+import { LANG_LABELS, type Lang } from '../../lib/i18n';
+import { useAuth } from '../../providers/AuthProvider';
+import { useSettings, type ThemeMode } from '../../providers/SettingsProvider';
+import { useTraining } from '../../providers/TrainingProvider';
+
+const REST = [0, ...range(30, 600, 15)];
+const mmss = (s: number) => (s === 0 ? '—' : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`);
+
+export default function SettingsScreen() {
+  const { t, settings, update } = useSettings();
+  const { session, profile, saveProfile } = useAuth();
+  const { data } = useTraining();
+  const [restSheet, setRestSheet] = useState(false);
+  const [rest, setRest] = useState(settings.restSec);
+
+  const exportData = async () => {
+    const json = JSON.stringify(data, null, 2);
+    if (Platform.OS === 'web') {
+      const blob = new Blob([json], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `zvedej-treninky-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+    } else {
+      await Share.share({ message: json, title: 'Zvedej – tréninky' });
+    }
+  };
+
+  return (
+    <Screen>
+      <Header title={t('tab.settings')} />
+      <View style={{ flex: 1 }}>
+        <Screen scroll edges={[]}>
+          <ListGroup title={t('st.appearance')}>
+            <View style={{ padding: 12, gap: 8 }}>
+              <T v="small" muted>
+                {t('st.theme')}
+              </T>
+              <Segmented<ThemeMode>
+                value={settings.theme}
+                onChange={(theme) => update({ theme })}
+                options={[
+                  { key: 'light', label: t('st.theme.light'), icon: 'sunny-outline' },
+                  { key: 'dark', label: t('st.theme.dark'), icon: 'moon-outline' },
+                  { key: 'system', label: t('st.theme.system'), icon: 'phone-portrait-outline' },
+                ]}
+              />
+            </View>
+            <View style={{ padding: 12, gap: 8 }}>
+              <T v="small" muted>
+                {t('st.language')}
+              </T>
+              <Segmented<Lang>
+                value={settings.lang}
+                onChange={(lang) => update({ lang })}
+                options={(Object.keys(LANG_LABELS) as Lang[]).map((l) => ({ key: l, label: LANG_LABELS[l] }))}
+              />
+            </View>
+            <View style={{ padding: 12, gap: 8 }}>
+              <T v="small" muted>
+                {t('st.units')}
+              </T>
+              <Segmented
+                value={settings.unit}
+                onChange={(unit) => update({ unit, barKg: 20 })}
+                options={[
+                  { key: 'kg', label: t('st.kg') },
+                  { key: 'lb', label: t('st.lb') },
+                ]}
+              />
+            </View>
+          </ListGroup>
+
+          <ListGroup title={t('st.training')}>
+            <View style={{ padding: 12, gap: 8 }}>
+              <T v="small" muted>
+                {t('st.rounding')}
+              </T>
+              <Segmented
+                value={String(settings.roundingKg)}
+                onChange={(v) => update({ roundingKg: Number(v) })}
+                options={['0.5', '1', '2.5', '5'].map((v) => ({ key: v, label: `${v.replace('.', ',')} kg` }))}
+              />
+            </View>
+            {settings.unit === 'kg' && (
+              <View style={{ padding: 12, gap: 8 }}>
+                <T v="small" muted>
+                  {t('st.barWeight')}
+                </T>
+                <Segmented
+                  value={String(settings.barKg)}
+                  onChange={(v) => update({ barKg: Number(v) })}
+                  options={['20', '15', '10'].map((v) => ({ key: v, label: `${v} kg` }))}
+                />
+              </View>
+            )}
+            <ListItem
+              icon="timer-outline"
+              title={t('st.restTimer')}
+              value={mmss(settings.restSec)}
+              onPress={() => {
+                setRest(settings.restSec);
+                setRestSheet(true);
+              }}
+            />
+            {Platform.OS !== 'web' && (
+              <ListItem
+                icon="pulse-outline"
+                title={t('st.haptics')}
+                toggle={settings.haptics}
+                onToggle={(haptics) => update({ haptics })}
+              />
+            )}
+          </ListGroup>
+
+          <ListGroup title={t('st.challenge')}>
+            <ListItem
+              icon="play-outline"
+              title={t('st.autoplay')}
+              toggle={settings.autoplay}
+              onToggle={(autoplay) => update({ autoplay })}
+            />
+            <ListItem
+              icon="volume-mute-outline"
+              title={t('st.muted')}
+              toggle={settings.muted}
+              onToggle={(muted) => update({ muted })}
+            />
+          </ListGroup>
+
+          <ListGroup title={t('st.privacy')}>
+            <ListItem
+              icon="eye-outline"
+              title={t('st.publicProfile')}
+              toggle={profile?.isPublic ?? true}
+              onToggle={(isPublic) => saveProfile({ isPublic }).catch(() => {})}
+            />
+          </ListGroup>
+
+          <ListGroup title={t('st.data')}>
+            <ListItem icon="download-outline" title={t('st.export')} onPress={exportData} />
+            <ListItem
+              icon="refresh-outline"
+              title={t('st.clearCache')}
+              onPress={async () => {
+                await clearFeedCache();
+                notify(t('st.cacheCleared'));
+              }}
+            />
+          </ListGroup>
+
+          <ListGroup title={t('st.account')}>
+            {session?.email ? <ListItem icon="mail-outline" title={t('st.signedInAs')} value={session.email} /> : null}
+            <ListItem
+              icon="log-out-outline"
+              title={t('st.logout')}
+              onPress={async () => {
+                if (await confirm(`${t('st.logout')}?`, { ok: t('st.logout'), cancel: t('common.cancel') })) api.signOut();
+              }}
+            />
+            <ListItem
+              icon="trash-outline"
+              danger
+              title={t('st.deleteAccount')}
+              onPress={async () => {
+                if (
+                  !(await confirm(t('st.deleteAccountQ'), {
+                    ok: t('common.delete'),
+                    cancel: t('common.cancel'),
+                    destructive: true,
+                  }))
+                )
+                  return;
+                try {
+                  await api.deleteAccount();
+                } catch (e: any) {
+                  notify(e?.message ?? t('common.error'));
+                }
+              }}
+            />
+          </ListGroup>
+
+          <ListGroup title={t('st.about')}>
+            <ListItem icon="globe-outline" title={t('st.csvWeb')} onPress={() => WebBrowser.openBrowserAsync(CSV_BASE)} />
+            {FEEDBACK_EMAIL ? (
+              <ListItem
+                icon="chatbubble-ellipses-outline"
+                title={t('st.feedback')}
+                onPress={() => Linking.openURL(`mailto:${FEEDBACK_EMAIL}?subject=Zvedej`)}
+              />
+            ) : null}
+          </ListGroup>
+
+          {api.mode === 'demo' && <Banner text={t('common.demo')} />}
+
+          <View style={{ alignItems: 'center', gap: 6, marginTop: 8 }}>
+            <AppIcon size={56} />
+            <T v="h3">Zvedej</T>
+            <T v="small" muted>
+              {t('st.version')} {Constants.expoConfig?.version ?? '1.0.0'}
+            </T>
+            <T v="small" muted>
+              {t('app.by')}
+            </T>
+          </View>
+        </Screen>
+      </View>
+
+      <Sheet visible={restSheet} onClose={() => setRestSheet(false)} title={t('st.restTimer')}>
+        <View style={{ alignItems: 'center', gap: 12, paddingHorizontal: 16 }}>
+          <Wheel values={REST} value={rest} onChange={setRest} format={mmss} width={140} />
+          <Row style={{ alignSelf: 'stretch' }}>
+            <Button
+              title={t('common.done')}
+              style={{ flex: 1 }}
+              onPress={() => {
+                update({ restSec: rest });
+                setRestSheet(false);
+              }}
+            />
+          </Row>
+        </View>
+      </Sheet>
+    </Screen>
+  );
+}
