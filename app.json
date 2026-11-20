@@ -30,7 +30,8 @@
       "name": "Zvedej",
       "shortName": "Zvedej",
       "themeColor": "#1249D1",
-      "backgroundColor": "#FFFFFF"
+      "backgroundColor": "#FFFFFF",
+      "output": "single"
     },
     "plugins": [
       "expo-router",
@@ -62,7 +63,8 @@
       "expo-font"
     ],
     "experiments": {
-      "typedRoutes": false
+      "typedRoutes": false,
+      "baseUrl": "/zvedej"
     }
   }
 }

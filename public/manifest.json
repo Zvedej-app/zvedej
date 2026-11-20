@@ -1,0 +1,15 @@
+{
+  "short_name": "Zvedej",
+  "name": "Zvedej – aplikace pro vzpěrače",
+  "icons": [
+    { "src": "/zvedej/logo192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/zvedej/logo512.png", "type": "image/png", "sizes": "512x512" }
+  ],
+  "start_url": "/zvedej/",
+  "scope": "/zvedej/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1249D1",
+  "background_color": "#1249D1",
+  "lang": "cs"
+}
