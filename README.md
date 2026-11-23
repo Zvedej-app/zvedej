@@ -149,7 +149,7 @@ npx eas-cli@latest build --platform all --profile production
 
 ## Novinky ve verzi 1.1
 
-- **Barvy české vlajky** (modrá `#11457E`, červená `#D7141A`, bílá), světlý i tmavý režim. Barvy jsou na jednom místě: `src/lib/theme.ts`.
+- **Barvy české vlajky** (modrá `#11457E`, červená `#C0000C`, bílá), světlý i tmavý režim. Barvy jsou na jednom místě: `src/lib/theme.ts`.
 - **Plány** mají vlastní tlačítko nad přepínačem Dnes / Deník / Nástroje. Nový plán se tvoří **průvodcem ve 3 krocích** (základ → dny → cviky), plán má **celý kalendář** pro výběr data začátku.
 - **Dny se pojmenují podle dne v týdnu**. Trénink přiřazený více dnům (např. Po + Čt) se jmenuje podle dne, kdy ho otevřeš.
 - **Dnešní trénink jde upravit přímo v záložce Dnes** (tlačítko Upravit), změny se uloží do plánu.
@@ -161,6 +161,17 @@ npx eas-cli@latest build --platform all --profile production
 - Po dokončení tréninku rychlé reakce (Easy, Tak akorát, Docela na …, Dnes to nešlo).
 - **Přátelé a zprávy**: žádosti o přátelství, soukromý chat. Zprávy od nepřátel se zobrazí v „Žádostech o zprávy“ (nejvýš 3 zprávy do odpovědi).
 - Export tréninků do **PDF**. Nastavení bez volby „Systém“ a bez zaokrouhlování.
+
+## Novinky ve verzi 1.2
+
+- **Červená z loga ČSV** (`#C0000C`, stejný odstín jako činka a koruna lva) ve všech místech aplikace.
+- **Bez zoomu**: aplikace se dá posouvat jen nahoru a dolů, přiblížení prsty i dvojitým klepnutím je vypnuté.
+- **Sinclair 2025–2028** (IWF): muži A = 0,700767794, b = 201,159007; ženy A = 0,674107962, b = 163,918008.
+- **Kalkulačka kotoučů**: jen levá část osy, kotouče, uzávěr a kousek osy za ním. Malé kotouče (0,5 / 1 / 1,5 / 2 kg) jsou zvlášť vpravo od uzávěru.
+- **Úvodní obrazovka**: činka se dvěma červenými a jedním modrým kotoučem, uzávěrem a bílým půlkilem, nápis Zvedej je mezi kotouči.
+- **Časovač pauzy**: červený podklad, modrá plynule ubývá s rozmazaným („mlhavým“) okrajem. Zvuky na konci pauzy jsou dvakrát delší a ostřejší.
+- **Pauza na zamčené obrazovce**: iOS ukazuje Live Activity (`expo-widgets`) s odpočtem, pruhem a tlačítkem „Odškrtnout“ (tlačítko od iOS 17). Android ukazuje trvalé oznámení po dobu pauzy.
+- **Export tréninků do PDF** funguje i ve webové verzi (PDF se vytvoří v telefonu a nabídne ke sdílení nebo stažení).
 
 ### Aktualizace dat ze svazu
 
@@ -176,6 +187,6 @@ První příkaz stáhne kluby, druhý kalendář včetně archivu proběhlých z
 
 ### Omezení
 
-- Živý odpočet na zamčené obrazovce (Live Activity v iOS, průběžné oznámení s odpočtem v Androidu) vyžaduje nativní kód, který zde není. Aplikace pošle oznámení ve chvíli, kdy pauza skončí.
+- Živý odpočet na zamčené obrazovce funguje jen v nativní aplikaci (vývojový build `eas build --profile development` nebo build pro obchod), ne v Expo Go ani ve webové verzi na ploše iPhonu. Ve webové verzi to iOS neumožňuje.
 - Loga klubů: svaz je v evidenci neuvádí, ikona klubu proto zatím zobrazuje iniciály. Pole `logo` v `src/data/clubs.ts` je připravené.
 - Při migraci databáze nahraj i `supabase/migrations/20261123000000_social.sql` (přátelé a zprávy).

@@ -106,7 +106,7 @@ export function ToolsView() {
           />
         ))}
       </ListGroup>
-      <Button kind="secondary" icon="add" title={t('tr.addMaxExercise')} onPress={() => setPicker(true)} style={{ marginTop: -6 }} />
+      <Button small kind="secondary" icon="add" title={t('tr.addMaxExercise')} onPress={() => setPicker(true)} style={{ marginTop: -6, alignSelf: 'flex-start' }} />
 
       <PlateCalculator />
       <SinclairCalc />
@@ -147,57 +147,81 @@ function plateSize(p: number, unit: 'kg' | 'lb') {
   return { w: w[String(p)] ?? 8, h: h[String(p)] ?? 50 };
 }
 
+/** malé kotouče (změnové) – zobrazují se samostatně vpravo od uzávěru */
+function isSmallPlate(p: number, unit: 'kg' | 'lb') {
+  return unit === 'kg' ? p < 2.5 : p < 5;
+}
+
+function Plate({ p, unit }: { p: number; unit: 'kg' | 'lb' }) {
+  const { colors } = useSettings();
+  const s = plateSize(p, unit);
+  const darkText = p === 5 || p === 0.5 || (p === 10 && unit === 'lb');
+  return (
+    <View
+      style={{
+        width: s.w,
+        height: s.h,
+        borderRadius: 3,
+        backgroundColor: PLATE_COLORS[String(p)] ?? colors.primary,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.3)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      {s.w >= 12 && (
+        <Text
+          numberOfLines={1}
+          style={{
+            width: s.h - 10,
+            textAlign: 'center',
+            fontSize: 10,
+            fontWeight: '800',
+            color: darkText ? '#222' : '#FFF',
+            transform: [{ rotate: '-90deg' }],
+          }}
+        >
+          {formatNumber(p)}
+        </Text>
+      )}
+    </View>
+  );
+}
+
 function BarbellSide({ plates, collars, unit }: { plates: number[]; collars: boolean; unit: 'kg' | 'lb' }) {
   const { colors } = useSettings();
-  const steel = '#B8BEC8';
+  const big = plates.filter((p) => !isSmallPlate(p, unit));
+  const small = plates.filter((p) => isSmallPlate(p, unit));
   return (
     <View style={styles.barWrap}>
-      {/* osa: zleva až do poloviny, tam začínají kotouče (od největšího po nejmenší) */}
-      <View style={[styles.shaft, { backgroundColor: steel, left: 0, width: '30%' }]} />
-      <View style={[styles.sleeve, { backgroundColor: '#9AA1AD', left: '30%', right: 0 }]} />
-      <View style={{ position: 'absolute', left: '30%', top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-        {plates.map((p, i) => {
-          const s = plateSize(p, unit);
-          const big = s.h >= 100;
-          return (
-            <View
-              key={i}
-              style={{
-                width: s.w,
-                height: s.h,
-                borderRadius: 3,
-                backgroundColor: PLATE_COLORS[String(p)] ?? colors.primary,
-                borderWidth: 1,
-                borderColor: 'rgba(0,0,0,0.3)',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-              }}
-            >
-              {s.w >= 12 && (
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    width: s.h - 10,
-                    textAlign: 'center',
-                    fontSize: 10,
-                    fontWeight: '800',
-                    color: p === 5 || p === 0.5 || p === 10 && unit === 'lb' ? '#222' : '#FFF',
-                    transform: [{ rotate: '-90deg' }],
-                  }}
-                >
-                  {formatNumber(p)}
-                </Text>
-              )}
-              {!big && null}
+      {/* osa zleva až k místu, kde začínají kotouče */}
+      <View style={[styles.shaft, { width: '30%' }]} />
+      <View style={{ position: 'absolute', left: '30%', top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center' }}>
+        {/* objímka osy jen pod kotouči, uzávěrem a malým kouskem za ním */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, paddingRight: 12 }}>
+          <View style={styles.sleeve} />
+          {big.map((p, i) => (
+            <Plate key={i} p={p} unit={unit} />
+          ))}
+          {collars && (
+            <View style={styles.collar}>
+              <View style={styles.collarKnob} />
+              <View style={styles.collarLine} />
             </View>
-          );
-        })}
-        {/* uzávěr osy – výrazný tmavý blok s šroubem, vždy až za posledním kotoučem */}
-        {collars && (
-          <View style={styles.collar}>
-            <View style={styles.collarKnob} />
-            <View style={styles.collarLine} />
+          )}
+        </View>
+        {/* malé kotouče samostatně vpravo od uzávěru */}
+        {small.length > 0 && (
+          <View style={{ marginLeft: 16, alignItems: 'center', gap: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+              {small.map((p, i) => (
+                <Plate key={i} p={p} unit={unit} />
+              ))}
+            </View>
+            <Text style={{ fontSize: 10, fontWeight: '700', color: colors.textMuted }}>
+              {small.map((p) => formatNumber(p)).join(' + ')}
+            </Text>
           </View>
         )}
       </View>
@@ -344,8 +368,8 @@ function Converter() {
 
 const styles = StyleSheet.create({
   barWrap: { height: 124, justifyContent: 'center', overflow: 'hidden' },
-  shaft: { position: 'absolute', height: 14, borderRadius: 3, top: 55 },
-  sleeve: { position: 'absolute', height: 20, borderRadius: 4, top: 52 },
+  shaft: { position: 'absolute', left: 0, height: 12, borderRadius: 3, top: 56, backgroundColor: '#B8BEC8' },
+  sleeve: { position: 'absolute', left: 0, right: 0, height: 20, top: '50%', marginTop: -10, borderRadius: 4, backgroundColor: '#9AA1AD' },
   collar: {
     width: 20,
     height: 50,

@@ -82,6 +82,7 @@ export default function CsvScreen() {
             ref={pager}
             horizontal
             pagingEnabled
+            scrollEnabled={false}
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={onPage}
             style={{ flex: 1 }}

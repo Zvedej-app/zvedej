@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useBottomInset } from '../lib/insets';
 import { WeightSheet } from '../components/training/ToolsView';
 import { WorkoutEditor } from '../components/training/WorkoutEditor';
@@ -10,7 +11,15 @@ import { range, Wheel } from '../components/WheelPicker';
 import { exerciseName } from '../data/exercises';
 import { confirm, toast } from '../lib/dialog';
 import type { TKey } from '../lib/i18n';
-import { cancelRestNotification, ensureNotificationPermission, scheduleRestEnd, setupRestNotifications } from '../lib/restNotifications';
+import { endRestActivity, markRestOver, onLiveActivityDone, startRestActivity } from '../lib/liveActivity';
+import {
+  cancelRestNotification,
+  ensureNotificationPermission,
+  hideRestOngoing,
+  scheduleRestEnd,
+  setupRestNotifications,
+  showRestOngoing,
+} from '../lib/restNotifications';
 import { playRestSound } from '../lib/restSound';
 import { radius } from '../lib/theme';
 import type { LoggedExercise, WorkoutLog } from '../lib/types';
@@ -20,6 +29,43 @@ import { useSettings } from '../providers/SettingsProvider';
 import { useTraining } from '../providers/TrainingProvider';
 
 const RPE = range(1, 10, 0.5);
+
+function withAlpha(hex: string, alpha: number) {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+}
+
+/** Modrý pruh, který plynule ubíhá zprava doleva; jeho pravý okraj je měkký jako mlha. */
+function RestFill({ until, total, color }: { until: number; total: number; color: string }) {
+  const [w, setW] = useState(0);
+  const [prog] = useState(() => new Animated.Value(1));
+  const FOG = 70;
+  useEffect(() => {
+    if (!w) return;
+    const left = Math.max(0, until - Date.now());
+    prog.setValue(Math.min(1, left / total));
+    const anim = Animated.timing(prog, { toValue: 0, duration: left, easing: Easing.linear, useNativeDriver: true });
+    anim.start();
+    return () => anim.stop();
+  }, [until, total, w, prog]);
+  const translateX = prog.interpolate({ inputRange: [0, 1], outputRange: [-(w + FOG), 0] });
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
+      {w > 0 && (
+        <Animated.View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: w + FOG, transform: [{ translateX }] }}>
+          <LinearGradient
+            colors={[color, color, withAlpha(color, 0.55), withAlpha(color, 0)]}
+            locations={[0, w / (w + FOG), (w + FOG * 0.45) / (w + FOG), 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+      )}
+    </View>
+  );
+}
 const FEELINGS = ['easy', 'ok', 'hard', 'bad'] as const;
 
 function useNow(ms: number, enabled: boolean) {
@@ -97,6 +143,8 @@ export default function WorkoutScreen() {
   const stopRest = useCallback(() => {
     const r = restRef.current;
     if (r) cancelRestNotification(r.notifId);
+    hideRestOngoing();
+    endRestActivity();
     setRest(null);
   }, []);
 
@@ -118,6 +166,25 @@ export default function WorkoutScreen() {
           });
         }
       }
+      if (next) {
+        const load = `${next.reps} × ${formatWeight(next.kg, settings.unit)}`;
+        // zamčená obrazovka: iOS Live Activity s odpočtem, Android trvalé oznámení
+        startRestActivity({
+          start: Date.now(),
+          end: until,
+          exercise: next.name,
+          load,
+          loggedExId: next.loggedExId,
+          setIndex: next.setIndex,
+          labels: { done: t('tr.markDone'), rest: t('tr.rest'), next: t('tr.upNext') },
+        });
+        const endsAt = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(until));
+        showRestOngoing({
+          title: `${t('tr.rest')} → ${endsAt}`,
+          body: `${t('tr.upNext')}: ${next.name} · ${load}`,
+          data: { exerciseId: next.exerciseId, loggedExId: next.loggedExId, setIndex: next.setIndex },
+        });
+      }
       setRest({ until, total: ms, next, notifId, over: false });
     },
     [settings.restNotify, settings.restSound, settings.unit, t],
@@ -131,6 +198,8 @@ export default function WorkoutScreen() {
     const id = setTimeout(() => {
       tap('success');
       playRestSound(settings.restSound);
+      markRestOver();
+      hideRestOngoing();
       setRest((r) => (r ? { ...r, over: true, notifId: null } : r));
     }, Math.max(0, restUntil - Date.now()));
     return () => clearTimeout(id);
@@ -167,6 +236,12 @@ export default function WorkoutScreen() {
     else setRest(null);
   };
 
+  const checkNextRef = useRef(checkNext);
+  useEffect(() => {
+    checkNextRef.current = checkNext;
+  });
+  useEffect(() => onLiveActivityDone(() => checkNextRef.current()), []);
+
   const shift = (ms: number) => {
     const r = rest;
     if (!r || r.over) return;
@@ -185,7 +260,6 @@ export default function WorkoutScreen() {
 
   const elapsed = Math.floor((clock - new Date(active.startedAt).getTime()) / 1000);
   const left = rest && !rest.over ? Math.max(0, rest.until - now) : 0;
-  const frac = rest && !rest.over ? Math.min(1, left / rest.total) : 0;
 
   return (
     <Screen>
@@ -224,9 +298,9 @@ export default function WorkoutScreen() {
 
       {rest && (
         <View style={[styles.restWrap, { bottom: bottom + 12 }]}>
-          <View style={[styles.rest, { backgroundColor: colors.primary }]}>
-            {/* červený pruh: ubíhá zprava doleva, modrá je podklad */}
-            {!rest.over && <View style={[styles.restFill, { width: `${frac * 100}%`, backgroundColor: colors.accent }]} />}
+          <View style={[styles.rest, { backgroundColor: rest.over ? colors.primary : colors.accent }]}>
+            {/* červený podklad, modrá plynule ubíhá zprava doleva a její okraj se rozplývá */}
+            {!rest.over && <RestFill until={rest.until} total={rest.total} color={colors.primary} />}
             {rest.over ? (
               <Row style={{ padding: 14 }} gap={12}>
                 <View style={{ flex: 1 }}>
@@ -319,7 +393,6 @@ export default function WorkoutScreen() {
 const styles = StyleSheet.create({
   restWrap: { position: 'absolute', left: 12, right: 12 },
   rest: { borderRadius: 20, overflow: 'hidden' },
-  restFill: { position: 'absolute', left: 0, top: 0, bottom: 0 },
   bigCheck: {
     width: 62,
     height: 62,

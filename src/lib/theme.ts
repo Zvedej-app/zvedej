@@ -23,8 +23,8 @@ export interface Palette {
   other: string;
 }
 
-/** Barvy české vlajky: modrá #11457E, červená #D7141A, bílá */
-export const FLAG = { blue: '#11457E', red: '#D7141A', white: '#FFFFFF' };
+/** Modrá z české vlajky, červená přesně podle loga ČSV (koruna a kotouče činky), bílá */
+export const FLAG = { blue: '#11457E', red: '#C0000C', white: '#FFFFFF' };
 
 export const BLUE = {
   50: '#EEF2F7',
@@ -52,8 +52,8 @@ export const lightPalette: Palette = {
   primarySoft: '#DDE6F2',
   onPrimary: '#FFFFFF',
   accent: FLAG.red,
-  accentSoft: '#FBE3E4',
-  danger: '#C4121A',
+  accentSoft: '#F8DADC',
+  danger: '#C0000C',
   success: '#16A34A',
   like: FLAG.red,
   tabBar: '#FFFFFF',
@@ -74,14 +74,14 @@ export const darkPalette: Palette = {
   primaryStrong: '#8DB4E3',
   primarySoft: '#16335E',
   onPrimary: '#FFFFFF',
-  accent: '#E8353B',
-  accentSoft: '#3B1520',
-  danger: '#FF5A66',
+  accent: '#C0000C',
+  accentSoft: '#3A0B12',
+  danger: '#C0000C',
   success: '#22C55E',
-  like: '#FF4D55',
+  like: '#C0000C',
   tabBar: '#061226',
   overlay: 'rgba(0,0,0,0.6)',
-  mcr: '#E8353B',
+  mcr: '#C0000C',
   liga: '#4F86C9',
   other: '#8A97AB',
 };

@@ -2,36 +2,56 @@ import { Image } from 'expo-image';
 import React from 'react';
 import Svg, { Defs, G, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+export const PLATE_RED = '#C0000C';
+export const PLATE_BLUE = '#1E5AA8';
+
 /**
- * Činka: od středu směrem ven největší kotouč → menší kotouče → uzávěr (zámek) → konec osy.
- * Jedna definice slouží pro logo, ikonu i úvodní obrazovku.
+ * Jedna strana činky podle závodní osy: od kraje konec osy, bílý kotouč 0,5 kg, uzávěr,
+ * modrý kotouč a dva červené kotouče (velké kotouče jsou stejně vysoké), pak osa ke středu.
+ * Kreslí se v souřadnicích 0–120 × 0–120 (levá strana; pravá se zrcadlí).
  */
-function Barbell({ color, accent }: { color: string; accent: string }) {
+function BarbellEnd({ bar = '#FFFFFF' }: { bar?: string }) {
+  const stroke = 'rgba(255,255,255,0.55)';
   return (
     <G>
-      {/* osa */}
-      <Rect x="4" y="46" width="192" height="8" rx="4" fill={color} />
-      {/* levá strana (od středu): velký → střední → malý kotouč → uzávěr */}
-      <Rect x="62" y="12" width="14" height="76" rx="4" fill={color} />
-      <Rect x="48" y="24" width="12" height="52" rx="3.5" fill={accent} />
-      <Rect x="38" y="34" width="8" height="32" rx="3" fill={color} />
-      <Rect x="29" y="40" width="7" height="20" rx="2" fill={accent} />
-      {/* pravá strana */}
-      <Rect x="124" y="12" width="14" height="76" rx="4" fill={color} />
-      <Rect x="140" y="24" width="12" height="52" rx="3.5" fill={accent} />
-      <Rect x="154" y="34" width="8" height="32" rx="3" fill={color} />
-      <Rect x="164" y="40" width="7" height="20" rx="2" fill={accent} />
-      {/* úchop uprostřed */}
-      <Rect x="84" y="44" width="32" height="12" rx="3" fill={accent} opacity={0.9} />
+      {/* konec osy */}
+      <Rect x="0" y="55" width="12" height="10" rx="2" fill={bar} />
+      {/* bílý kotouč 0,5 kg */}
+      <Rect x="10" y="43" width="7" height="34" rx="2" fill="#FFFFFF" stroke="#C9D2DE" strokeWidth="1" />
+      {/* uzávěr */}
+      <Rect x="19" y="47" width="11" height="26" rx="3" fill="#DDE3EA" stroke="#8E99A8" strokeWidth="1.5" />
+      <Rect x="23" y="51" width="3" height="3" rx="1.5" fill="#5D6878" />
+      {/* modrý a dva červené kotouče – stejně velké */}
+      <Rect x="32" y="5" width="14" height="110" rx="4" fill={PLATE_BLUE} stroke={stroke} strokeWidth="1" />
+      <Rect x="48" y="5" width="14" height="110" rx="4" fill={PLATE_RED} stroke={stroke} strokeWidth="1" />
+      <Rect x="64" y="5" width="14" height="110" rx="4" fill={PLATE_RED} stroke={stroke} strokeWidth="1" />
+      {/* vnitřní dorazová objímka a osa ke středu */}
+      <Rect x="78" y="50" width="6" height="20" rx="2" fill="#DDE3EA" />
+      <Rect x="84" y="56" width="36" height="8" rx="3" fill={bar} />
     </G>
   );
 }
 
-/** Logo aplikace Zvedej – činka */
-export function BarbellLogo({ size = 120, color = '#FFFFFF', accent = '#A9BFDC' }: { size?: number; color?: string; accent?: string }) {
+/** Polovina činky (levá, nebo zrcadlená pravá) – na úvodní obrazovce s nápisem uprostřed. */
+export function BarbellHalf({ height = 110, flip = false }: { height?: number; flip?: boolean }) {
   return (
-    <Svg width={size} height={size * 0.5} viewBox="0 0 200 100">
-      <Barbell color={color} accent={accent} />
+    <Svg width={height} height={height} viewBox="0 0 120 120">
+      <G transform={flip ? 'translate(120 0) scale(-1 1)' : undefined}>
+        <BarbellEnd />
+      </G>
+    </Svg>
+  );
+}
+
+/** Logo aplikace Zvedej – celá činka */
+export function BarbellLogo({ size = 120 }: { size?: number; color?: string; accent?: string }) {
+  return (
+    <Svg width={size} height={size * 0.4} viewBox="0 0 300 120">
+      <BarbellEnd />
+      <Rect x="118" y="56" width="64" height="8" rx="3" fill="#FFFFFF" />
+      <G transform="translate(300 0) scale(-1 1)">
+        <BarbellEnd />
+      </G>
     </Svg>
   );
 }
@@ -47,8 +67,12 @@ export function AppIcon({ size = 96 }: { size?: number }) {
         </LinearGradient>
       </Defs>
       <Rect x="0" y="0" width="100" height="100" rx="24" fill="url(#g)" />
-      <G transform="translate(10 30) scale(0.4)">
-        <Barbell color="#FFFFFF" accent="#D7141A" />
+      <G transform="translate(5 32) scale(0.3)">
+        <BarbellEnd />
+        <Rect x="118" y="56" width="64" height="8" rx="3" fill="#FFFFFF" />
+        <G transform="translate(300 0) scale(-1 1)">
+          <BarbellEnd />
+        </G>
       </G>
     </Svg>
   );

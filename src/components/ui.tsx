@@ -313,7 +313,7 @@ export function SearchBar({
         autoFocus={autoFocus}
         autoCorrect={false}
         returnKeyType="search"
-        style={[{ flex: 1, color: colors.text, fontSize: 15, paddingVertical: 0, minHeight: 22 }, webNoOutline]}
+        style={[{ flex: 1, color: colors.text, fontSize: 16, paddingVertical: 0, minHeight: 22 }, webNoOutline]}
       />
       {value.length > 0 && <IconButton name="close-circle" size={18} color={colors.textMuted} onPress={() => onChangeText('')} />}
     </View>

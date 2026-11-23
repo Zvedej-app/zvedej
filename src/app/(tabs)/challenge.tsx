@@ -137,7 +137,7 @@ export default function ChallengeScreen() {
                 </T>
               </View>
               <Row gap={4}>
-                <Ionicons name="heart" size={16} color="#FF4D6A" />
+                <Ionicons name="heart" size={16} color="#C0000C" />
                 <T color="#FFF" style={{ fontWeight: '800' }}>
                   {item.likesCount}
                 </T>
@@ -179,7 +179,7 @@ export default function ChallengeScreen() {
                 {formatMonth(item.month, locale)}
               </T>
               <Row gap={4}>
-                <Ionicons name="heart" size={13} color="#FF4D6A" />
+                <Ionicons name="heart" size={13} color="#C0000C" />
                 <T v="caption" color="#FFF">
                   {item.likes}
                 </T>

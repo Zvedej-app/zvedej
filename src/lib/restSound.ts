@@ -20,6 +20,6 @@ export async function playRestSound(kind: RestSound) {
       try {
         player.remove();
       } catch {}
-    }, 5000);
+    }, 8000);
   } catch {}
 }

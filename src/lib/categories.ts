@@ -87,12 +87,13 @@ export function formatCategory(cat: string | null) {
 }
 
 /**
- * Sinclairovy koeficienty (IWF) – stejné konstanty používá kalkulačka na webu ČSV.
+ * Sinclairovy koeficienty pro olympijský cyklus 2025–2028.
+ * Ověřeno proti oficiálním tabulkám „Sinclair Coefficients (2025-2028)“ (shoda na 6 desetinných míst).
  * Sinclair = dvojboj × 10^(A · log10(hmotnost / b)²) pro hmotnost menší než b, jinak koeficient 1.
  */
 export const SINCLAIR = {
-  M: { A: 0.75194503, b: 175.508 },
-  F: { A: 0.783497476, b: 153.655 },
+  M: { A: 0.700767794, b: 201.159007 },
+  F: { A: 0.674107962, b: 163.918008 },
 };
 
 export function sinclairCoefficient(gender: Gender, bodyweight: number) {

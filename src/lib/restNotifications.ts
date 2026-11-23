@@ -103,3 +103,35 @@ export async function cancelRestNotification(id: string | null) {
 }
 
 export { Notifications };
+
+const ONGOING_ID = 'rest-ongoing';
+
+/**
+ * Android: trvalé oznámení po dobu pauzy (viditelné na zamčené obrazovce)
+ * s tlačítkem „Odškrtnout nástup“. Na iOS tuto roli plní Live Activity.
+ */
+export async function showRestOngoing(opts: { title: string; body: string; data: RestNotificationData }) {
+  if (Platform.OS !== 'android' || !ready) return;
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: ONGOING_ID,
+      content: {
+        title: opts.title,
+        body: opts.body,
+        categoryIdentifier: REST_CATEGORY,
+        sticky: true,
+        autoDismiss: false,
+        sound: false,
+        data: opts.data as unknown as Record<string, unknown>,
+      },
+      trigger: { channelId: 'rest-none' } as Notifications.NotificationTriggerInput,
+    });
+  } catch {}
+}
+
+export async function hideRestOngoing() {
+  if (Platform.OS !== 'android') return;
+  try {
+    await Notifications.dismissNotificationAsync(ONGOING_ID);
+  } catch {}
+}

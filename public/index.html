@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <!-- viewport-fit=cover: aplikace na ploše iPhonu jde až pod výřez, okraje řeší safe-area -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>%WEB_TITLE%</title>
 
     <!-- Instalace na plochu (PWA). Cesty odpovídají experiments.baseUrl v app.json. -->
@@ -29,6 +29,19 @@
         overflow: hidden;
         overscroll-behavior: none;
       }
+      /* aplikace se posouvá jen nahoru a dolů – žádné přibližování ani posun do stran */
+      html,
+      body,
+      #root {
+        touch-action: manipulation;
+        overflow-x: hidden;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+      input,
+      textarea {
+        font-size: 16px;
+      }
       /* These styles make the root element full-height */
       #root {
         display: flex;
@@ -43,5 +56,20 @@
     <noscript> You need to enable JavaScript to run this app. </noscript>
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
+    <script>
+      // iOS Safari ignoruje user-scalable=no – zablokujeme gesto přiblížení i dvojité klepnutí
+      (function () {
+        var block = function (e) { e.preventDefault(); };
+        document.addEventListener('gesturestart', block, { passive: false });
+        document.addEventListener('gesturechange', block, { passive: false });
+        document.addEventListener('touchmove', function (e) { if (e.scale && e.scale !== 1) e.preventDefault(); }, { passive: false });
+        var last = 0;
+        document.addEventListener('touchend', function (e) {
+          var now = Date.now();
+          if (now - last < 300) e.preventDefault();
+          last = now;
+        }, { passive: false });
+      })();
+    </script>
   </body>
 </html>
