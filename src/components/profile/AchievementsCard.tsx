@@ -36,7 +36,7 @@ export function AchievementsCard() {
             key={a.id}
             accessibilityLabel={t(a.title)}
             onPress={() =>
-              notify(`${t(a.title)}\n${t(a.desc)}${done ? '' : `\n\n${formatNumber(v, 0)} / ${formatNumber(goal, 0)}`}`)
+              notify(`${t(a.desc)}${done ? '' : `\n\n${formatNumber(v, 0)} / ${formatNumber(goal, 0)}`}`, t(a.title))
             }
             style={styles.item}
           >

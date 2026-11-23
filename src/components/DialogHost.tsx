@@ -53,6 +53,7 @@ export function DialogHost() {
               <View style={{ flex: 1, backgroundColor: colors.accent }} />
             </View>
             {cur?.kind === 'confirm' && cur.options.title ? <T v="h3">{cur.options.title}</T> : null}
+            {cur?.kind === 'notify' && cur.title ? <T v="h3">{cur.title}</T> : null}
             <T style={{ fontSize: 16, lineHeight: 22 }}>{cur?.message}</T>
             {cur?.kind === 'confirm' ? (
               <Row style={{ marginTop: 6 }}>
@@ -76,7 +77,11 @@ export function DialogHost() {
           pointerEvents="none"
           style={[
             styles.toastWrap,
-            { bottom: bottom + 92, opacity: fade, transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] },
+            {
+              bottom: bottom + 92,
+              opacity: fade,
+              transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
+            },
           ]}
         >
           <View style={[styles.toast, { backgroundColor: colors.primary }]}>
@@ -93,8 +98,24 @@ export function DialogHost() {
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  card: { width: '100%', maxWidth: 420, borderRadius: radius.lg + 4, borderWidth: StyleSheet.hairlineWidth, padding: 20, gap: 12, overflow: 'hidden' },
+  card: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: radius.lg + 4,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 20,
+    gap: 12,
+    overflow: 'hidden',
+  },
   stripe: { flexDirection: 'row', height: 5, marginHorizontal: -20, marginTop: -20, marginBottom: 4 },
   toastWrap: { position: 'absolute', left: 16, right: 16, alignItems: 'center' },
-  toast: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderRadius: radius.pill, maxWidth: 420 },
+  toast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: radius.pill,
+    maxWidth: 420,
+  },
 });

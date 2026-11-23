@@ -10,7 +10,7 @@ import { Celebration, type CelebrationData } from '../components/training/Celebr
 import { formatTonnage } from '../components/training/format';
 import { ACHIEVEMENTS, unlockedIds } from '../lib/achievements';
 import { logSetCount, logTonnage, weekStreak } from '../lib/training';
-import { Button, Chip, Empty, Field, Header, IconButton, ListItem, Row, Screen, Sheet, T } from '../components/ui';
+import { Button, Chip, Empty, Field, Header, IconButton, Row, Screen, Sheet, T } from '../components/ui';
 import { range, Wheel } from '../components/WheelPicker';
 import { exerciseName } from '../data/exercises';
 import { confirm, toast } from '../lib/dialog';
@@ -408,7 +408,7 @@ export default function WorkoutScreen() {
             value={notes}
             onChangeText={setNotes}
             multiline
-            inputStyle={{ minHeight: 48, paddingTop: 10, paddingBottom: 10, fontSize: 15 }}
+            inputStyle={{ minHeight: 44, paddingTop: 9, paddingBottom: 9, fontSize: 15 }}
           />
           <T v="label" muted>
             {t('tr.feelingTitle')}
@@ -423,23 +423,50 @@ export default function WorkoutScreen() {
               />
             ))}
           </Row>
-          <Row style={{ justifyContent: 'space-around' }}>
+          {/* náročnost a tělesná hmotnost vedle sebe, aby se vše vešlo bez posouvání */}
+          <Row style={{ justifyContent: 'space-around', alignItems: 'center' }}>
             <Wheel
               label={t('tr.rpe')}
               values={RPE}
               value={rpe}
               onChange={setRpe}
-              width={140}
+              width={130}
+              rows={3}
               format={(v) => String(v).replace('.', ',')}
             />
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setBwSheet(true)}
+              style={{ alignItems: 'center', gap: 6, paddingTop: 4 }}
+            >
+              <T v="label" muted>
+                {t('tr.bodyweight')}
+              </T>
+              <View
+                style={{
+                  minWidth: 120,
+                  height: 44,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  backgroundColor: colors.surface,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  paddingHorizontal: 12,
+                }}
+              >
+                <Ionicons name="scale-outline" size={18} color={colors.primary} />
+                <T style={{ fontSize: 18, fontWeight: '800' }}>{bw ? formatWeight(bw, settings.unit) : '—'}</T>
+              </View>
+            </Pressable>
           </Row>
-          <ListItem
-            icon="scale-outline"
-            title={t('tr.bodyweight')}
-            value={bw ? formatWeight(bw, settings.unit) : '—'}
-            onPress={() => setBwSheet(true)}
-          />
+        </ScrollView>
+        {/* tlačítko je mimo posuvnou část, takže je vždy vidět */}
+        <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
           <Button
+            style={{ minHeight: 54, borderRadius: 16 }}
             icon="checkmark-circle-outline"
             title={t('tr.finish')}
             onPress={() => {
@@ -465,7 +492,7 @@ export default function WorkoutScreen() {
               });
             }}
           />
-        </ScrollView>
+        </View>
         <WeightSheet
           visible={bwSheet}
           title={t('tr.bodyweight')}

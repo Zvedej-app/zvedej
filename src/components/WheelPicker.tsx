@@ -29,6 +29,7 @@ export function Wheel<V extends string | number>({
   format = (v) => String(v),
   label,
   width = 90,
+  rows = VISIBLE,
 }: {
   values: V[];
   value: V;
@@ -36,7 +37,10 @@ export function Wheel<V extends string | number>({
   format?: (v: V) => string;
   label?: string;
   width?: number;
+  /** počet viditelných řádků (liché číslo), výchozí 5 */
+  rows?: number;
 }) {
+  const pad = ITEM_H * Math.floor(rows / 2);
   const { colors, settings } = useSettings();
   const ref = useRef<FlatList<V>>(null);
   const initial = Math.max(0, values.indexOf(value));
@@ -97,10 +101,10 @@ export function Wheel<V extends string | number>({
           {label}
         </T>
       )}
-      <View style={{ height: ITEM_H * VISIBLE, width }}>
+      <View style={{ height: ITEM_H * rows, width }}>
         <View
           pointerEvents="none"
-          style={[styles.band, { top: ITEM_H * 2, backgroundColor: colors.primarySoft, borderColor: colors.primary }]}
+          style={[styles.band, { top: pad, backgroundColor: colors.primarySoft, borderColor: colors.primary }]}
         />
         <FlatList
           ref={ref}
@@ -112,10 +116,10 @@ export function Wheel<V extends string | number>({
           decelerationRate="fast"
           initialScrollIndex={initial}
           getItemLayout={(_, i) => ({ length: ITEM_H, offset: ITEM_H * i, index: i })}
-          contentContainerStyle={{ paddingVertical: ITEM_H * 2 }}
+          contentContainerStyle={{ paddingVertical: pad }}
           onScroll={onScroll}
           scrollEventThrottle={16}
-          style={webSnap}
+          style={webSnap(pad)}
           windowSize={7}
           initialNumToRender={15}
           renderItem={({ item, index }) => {
@@ -146,7 +150,8 @@ export function Wheel<V extends string | number>({
 }
 
 // Na webu zajistí přesné ukotvení čísla CSS scroll-snap (prohlížeč „zacvakne“ vždy na číslo).
-const webSnap = (Platform.OS === 'web' ? { scrollSnapType: 'y mandatory', scrollPaddingTop: ITEM_H * 2 } : undefined) as StyleProp<ViewStyle>;
+const webSnap = (pad: number) =>
+  (Platform.OS === 'web' ? { scrollSnapType: 'y mandatory', scrollPaddingTop: pad } : undefined) as StyleProp<ViewStyle>;
 const webSnapItem = (Platform.OS === 'web' ? { scrollSnapAlign: 'start' } : undefined) as StyleProp<ViewStyle>;
 
 export function range(from: number, to: number, step = 1) {

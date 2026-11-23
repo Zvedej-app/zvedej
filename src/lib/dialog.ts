@@ -11,7 +11,7 @@ export interface ConfirmOptions {
 
 export type DialogRequest =
   | { kind: 'confirm'; message: string; options: ConfirmOptions; resolve: (v: boolean) => void }
-  | { kind: 'notify'; message: string; resolve: () => void }
+  | { kind: 'notify'; message: string; title?: string; resolve: () => void }
   | { kind: 'toast'; message: string; id: number };
 
 type Listener = (r: DialogRequest) => void;
@@ -28,16 +28,17 @@ export function subscribeDialogs(l: Listener) {
 /** Potvrzovací dialog – vrací true po potvrzení. */
 export function confirm(message: string, options: ConfirmOptions): Promise<boolean> {
   return new Promise((resolve) => {
-    if (!listener) return resolve(typeof window !== 'undefined' && typeof window.confirm === 'function' ? window.confirm(message) : true);
+    if (!listener)
+      return resolve(typeof window !== 'undefined' && typeof window.confirm === 'function' ? window.confirm(message) : true);
     listener({ kind: 'confirm', message, options, resolve });
   });
 }
 
-/** Informační okno s tlačítkem OK. */
-export function notify(message: string): Promise<void> {
+/** Informační okno s tlačítkem OK (volitelně s tučným nadpisem). */
+export function notify(message: string, title?: string): Promise<void> {
   return new Promise((resolve) => {
     if (!listener) return resolve();
-    listener({ kind: 'notify', message, resolve });
+    listener({ kind: 'notify', message, title, resolve });
   });
 }
 
