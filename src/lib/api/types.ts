@@ -1,11 +1,14 @@
 import type {
   ChallengeTheme,
   ChallengeVideo,
+  ContentReport,
   Conversation,
   FeedItem,
   FriendsOverview,
   FriendStatus,
   Message,
+  ModerationAction,
+  ModerationNotice,
   MonthlyWinner,
   Profile,
   TrainingData,
@@ -32,6 +35,17 @@ export interface UserStats {
   wins: number;
 }
 
+export interface SignUpInput {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  /** YYYY-MM-DD */
+  birthDate: string;
+  /** ISO čas souhlasu s podmínkami a zásadami */
+  termsAcceptedAt: string;
+}
+
 export interface Backend {
   mode: 'supabase' | 'demo';
 
@@ -39,7 +53,7 @@ export interface Backend {
   getSession(): Promise<Session | null>;
   onAuthChange(cb: (s: Session | null) => void): () => void;
   signIn(email: string, password: string): Promise<void>;
-  signUp(email: string, password: string, firstName: string, lastName: string): Promise<{ needsConfirmation: boolean }>;
+  signUp(input: SignUpInput): Promise<{ needsConfirmation: boolean }>;
   signInDemo?(): Promise<void>;
   resetPassword(email: string): Promise<void>;
   signOut(): Promise<void>;
@@ -80,6 +94,22 @@ export interface Backend {
   sendMessage(userId: string, body: string): Promise<Message>;
   markRead(userId: string): Promise<void>;
   unreadCount(): Promise<number>;
+
+  // bezpečnost a moderace
+  blockUser(userId: string): Promise<void>;
+  unblockUser(userId: string): Promise<void>;
+  listBlocked(): Promise<Profile[]>;
+  /** Je mezi mnou a uživatelem blokace (v libovolném směru)? Zjistíme jen tu moji. */
+  isBlockedByMe(userId: string): Promise<boolean>;
+  reportUser(userId: string, reason: string): Promise<void>;
+  reportMessage(messageId: string, reason: string): Promise<void>;
+  listReports(status: 'open' | 'all'): Promise<ContentReport[]>;
+  resolveReport(reportId: string, action: ModerationAction, reason: string): Promise<void>;
+  unbanUser(userId: string): Promise<void>;
+  listNotices(): Promise<ModerationNotice[]>;
+  markNoticesSeen(): Promise<void>;
+  /** Všechna moje data jako JSON (GDPR) */
+  exportMyData(): Promise<unknown>;
 
   // ČSV
   fetchFeed(kind: 'calendar' | 'news'): Promise<FeedItem[]>;

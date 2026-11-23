@@ -8,6 +8,7 @@ import { fallbackTheme } from '../../data/themes';
 import type {
   ChallengeTheme,
   ChallengeVideo,
+  ContentReport,
   Conversation,
   FriendsOverview,
   FriendStatus,
@@ -38,7 +39,11 @@ function mapProfile(r: Row): Profile {
     prSnatch: r.pr_snatch === null || r.pr_snatch === undefined ? null : Number(r.pr_snatch),
     prCleanJerk: r.pr_clean_jerk === null || r.pr_clean_jerk === undefined ? null : Number(r.pr_clean_jerk),
     bodyweight: r.bodyweight === null || r.bodyweight === undefined ? null : Number(r.bodyweight),
+    showBodyweight: !!r.show_bodyweight,
     isPublic: r.is_public ?? true,
+    isAdmin: !!r.is_admin,
+    bannedAt: r.banned_at ?? null,
+    banReason: r.ban_reason ?? null,
     createdAt: r.created_at,
   };
 }
@@ -56,12 +61,35 @@ function profileToRow(p: Partial<Profile>): Row {
     ['weightCategory', 'weight_category'],
     ['prSnatch', 'pr_snatch'],
     ['prCleanJerk', 'pr_clean_jerk'],
-    ['bodyweight', 'bodyweight'],
+    ['showBodyweight', 'show_bodyweight'],
     ['isPublic', 'is_public'],
   ];
   const out: Row = {};
   for (const [k, col] of map) if (k in p) out[col] = p[k];
   return out;
+}
+
+function mapReport(r: Row): ContentReport {
+  return {
+    id: r.id,
+    kind: r.kind,
+    status: r.status,
+    reason: r.reason,
+    snapshot: r.snapshot,
+    resolution: r.resolution,
+    createdAt: r.created_at,
+    handledAt: r.handled_at,
+    reporterId: r.reporter_id,
+    reporterName: r.reporter_name ?? '',
+    targetUserId: r.target_user_id,
+    targetName: r.target_name ?? '',
+    targetBanned: !!r.target_banned,
+    messageId: r.message_id,
+    videoId: r.video_id,
+    videoUrl: r.video_url,
+    videoHidden: r.video_hidden,
+    sameTargetReports: Number(r.same_target_reports ?? 0),
+  };
 }
 
 function mapAuthor(r: Row | null) {
@@ -75,7 +103,14 @@ function mapAuthor(r: Row | null) {
 }
 
 function mapMessage(r: Row): Message {
-  return { id: r.id, senderId: r.sender_id, recipientId: r.recipient_id, body: r.body, createdAt: r.created_at, readAt: r.read_at };
+  return {
+    id: r.id,
+    senderId: r.sender_id,
+    recipientId: r.recipient_id,
+    body: r.body,
+    createdAt: r.created_at,
+    readAt: r.read_at,
+  };
 }
 
 const monthDate = (key: string) => `${key}-01`;
@@ -149,11 +184,18 @@ export function createSupabaseBackend(): Backend {
       const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw error;
     },
-    async signUp(email, password, firstName, lastName) {
+    async signUp({ email, password, firstName, lastName, birthDate, termsAcceptedAt }) {
       const { data, error } = await sb.auth.signUp({
         email: email.trim(),
         password,
-        options: { data: { first_name: firstName.trim(), last_name: lastName.trim() } },
+        options: {
+          data: {
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            birth_date: birthDate,
+            terms_accepted_at: termsAcceptedAt,
+          },
+        },
       });
       if (error) throw error;
       return { needsConfirmation: !data.session };
@@ -181,16 +223,25 @@ export function createSupabaseBackend(): Backend {
     async getProfile(id) {
       const { data, error } = await sb.from('profiles').select('*').eq('id', id).maybeSingle();
       if (error) throw error;
-      return data ? mapProfile(data) : null;
+      if (!data) return null;
+      const p = mapProfile(data);
+      // vlastní hmotnost je v soukromé tabulce (veřejná kopie jen se souhlasem)
+      if (id === (await myId())) {
+        const { data: priv } = await sb.from('profile_private').select('bodyweight').eq('user_id', id).maybeSingle();
+        p.bodyweight = priv?.bodyweight === null || priv?.bodyweight === undefined ? null : Number(priv.bodyweight);
+      }
+      return p;
     },
     async updateProfile(id, patch) {
-      const { data, error } = await sb
-        .from('profiles')
-        .upsert({ id, ...profileToRow(patch) })
-        .select('*')
-        .single();
+      if ('bodyweight' in patch) {
+        const { error: e } = await sb.from('profile_private').upsert({ user_id: id, bodyweight: patch.bodyweight ?? null });
+        if (e) throw e;
+      }
+      const { error } = await sb.from('profiles').upsert({ id, ...profileToRow(patch) });
       if (error) throw error;
-      return mapProfile(data);
+      const p = await this.getProfile(id);
+      if (!p) throw new Error('profile not found');
+      return p;
     },
     async uploadAvatar(userId, uri, mimeType) {
       const body = await readAsArrayBuffer(uri);
@@ -449,20 +500,116 @@ export function createSupabaseBackend(): Backend {
     async sendMessage(userId, body) {
       const me = await myId();
       if (!me) throw new Error('not signed in');
-      const { data, error } = await sb.from('messages').insert({ sender_id: me, recipient_id: userId, body: body.trim() }).select('*').single();
+      const { data, error } = await sb
+        .from('messages')
+        .insert({ sender_id: me, recipient_id: userId, body: body.trim() })
+        .select('*')
+        .single();
       if (error) throw error;
       return mapMessage(data);
     },
     async markRead(userId) {
       const me = await myId();
       if (!me) return;
-      await sb.from('messages').update({ read_at: new Date().toISOString() }).eq('sender_id', userId).eq('recipient_id', me).is('read_at', null);
+      await sb
+        .from('messages')
+        .update({ read_at: new Date().toISOString() })
+        .eq('sender_id', userId)
+        .eq('recipient_id', me)
+        .is('read_at', null);
     },
     async unreadCount() {
       const me = await myId();
       if (!me) return 0;
-      const { count } = await sb.from('messages').select('id', { count: 'exact', head: true }).eq('recipient_id', me).is('read_at', null);
+      const { count } = await sb
+        .from('messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('recipient_id', me)
+        .is('read_at', null);
       return count ?? 0;
+    },
+
+    async blockUser(userId) {
+      const me = await myId();
+      if (!me) throw new Error('not signed in');
+      const { error } = await sb.from('user_blocks').insert({ blocker_id: me, blocked_id: userId });
+      if (error && error.code !== '23505') throw error;
+    },
+    async unblockUser(userId) {
+      const me = await myId();
+      if (!me) return;
+      const { error } = await sb.from('user_blocks').delete().eq('blocker_id', me).eq('blocked_id', userId);
+      if (error) throw error;
+    },
+    async listBlocked() {
+      const me = await myId();
+      if (!me) return [];
+      const { data, error } = await sb.from('user_blocks').select('blocked_id').eq('blocker_id', me);
+      if (error) throw error;
+      const ids = (data ?? []).map((r: Row) => r.blocked_id as string);
+      if (!ids.length) return [];
+      const { data: ps } = await sb.from('profiles').select('*').in('id', ids);
+      return (ps ?? []).map(mapProfile);
+    },
+    async isBlockedByMe(userId) {
+      const me = await myId();
+      if (!me) return false;
+      const { data } = await sb
+        .from('user_blocks')
+        .select('blocked_id')
+        .eq('blocker_id', me)
+        .eq('blocked_id', userId)
+        .maybeSingle();
+      return !!data;
+    },
+    async reportUser(userId, reason) {
+      const me = await myId();
+      if (!me) throw new Error('not signed in');
+      const { error } = await sb
+        .from('content_reports')
+        .insert({ reporter_id: me, kind: 'user', target_user_id: userId, reason });
+      if (error) throw error;
+    },
+    async reportMessage(messageId, reason) {
+      const me = await myId();
+      if (!me) throw new Error('not signed in');
+      const { error } = await sb
+        .from('content_reports')
+        .insert({ reporter_id: me, kind: 'message', message_id: messageId, reason });
+      if (error) throw error;
+    },
+    async listReports(status) {
+      const { data, error } = await sb.rpc('admin_list_reports', { p_status: status === 'open' ? 'open' : null });
+      if (error) throw error;
+      return (data ?? []).map(mapReport);
+    },
+    async resolveReport(reportId, action, reason) {
+      const { error } = await sb.rpc('admin_resolve_report', { p_report: reportId, p_action: action, p_reason: reason || null });
+      if (error) throw error;
+    },
+    async unbanUser(userId) {
+      const { error } = await sb.rpc('admin_unban', { p_user: userId });
+      if (error) throw error;
+    },
+    async listNotices() {
+      const me = await myId();
+      if (!me) return [];
+      const { data, error } = await sb
+        .from('moderation_notices')
+        .select('*')
+        .eq('user_id', me)
+        .is('seen_at', null)
+        .order('created_at', { ascending: true });
+      if (error) return []; // starší databáze bez tabulky – neblokuj aplikaci
+      return (data ?? []).map((r: Row) => ({ id: r.id, kind: r.kind, reason: r.reason, createdAt: r.created_at }));
+    },
+    async markNoticesSeen() {
+      await sb.rpc('mark_notices_seen');
+    },
+    async exportMyData() {
+      const { data, error } = await sb.rpc('export_my_data');
+      if (error) throw error;
+      return data;
     },
 
     async loadTraining(userId) {

@@ -2,7 +2,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { currentMonthKey, prevMonthKey } from '../date';
 import { uuid } from '../id';
 import { fallbackTheme } from '../../data/themes';
-import type { ChallengeVideo, Conversation, FriendsOverview, FriendStatus, Message, MonthlyWinner, Profile, TrainingData } from '../types';
+import type {
+  ChallengeVideo,
+  ContentReport,
+  Conversation,
+  FriendsOverview,
+  FriendStatus,
+  Message,
+  ModerationNotice,
+  MonthlyWinner,
+  Profile,
+  TrainingData,
+} from '../types';
 import type { Backend, Session } from './types';
 import { fetchFeedCached } from './feeds';
 
@@ -20,6 +31,9 @@ const K = {
   seeded: 'zvedej:demo:seeded:v2',
   friends: (id: string) => `zvedej:demo:friends:${id}`,
   messages: (id: string) => `zvedej:demo:messages:${id}`,
+  blocks: (id: string) => `zvedej:demo:blocks:${id}`,
+  reports: 'zvedej:demo:reports',
+  notices: (id: string) => `zvedej:demo:notices:${id}`,
 };
 
 interface DemoVideo {
@@ -55,6 +69,7 @@ function demoProfile(p: Partial<Profile> & { id: string }): Profile {
     prSnatch: null,
     prCleanJerk: null,
     bodyweight: null,
+    showBodyweight: false,
     isPublic: true,
     createdAt: new Date().toISOString(),
     ...p,
@@ -74,6 +89,7 @@ const SEED_USERS: Profile[] = [
     prSnatch: 78,
     prCleanJerk: 96,
     bodyweight: 60.4,
+    showBodyweight: true,
     motto: 'Rychlé lokty, klidná hlava.',
   }),
   demoProfile({
@@ -238,7 +254,11 @@ interface DemoFriend {
 const listeners = new Set<(s: Session | null) => void>();
 const emit = (s: Session | null) => listeners.forEach((l) => l(s));
 
-const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const normalize = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 
 export function createDemoBackend(): Backend {
   async function session() {
@@ -277,6 +297,14 @@ export function createDemoBackend(): Backend {
       };
     });
   }
+  /** Cizí profil: hmotnost jen se souhlasem (jako v databázi) */
+  async function publicView(p: Profile): Promise<Profile> {
+    const me = (await session())?.userId;
+    return p.id === me || p.showBodyweight ? p : { ...p, bodyweight: null };
+  }
+  async function blockedIds(me: string) {
+    return get<string[]>(K.blocks(me), []);
+  }
   async function videos() {
     await ensureSeed();
     return get<DemoVideo[]>(K.videos, []);
@@ -298,11 +326,58 @@ export function createDemoBackend(): Backend {
     if (raw) return JSON.parse(raw);
     const ago = (min: number) => new Date(Date.now() - min * 60000).toISOString();
     const seed: Message[] = [
-      { id: uuid(), senderId: 'demo-1', recipientId: me, body: 'Ahoj! Jdeš zítra na trénink do Barbell Clubu?', createdAt: ago(95), readAt: null },
-      { id: uuid(), senderId: 'demo-5', recipientId: me, body: 'Čau, viděl jsem tvoje video z výzvy – paráda! Nechceš si někdy zatrénovat spolu?', createdAt: ago(300), readAt: null },
+      {
+        id: uuid(),
+        senderId: 'demo-1',
+        recipientId: me,
+        body: 'Ahoj! Jdeš zítra na trénink do Barbell Clubu?',
+        createdAt: ago(95),
+        readAt: null,
+      },
+      {
+        id: uuid(),
+        senderId: 'demo-5',
+        recipientId: me,
+        body: 'Čau, viděl jsem tvoje video z výzvy – paráda! Nechceš si někdy zatrénovat spolu?',
+        createdAt: ago(300),
+        readAt: null,
+      },
     ];
     await set(K.messages(me), seed);
     return seed;
+  }
+
+  async function addReport(kind: 'user' | 'message', targetUserId: string | null, messageId: string | null, reason: string) {
+    const me = (await session())?.userId;
+    if (!me) throw new Error('not signed in');
+    const us = await users();
+    const msg = messageId ? (await messageRows(me)).find((m) => m.id === messageId) : null;
+    const target = targetUserId ?? msg?.senderId ?? null;
+    const name = (id: string | null) => {
+      const u = us.find((x) => x.id === id);
+      return u ? `${u.firstName} ${u.lastName}`.trim() : '';
+    };
+    const r: ContentReport = {
+      id: uuid(),
+      kind,
+      status: 'open',
+      reason: reason || null,
+      snapshot: msg?.body ?? null,
+      resolution: null,
+      createdAt: new Date().toISOString(),
+      handledAt: null,
+      reporterId: me,
+      reporterName: name(me),
+      targetUserId: target,
+      targetName: name(target),
+      targetBanned: false,
+      messageId,
+      videoId: null,
+      videoUrl: null,
+      videoHidden: null,
+      sameTargetReports: 1,
+    };
+    await set(K.reports, [...(await get<ContentReport[]>(K.reports, [])), r]);
   }
 
   const backend: Backend = {
@@ -322,10 +397,10 @@ export function createDemoBackend(): Backend {
       await set(K.session, s);
       emit(s);
     },
-    async signUp(email, _pw, firstName, lastName) {
+    async signUp({ email, firstName, lastName, birthDate }) {
       const s = { userId: `local-${normalize(email).replace(/[^a-z0-9]/g, '')}`, email };
       const us = (await users()).filter((u) => u.id !== s.userId);
-      await set(K.users, [...us, demoProfile({ id: s.userId, firstName, lastName })]);
+      await set(K.users, [...us, demoProfile({ id: s.userId, firstName, lastName, birthYear: Number(birthDate.slice(0, 4)) })]);
       await set(K.session, s);
       emit(s);
       return { needsConfirmation: false };
@@ -349,6 +424,8 @@ export function createDemoBackend(): Backend {
             prCleanJerk: 138,
             bodyweight: 82.5,
             motto: 'Zvedej!',
+            // v ukázce si lze vyzkoušet i přehled nahlášení
+            isAdmin: true,
           }),
         ]);
       }
@@ -377,7 +454,8 @@ export function createDemoBackend(): Backend {
     },
 
     async getProfile(id) {
-      return (await users()).find((u) => u.id === id) ?? null;
+      const p = (await users()).find((u) => u.id === id);
+      return p ? publicView(p) : null;
     },
     async updateProfile(id, patch) {
       const us = await users();
@@ -395,7 +473,8 @@ export function createDemoBackend(): Backend {
         .filter((u) => u.isPublic && (u.firstName || u.lastName))
         .filter((u) => (clubId ? u.clubId === clubId : true))
         .filter((u) => !nq || normalize(`${u.firstName} ${u.lastName}`).includes(nq))
-        .sort((a, b) => a.lastName.localeCompare(b.lastName, 'cs'));
+        .sort((a, b) => a.lastName.localeCompare(b.lastName, 'cs'))
+        .map((u) => (u.showBodyweight ? u : { ...u, bodyweight: null }));
     },
     async clubMemberCounts() {
       const out: Record<number, number> = {};
@@ -485,7 +564,10 @@ export function createDemoBackend(): Backend {
       if (!me) return { friends: [], incoming: [], outgoing: [] };
       const [list, us] = await Promise.all([friendRows(me), users()]);
       const pick = (s: DemoFriend['status']) =>
-        list.filter((f) => f.status === s).map((f) => us.find((u) => u.id === f.other)).filter(Boolean) as Profile[];
+        list
+          .filter((f) => f.status === s)
+          .map((f) => us.find((u) => u.id === f.other))
+          .filter(Boolean) as Profile[];
       return { friends: pick('friends'), incoming: pick('incoming'), outgoing: pick('outgoing') };
     },
     async friendStatus(userId): Promise<FriendStatus> {
@@ -507,13 +589,18 @@ export function createDemoBackend(): Backend {
       const list = await friendRows(me);
       await set(
         K.friends(me),
-        accept ? list.map((f) => (f.other === userId ? { ...f, status: 'friends' as const } : f)) : list.filter((f) => f.other !== userId),
+        accept
+          ? list.map((f) => (f.other === userId ? { ...f, status: 'friends' as const } : f))
+          : list.filter((f) => f.other !== userId),
       );
     },
     async removeFriend(userId) {
       const me = (await session())?.userId;
       if (!me) return;
-      await set(K.friends(me), (await friendRows(me)).filter((f) => f.other !== userId));
+      await set(
+        K.friends(me),
+        (await friendRows(me)).filter((f) => f.other !== userId),
+      );
     },
 
     async listConversations(): Promise<Conversation[]> {
@@ -555,8 +642,16 @@ export function createDemoBackend(): Backend {
       const isFriend = fr.some((f) => f.other === userId && f.status === 'friends');
       const theyReplied = msgs.some((m) => m.senderId === userId);
       const sent = msgs.filter((m) => m.senderId === me && m.recipientId === userId).length;
+      if ((await blockedIds(me)).includes(userId)) throw new Error('BLOCKED');
       if (!isFriend && !theyReplied && sent >= 3) throw new Error('MESSAGE_REQUEST_LIMIT');
-      const m: Message = { id: uuid(), senderId: me, recipientId: userId, body: body.trim(), createdAt: new Date().toISOString(), readAt: null };
+      const m: Message = {
+        id: uuid(),
+        senderId: me,
+        recipientId: userId,
+        body: body.trim(),
+        createdAt: new Date().toISOString(),
+        readAt: null,
+      };
       await set(K.messages(me), [...msgs, m]);
       return m;
     },
@@ -573,6 +668,91 @@ export function createDemoBackend(): Backend {
       const me = (await session())?.userId;
       if (!me) return 0;
       return (await messageRows(me)).filter((m) => m.recipientId === me && !m.readAt).length;
+    },
+
+    async blockUser(userId) {
+      const me = (await session())?.userId;
+      if (!me) throw new Error('not signed in');
+      const ids = await blockedIds(me);
+      if (!ids.includes(userId)) await set(K.blocks(me), [...ids, userId]);
+      await set(
+        K.friends(me),
+        (await friendRows(me)).filter((f) => f.other !== userId),
+      );
+    },
+    async unblockUser(userId) {
+      const me = (await session())?.userId;
+      if (!me) return;
+      await set(
+        K.blocks(me),
+        (await blockedIds(me)).filter((id) => id !== userId),
+      );
+    },
+    async listBlocked() {
+      const me = (await session())?.userId;
+      if (!me) return [];
+      const ids = await blockedIds(me);
+      return (await users()).filter((u) => ids.includes(u.id));
+    },
+    async isBlockedByMe(userId) {
+      const me = (await session())?.userId;
+      return !!me && (await blockedIds(me)).includes(userId);
+    },
+    async reportUser(userId, reason) {
+      await addReport('user', userId, null, reason);
+    },
+    async reportMessage(messageId, reason) {
+      await addReport('message', null, messageId, reason);
+    },
+    async listReports(status) {
+      const all = await get<ContentReport[]>(K.reports, []);
+      return (status === 'open' ? all.filter((r) => r.status === 'open') : all).sort((a, b) =>
+        b.createdAt.localeCompare(a.createdAt),
+      );
+    },
+    async resolveReport(reportId, action, reason) {
+      const all = await get<ContentReport[]>(K.reports, []);
+      const r = all.find((x) => x.id === reportId);
+      if (!r) return;
+      const now = new Date().toISOString();
+      await set(
+        K.reports,
+        all.map((x) =>
+          x.id === reportId || (action === 'ban' && x.status === 'open' && x.targetUserId === r.targetUserId)
+            ? {
+                ...x,
+                status: action === 'dismiss' ? 'dismissed' : 'actioned',
+                resolution: reason || action,
+                handledAt: now,
+                targetBanned: action === 'ban' || x.targetBanned,
+              }
+            : x,
+        ),
+      );
+    },
+    async unbanUser() {},
+    async listNotices() {
+      const me = (await session())?.userId;
+      return me ? get<ModerationNotice[]>(K.notices(me), []) : [];
+    },
+    async markNoticesSeen() {
+      const me = (await session())?.userId;
+      if (me) await AsyncStorage.removeItem(K.notices(me));
+    },
+    async exportMyData() {
+      const s = await session();
+      if (!s) throw new Error('not signed in');
+      return {
+        exported_at: new Date().toISOString(),
+        mode: 'demo',
+        account: { email: s.email },
+        profile: (await users()).find((u) => u.id === s.userId) ?? null,
+        training: await get<TrainingData | null>(K.training(s.userId), null),
+        videos: (await videos()).filter((v) => v.userId === s.userId),
+        friendships: await friendRows(s.userId),
+        messages: await messageRows(s.userId),
+        blocked_users: await blockedIds(s.userId),
+      };
     },
 
     async loadTraining(userId) {

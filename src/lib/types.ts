@@ -52,7 +52,47 @@ export interface Profile {
   prCleanJerk: number | null;
   /** Tělesná hmotnost pro výpočet Sinclaira (kg) */
   bodyweight: number | null;
+  /** Hmotnost (a Sinclair) vidí i ostatní – výchozí ne */
+  showBodyweight: boolean;
   isPublic: boolean;
+  /** Správce: vidí přehled nahlášení */
+  isAdmin?: boolean;
+  /** Účet zablokovaný moderátorem (nemůže psát ani nahrávat) */
+  bannedAt?: string | null;
+  banReason?: string | null;
+  createdAt: string;
+}
+
+export type ReportKind = 'user' | 'message' | 'video';
+export type ReportStatus = 'open' | 'dismissed' | 'actioned';
+export type ModerationAction = 'dismiss' | 'remove' | 'ban';
+
+export interface ContentReport {
+  id: string;
+  kind: ReportKind;
+  status: ReportStatus;
+  reason: string | null;
+  snapshot: string | null;
+  resolution: string | null;
+  createdAt: string;
+  handledAt: string | null;
+  reporterId: string | null;
+  reporterName: string;
+  targetUserId: string | null;
+  targetName: string;
+  targetBanned: boolean;
+  messageId: string | null;
+  videoId: string | null;
+  videoUrl: string | null;
+  videoHidden: boolean | null;
+  /** Počet otevřených nahlášení stejného uživatele */
+  sameTargetReports: number;
+}
+
+export interface ModerationNotice {
+  id: string;
+  kind: 'content_removed' | 'banned' | 'unbanned';
+  reason: string | null;
   createdAt: string;
 }
 

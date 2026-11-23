@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, TextInput, View } from 'react-native';
+import { ReportSheet, type ReportTarget } from '../../components/safety/ReportSheet';
+import { UserSafetyMenu } from '../../components/safety/UserSafetyMenu';
 import { Avatar, Banner, Header, IconButton, Row, Screen, T } from '../../components/ui';
 import { useSession } from '../../hooks/useSession';
 import { api } from '../../lib/api';
-import { notify } from '../../lib/dialog';
+import { confirm, notify } from '../../lib/dialog';
 import { useBottomInset } from '../../lib/insets';
 import { radius } from '../../lib/theme';
 import type { FriendStatus, Message, Profile } from '../../lib/types';
@@ -21,12 +23,32 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [blocked, setBlocked] = useState(false);
+  const [report, setReport] = useState<ReportTarget | null>(null);
   const listRef = useRef<FlatList<Message>>(null);
+  const onBlockedChange = useCallback((b: boolean) => setBlocked(b), []);
+
+  // podržením cizí zprávy ji lze nahlásit
+  const askReport = async (m: Message) => {
+    if (m.senderId === me) return;
+    const ok = await confirm(t('safety.reportMessageQ'), {
+      ok: t('safety.report'),
+      cancel: t('common.cancel'),
+      destructive: true,
+    });
+    if (ok) setReport({ kind: 'message', messageId: m.id, userId: m.senderId });
+  };
 
   useEffect(() => {
     let alive = true;
-    api.getProfile(id).then((p) => alive && setUser(p)).catch(() => {});
-    api.friendStatus(id).then((s) => alive && setStatus(s)).catch(() => {});
+    api
+      .getProfile(id)
+      .then((p) => alive && setUser(p))
+      .catch(() => {});
+    api
+      .friendStatus(id)
+      .then((s) => alive && setStatus(s))
+      .catch(() => {});
     const poll = async () => {
       try {
         const list = await api.listMessages(id);
@@ -53,7 +75,16 @@ export default function ChatScreen() {
       setText('');
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
     } catch (e) {
-      notify(String((e as Error)?.message).includes('MESSAGE_REQUEST_LIMIT') ? t('soc.limit') : t('common.error'));
+      const msg = String((e as Error)?.message);
+      notify(
+        msg.includes('MESSAGE_REQUEST_LIMIT')
+          ? t('soc.limit')
+          : msg.includes('BLOCKED')
+            ? t('safety.blockedChat')
+            : msg.includes('BANNED')
+              ? t('notice.banned')
+              : t('common.error'),
+      );
     } finally {
       setSending(false);
     }
@@ -76,6 +107,7 @@ export default function ChatScreen() {
             </Row>
           </Pressable>
         }
+        right={user ? <UserSafetyMenu userId={id} name={name} onBlockedChange={onBlockedChange} /> : undefined}
       />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <FlatList
@@ -84,12 +116,23 @@ export default function ChatScreen() {
           keyExtractor={(m) => m.id}
           contentContainerStyle={{ padding: 16, gap: 8 }}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
-          ListHeaderComponent={status !== 'friends' ? <Banner text={theyWrote ? t('soc.requestHint') : t('soc.notFriendHint')} /> : undefined}
+          ListHeaderComponent={
+            <View style={{ gap: 8 }}>
+              {status !== 'friends' && <Banner text={theyWrote ? t('soc.requestHint') : t('soc.notFriendHint')} />}
+              {theyWrote && (
+                <T v="caption" muted style={{ textAlign: 'center' }}>
+                  {t('safety.longPressHint')}
+                </T>
+              )}
+            </View>
+          }
           renderItem={({ item }) => {
             const mine = item.senderId === me;
             return (
               <View style={{ alignItems: mine ? 'flex-end' : 'flex-start' }}>
-                <View
+                <Pressable
+                  onLongPress={mine ? undefined : () => askReport(item)}
+                  delayLongPress={450}
                   style={{
                     maxWidth: '82%',
                     paddingHorizontal: 14,
@@ -105,7 +148,7 @@ export default function ChatScreen() {
                   <T color={mine ? '#FFF' : undefined} style={{ fontSize: 15.5, lineHeight: 21 }} selectable>
                     {item.body}
                   </T>
-                </View>
+                </Pressable>
                 <T v="caption" muted style={{ marginTop: 2, marginHorizontal: 6 }}>
                   {new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(new Date(item.createdAt))}
                 </T>
@@ -113,40 +156,71 @@ export default function ChatScreen() {
             );
           }}
         />
-        <Row style={{ padding: 12, paddingBottom: 12 + (Platform.OS === 'web' ? 0 : bottom), borderTopWidth: 1, borderTopColor: colors.border }} gap={8}>
-          <TextInput
-            value={text}
-            onChangeText={setText}
-            placeholder={t('soc.writeMessage')}
-            placeholderTextColor={colors.textMuted}
-            multiline
-            maxLength={1000}
+        {blocked ? (
+          <View
             style={{
-              flex: 1,
-              maxHeight: 110,
-              minHeight: 44,
-              borderRadius: radius.pill,
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: colors.surface,
-              color: colors.text,
-              paddingHorizontal: 16,
-              paddingTop: 11,
-              paddingBottom: 11,
-              fontSize: 16,
+              padding: 16,
+              paddingBottom: 16 + (Platform.OS === 'web' ? 0 : bottom),
+              borderTopWidth: 1,
+              borderTopColor: colors.border,
             }}
-          />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('soc.send')}
-            onPress={send}
-            disabled={!text.trim() || sending}
-            style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: text.trim() ? colors.accent : colors.border, alignItems: 'center', justifyContent: 'center' }}
           >
-            <Ionicons name="send" size={19} color="#FFF" />
-          </Pressable>
-        </Row>
+            <T muted style={{ textAlign: 'center' }}>
+              {t('safety.blockedChat')}
+            </T>
+          </View>
+        ) : (
+          <Row
+            style={{
+              padding: 12,
+              paddingBottom: 12 + (Platform.OS === 'web' ? 0 : bottom),
+              borderTopWidth: 1,
+              borderTopColor: colors.border,
+            }}
+            gap={8}
+          >
+            <TextInput
+              value={text}
+              onChangeText={setText}
+              placeholder={t('soc.writeMessage')}
+              placeholderTextColor={colors.textMuted}
+              multiline
+              maxLength={1000}
+              style={{
+                flex: 1,
+                maxHeight: 110,
+                minHeight: 44,
+                borderRadius: radius.pill,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+                color: colors.text,
+                paddingHorizontal: 16,
+                paddingTop: 11,
+                paddingBottom: 11,
+                fontSize: 16,
+              }}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('soc.send')}
+              onPress={send}
+              disabled={!text.trim() || sending}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: text.trim() ? colors.accent : colors.border,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Ionicons name="send" size={19} color="#FFF" />
+            </Pressable>
+          </Row>
+        )}
       </KeyboardAvoidingView>
+      <ReportSheet target={report} onClose={() => setReport(null)} onDone={(b) => b && setBlocked(true)} />
     </Screen>
   );
 }

@@ -1,6 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarbellLogo } from '../components/Logo';
 import { Banner, Button, Field, Row, T } from '../components/ui';
@@ -18,6 +20,10 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [bDay, setBDay] = useState('');
+  const [bMonth, setBMonth] = useState('');
+  const [bYear, setBYear] = useState('');
+  const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -30,15 +36,41 @@ export default function AuthScreen() {
     try {
       if (mode === 'login') await api.signIn(email, password);
       else {
-        const r = await api.signUp(email, password, firstName, lastName);
+        const birthDate = parseBirthDate(bDay, bMonth, bYear);
+        if (!firstName.trim() || !lastName.trim()) return notify(t('auth.nameRequired'));
+        if (!birthDate) return notify(t('auth.birthInvalid'));
+        if (ageOn(birthDate, new Date()) < MIN_AGE) return notify(t('auth.underAge'));
+        if (!consent) return notify(t('auth.consentRequired'));
+        const r = await api.signUp({
+          email,
+          password,
+          firstName,
+          lastName,
+          birthDate,
+          termsAcceptedAt: new Date().toISOString(),
+        });
         if (r.needsConfirmation) notify(t('auth.checkEmail'));
       }
     } catch (e: any) {
-      notify(e?.message ?? t('common.error'));
+      const m = String(e?.message ?? '');
+      notify(m.includes('UNDER_AGE') ? t('auth.underAge') : m || t('common.error'));
     } finally {
       setBusy(false);
     }
   };
+
+  const numField = (value: string, set: (v: string) => void, label: string, placeholder: string, max: number, flex: number) => (
+    <Field
+      label={label}
+      value={value}
+      onChangeText={(v) => set(v.replace(/\D/g, '').slice(0, max))}
+      placeholder={placeholder}
+      keyboardType="number-pad"
+      maxLength={max}
+      style={{ flex }}
+      inputStyle={{ textAlign: 'center' }}
+    />
+  );
 
   return (
     // na počítači: vlevo modrá úvodní plocha s logem, vpravo formulář
@@ -82,6 +114,18 @@ export default function AuthScreen() {
               />
             </Row>
           )}
+          {mode === 'register' && (
+            <View style={{ gap: 6 }}>
+              <T v="label" muted>
+                {t('auth.birthDate')}
+              </T>
+              <Row gap={10}>
+                {numField(bDay, setBDay, '', t('auth.dd'), 2, 1)}
+                {numField(bMonth, setBMonth, '', t('auth.mm'), 2, 1)}
+                {numField(bYear, setBYear, '', t('auth.yyyy'), 4, 1.6)}
+              </Row>
+            </View>
+          )}
           <Field
             label={t('auth.email')}
             value={email}
@@ -98,6 +142,31 @@ export default function AuthScreen() {
             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             onSubmitEditing={submit}
           />
+          {mode === 'register' && (
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: consent }}
+              onPress={() => setConsent(!consent)}
+              style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingVertical: 4 }}
+            >
+              <Ionicons
+                name={consent ? 'checkbox' : 'square-outline'}
+                size={24}
+                color={consent ? colors.primary : colors.textMuted}
+              />
+              <T v="small" style={{ flex: 1, lineHeight: 20 }}>
+                {t('auth.consentPre')}
+                <T v="small" color={colors.primary} style={{ fontWeight: '700' }} onPress={() => router.push('/legal/terms')}>
+                  {t('auth.consentTerms')}
+                </T>
+                {t('auth.consentMid')}
+                <T v="small" color={colors.primary} style={{ fontWeight: '700' }} onPress={() => router.push('/legal/privacy')}>
+                  {t('auth.consentPrivacy')}
+                </T>
+                {t('auth.consentAge')}
+              </T>
+            </Pressable>
+          )}
           {msg && <Banner text={msg} />}
           <Button title={mode === 'login' ? t('auth.login') : t('auth.register')} onPress={submit} loading={busy} />
           <Button
@@ -121,11 +190,10 @@ export default function AuthScreen() {
               }}
             />
           )}
-          {mode === 'register' && (
-            <T v="caption" muted style={{ textAlign: 'center' }}>
-              {t('auth.terms')}
-            </T>
-          )}
+          <Row style={{ justifyContent: 'center' }} gap={4}>
+            <Button kind="ghost" small title={t('legal.terms')} onPress={() => router.push('/legal/terms')} />
+            <Button kind="ghost" small title={t('legal.privacy')} onPress={() => router.push('/legal/privacy')} />
+          </Row>
           {api.mode === 'demo' && (
             <>
               <Banner text={t('common.demo')} />
@@ -150,6 +218,27 @@ export default function AuthScreen() {
       </KeyboardAvoidingView>
     </View>
   );
+}
+
+const MIN_AGE = 15;
+
+/** Den/měsíc/rok → YYYY-MM-DD, nebo null pro neplatné datum */
+function parseBirthDate(d: string, m: string, y: string): string | null {
+  const day = Number(d);
+  const month = Number(m);
+  const year = Number(y);
+  if (!day || !month || y.length !== 4 || year < 1920) return null;
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+  if (date > new Date()) return null;
+  return `${y}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function ageOn(iso: string, now: Date) {
+  const [y, m, d] = iso.split('-').map(Number);
+  let age = now.getFullYear() - y;
+  if (now.getMonth() + 1 < m || (now.getMonth() + 1 === m && now.getDate() < d)) age--;
+  return age;
 }
 
 const styles = StyleSheet.create({

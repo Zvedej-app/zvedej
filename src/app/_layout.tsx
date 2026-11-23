@@ -11,6 +11,7 @@ import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sa
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AnimatedSplash } from '../components/AnimatedSplash';
 import { DialogHost } from '../components/DialogHost';
+import { ModerationNotices } from '../components/safety/ModerationNotices';
 import { RestNotificationBridge } from '../components/RestNotificationBridge';
 import { AuthProvider, useAuth } from '../providers/AuthProvider';
 import { SettingsProvider, useSettings } from '../providers/SettingsProvider';
@@ -76,13 +77,18 @@ function App() {
             <Stack.Screen name="user/[id]" />
             <Stack.Screen name="club/[id]" />
             <Stack.Screen name="videos" options={{ animation: 'fade' }} />
+            <Stack.Screen name="blocked" />
+            <Stack.Screen name="moderation" />
           </Stack.Protected>
           <Stack.Protected guard={!signedIn}>
             <Stack.Screen name="auth" />
           </Stack.Protected>
+          {/* právní texty jsou dostupné i bez přihlášení (odkaz z registrace) */}
+          <Stack.Screen name="legal/[doc]" />
         </Stack>
       )}
       <DialogHost />
+      {allReady && splashDone && <ModerationNotices />}
       <RestNotificationBridge />
       {!splashDone && <AnimatedSplash ready={allReady} onDone={done} />}
     </>

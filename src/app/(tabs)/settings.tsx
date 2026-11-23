@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 import { ScreenDiagnostics } from '../../components/ScreenDiagnostics';
 import * as Linking from 'expo-linking';
+import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
 import { Platform, View } from 'react-native';
@@ -10,6 +11,8 @@ import { range, Wheel } from '../../components/WheelPicker';
 import { api } from '../../lib/api';
 import { clearFeedCache } from '../../lib/api/feeds';
 import { exportTrainingPdf } from '../../lib/exportPdf';
+import { shareJson } from '../../lib/exportJson';
+import { todayISO } from '../../lib/date';
 import { playRestSound, type RestSound } from '../../lib/restSound';
 import { CSV_BASE, FEEDBACK_EMAIL } from '../../lib/config';
 import { confirm, notify } from '../../lib/dialog';
@@ -32,6 +35,15 @@ export default function SettingsScreen() {
     try {
       const owner = profile ? `${profile.firstName} ${profile.lastName}`.trim() : '';
       await exportTrainingPdf(data, settings.lang, settings.unit, owner || 'Zvedej');
+    } catch {
+      notify(t('common.error'));
+    }
+  };
+
+  const exportAll = async () => {
+    try {
+      const all = await api.exportMyData();
+      await shareJson(all, `zvedej-data-${todayISO()}.json`);
     } catch {
       notify(t('common.error'));
     }
@@ -122,7 +134,12 @@ export default function SettingsScreen() {
               />
             </View>
             {Platform.OS !== 'web' && (
-              <ListItem icon="notifications-outline" title={t('st.notifyRest')} toggle={settings.restNotify} onToggle={(restNotify) => update({ restNotify })} />
+              <ListItem
+                icon="notifications-outline"
+                title={t('st.notifyRest')}
+                toggle={settings.restNotify}
+                onToggle={(restNotify) => update({ restNotify })}
+              />
             )}
             {Platform.OS !== 'web' && (
               <ListItem
@@ -156,10 +173,25 @@ export default function SettingsScreen() {
               toggle={profile?.isPublic ?? true}
               onToggle={(isPublic) => saveProfile({ isPublic }).catch(() => {})}
             />
+            <ListItem
+              icon="scale-outline"
+              title={t('pr.showBodyweight')}
+              subtitle={t('pr.showBodyweightHint')}
+              toggle={profile?.showBodyweight ?? false}
+              onToggle={(showBodyweight) => saveProfile({ showBodyweight }).catch(() => {})}
+            />
+            <ListItem icon="ban-outline" title={t('safety.blockedUsers')} onPress={() => router.push('/blocked')} />
           </ListGroup>
+
+          {profile?.isAdmin && (
+            <ListGroup title={t('mod.section')}>
+              <ListItem icon="shield-checkmark-outline" title={t('mod.title')} onPress={() => router.push('/moderation')} />
+            </ListGroup>
+          )}
 
           <ListGroup title={t('st.data')}>
             <ListItem icon="document-text-outline" title={t('st.exportPdf')} onPress={exportData} />
+            <ListItem icon="download-outline" title={t('st.exportAll')} subtitle={t('st.exportAllHint')} onPress={exportAll} />
             <ListItem
               icon="refresh-outline"
               title={t('st.clearCache')}
@@ -202,6 +234,8 @@ export default function SettingsScreen() {
           </ListGroup>
 
           <ListGroup title={t('st.about')}>
+            <ListItem icon="document-lock-outline" title={t('legal.privacy')} onPress={() => router.push('/legal/privacy')} />
+            <ListItem icon="reader-outline" title={t('legal.terms')} onPress={() => router.push('/legal/terms')} />
             <ListItem icon="globe-outline" title={t('st.csvWeb')} onPress={() => WebBrowser.openBrowserAsync(CSV_BASE)} />
             {FEEDBACK_EMAIL ? (
               <ListItem

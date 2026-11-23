@@ -55,6 +55,8 @@ export function T({
   children?: React.ReactNode;
   numberOfLines?: number;
   selectable?: boolean;
+  /** vložený odkaz v textu */
+  onPress?: () => void;
 }) {
   const { colors } = useSettings();
   return (

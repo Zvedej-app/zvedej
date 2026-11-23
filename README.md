@@ -206,3 +206,24 @@ První příkaz stáhne kluby, druhý kalendář včetně archivu proběhlých z
 - Živý odpočet na zamčené obrazovce funguje jen v nativní aplikaci (vývojový build `eas build --profile development` nebo build pro obchod), ne v Expo Go ani ve webové verzi na ploše iPhonu. Ve webové verzi to iOS neumožňuje.
 - Loga klubů jsou v `assets/images/clubs/<id>.png` a `src/data/clubLogos.ts` (44 z 51 klubů, staženo z webů a facebookových stránek klubů). Kluby bez loga mají iniciály.
 - Při migraci databáze nahraj i `supabase/migrations/20261123000000_social.sql` (přátelé a zprávy).
+
+## Bezpečnost a ochrana údajů (verze 1.3)
+
+- **Zásady ochrany osobních údajů a Podmínky použití** (cs/sk/en) – `src/data/legal.ts`, obrazovka `/legal/privacy` a `/legal/terms`
+  (dostupné i bez přihlášení, odkazy v registraci a v Nastavení). Před spuštěním doplň údaje provozovatele v `OPERATOR`.
+- **Registrace:** datum narození, minimální věk 15 let (kontrola v aplikaci i v databázi), nezaškrtnutý souhlas s podmínkami;
+  datum souhlasu se ukládá do `profile_private`.
+- **Nahlášení a blokování:** v profilu a chatu přes „⋯“, zprávu nahlásíš podržením. Blokace zruší přátelství
+  a znemožní zprávy i žádosti (hlídá databáze).
+- **Moderace:** správce (`profiles.is_admin = true`, nastaví se v SQL editoru) vidí v Nastavení → Správa → Nahlášení.
+  Může nahlášení zamítnout, odstranit obsah nebo zablokovat účet; uživatel dostane oznámení s odůvodněním.
+  Vyřízená nahlášení se po roce mažou.
+- **Soukromí hmotnosti:** tělesná hmotnost je v `profile_private`, ostatním se ukáže jen po zapnutí „Ukázat hmotnost ostatním“.
+- **Export dat:** Nastavení → Stáhnout všechna moje data (JSON, RPC `export_my_data`).
+
+Nastavení správce (v Supabase SQL Editoru):
+
+```sql
+update public.profiles set is_admin = true
+ where id = (select id from auth.users where email = 'tvuj@email.cz');
+```
