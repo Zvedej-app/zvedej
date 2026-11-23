@@ -8,6 +8,7 @@ import { ToolsView } from '../../components/training/ToolsView';
 import { Header, IconButton, Screen, Segmented, T } from '../../components/ui';
 import { activePlan } from '../../lib/training';
 import { radius } from '../../lib/theme';
+import { useTabEnter } from '../../lib/tabReset';
 import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
 
@@ -18,6 +19,7 @@ export default function TrainingScreen() {
   const { data } = useTraining();
   const plan = activePlan(data);
   const [tab, setTab] = useState<Tab>('today');
+  useTabEnter('training', () => setTab('today'));
   return (
     <Screen>
       <Header

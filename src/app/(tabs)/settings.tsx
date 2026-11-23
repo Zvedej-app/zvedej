@@ -114,7 +114,7 @@ export default function SettingsScreen() {
                 }}
                 options={[
                   { key: 'gong', label: t('st.sound.gong') },
-                  { key: 'beep', label: t('st.sound.beep') },
+                  { key: 'whistle', label: t('st.sound.whistle') },
                   { key: 'bell', label: t('st.sound.bell') },
                   { key: 'none', label: t('st.sound.none') },
                 ]}

@@ -19,6 +19,7 @@ import { useDebounced } from '../../hooks/useDebounced';
 import { api } from '../../lib/api';
 import { clubName, searchClubs } from '../../lib/clubs';
 import { formatCategory } from '../../lib/categories';
+import { useTabEnter } from '../../lib/tabReset';
 import type { Profile } from '../../lib/types';
 import { useSettings } from '../../providers/SettingsProvider';
 
@@ -31,6 +32,13 @@ export default function CsvScreen() {
   const [q, setQ] = useState('');
   const [searching, setSearching] = useState(false);
   const pager = useRef<ScrollViewInstance>(null);
+  // po návratu do sekce Svaz vždy Kalendář závodů (nadcházející)
+  useTabEnter('index', () => {
+    setTab('calendar');
+    setQ('');
+    setSearching(false);
+    pager.current?.scrollTo({ x: 0, animated: false });
+  });
 
   const goTo = (k: Tab) => {
     setTab(k);

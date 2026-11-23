@@ -27,7 +27,7 @@ export async function setupRestNotifications(actionTitle: string) {
       }),
     });
     if (Platform.OS === 'android') {
-      for (const s of ['gong', 'beep', 'bell', 'none']) {
+      for (const s of ['gong', 'whistle', 'bell', 'none']) {
         await Notifications.setNotificationChannelAsync(`rest-${s}`, {
           name: `Pauza (${s})`,
           importance: AndroidImportance.HIGH,

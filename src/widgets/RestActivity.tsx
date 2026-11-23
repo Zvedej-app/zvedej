@@ -1,5 +1,5 @@
 import { Button, HStack, ProgressView, Spacer, Text, VStack } from '@expo/ui/swift-ui';
-import { activityBackgroundTint, font, foregroundStyle, lineLimit, minimumScaleFactor, monospacedDigit, padding, tint } from '@expo/ui/swift-ui/modifiers';
+import { activityBackgroundTint, background, clipShape, font, foregroundStyle, lineLimit, minimumScaleFactor, monospacedDigit, padding, scaleEffect, tint } from '@expo/ui/swift-ui/modifiers';
 import { createLiveActivity, type LiveActivityEnvironment } from 'expo-widgets';
 
 /**
@@ -52,24 +52,34 @@ const RestActivity = (props: RestActivityProps, env: LiveActivityEnvironment) =>
       {check}
     </HStack>
   ) : (
-    <VStack alignment="leading" modifiers={[padding({ all: 16 }), activityBackgroundTint(BLUE)]}>
+    // stejné rozložení jako panel pauzy v aplikaci: Pauza, velký odpočet, cvik · váha, pruh
+    <VStack alignment="leading" spacing={10} modifiers={[padding({ all: 16 }), activityBackgroundTint(BLUE)]}>
       <HStack>
-        <VStack alignment="leading">
-          <Text modifiers={[font({ size: 13 }), foregroundStyle('#FFFFFF')]}>{props.restLabel}</Text>
+        <VStack alignment="leading" spacing={0}>
+          <Text modifiers={[font({ size: 14 }), foregroundStyle('#FFFFFF')]}>{props.restLabel}</Text>
           <Text
             timerInterval={{ lower, upper }}
             countsDown
-            modifiers={[font({ size: 36, weight: 'black' }), monospacedDigit(), foregroundStyle('#FFFFFF')]}
+            modifiers={[font({ size: 44, weight: 'black' }), monospacedDigit(), foregroundStyle('#FFFFFF')]}
           />
-          <Text modifiers={[font({ size: 15, weight: 'bold' }), foregroundStyle('#FFFFFF'), lineLimit(1)]}>
+          <Text modifiers={[font({ size: 16, weight: 'bold' }), foregroundStyle('#FFFFFF'), lineLimit(1)]}>
             {props.exercise} · {props.load}
           </Text>
         </VStack>
         <Spacer />
         {check}
       </HStack>
-      {/* pruh: modrá ubíhá a odkrývá červenou */}
-      <ProgressView timerInterval={{ lower, upper }} countsDown modifiers={[tint(env.isLuminanceReduced ? '#FFFFFF' : RED)]} />
+      {/* pruh jako v aplikaci: červený podklad, modrá plynule ubývá */}
+      <ProgressView
+        timerInterval={{ lower, upper }}
+        countsDown
+        modifiers={[
+          tint(env.isLuminanceReduced ? '#FFFFFF' : '#2F6DB5'),
+          scaleEffect({ x: 1, y: 3 }),
+          background(RED),
+          clipShape('capsule'),
+        ]}
+      />
     </VStack>
   );
 

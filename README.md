@@ -156,7 +156,7 @@ npx eas-cli@latest build --platform all --profile production
 - **Moje maxima**: lze přidat libovolný cvik, ze kterého se počítají procenta. Tabulka procent byla odstraněna.
 - **Váhy jen v celých kilech** (žádné půlkilo). Kolečko pro výběr čísel se přesně „zacvakne“ do středu a cvakne při každém čísle.
 - **Kalkulačka kotoučů**: kotouče se řadí od největšího po nejmenší, uzávěr je až za nimi, zobrazuje se jen jedna strana osy.
-- **Časovač pauzy**: modrý podklad, červený pruh ubíhá zprava doleva, pod časem je další cvik s váhou; po skončení zvuk (gong / pípnutí / zvonek / bez zvuku, nastavuje se v Nastavení) a velké odškrtnutí dalšího nástupu.
+- **Časovač pauzy**: modrý podklad, červený pruh ubíhá zprava doleva, pod časem je další cvik s váhou; po skončení zvuk (gong / píšťalka / zvonek / bez zvuku, nastavuje se v Nastavení) a velké odškrtnutí dalšího nástupu.
 - **Upozornění na pauzu na zamčené obrazovce** s tlačítkem „Odškrtnout nástup“ (`expo-notifications`, jen iOS/Android).
 - Po dokončení tréninku rychlé reakce (Easy, Tak akorát, Docela na …, Dnes to nešlo).
 - **Přátelé a zprávy**: žádosti o přátelství, soukromý chat. Zprávy od nepřátel se zobrazí v „Žádostech o zprávy“ (nejvýš 3 zprávy do odpovědi).
@@ -171,6 +171,8 @@ npx eas-cli@latest build --platform all --profile production
 - **Úvodní obrazovka**: činka se dvěma červenými a jedním modrým kotoučem, uzávěrem a bílým půlkilem, nápis Zvedej je mezi kotouči.
 - **Časovač pauzy**: červený podklad, modrá plynule ubývá s rozmazaným („mlhavým“) okrajem. Zvuky na konci pauzy jsou dvakrát delší a ostřejší.
 - **Pauza na zamčené obrazovce**: iOS ukazuje Live Activity (`expo-widgets`) s odpočtem, pruhem a tlačítkem „Odškrtnout“ (tlačítko od iOS 17). Android ukazuje trvalé oznámení po dobu pauzy.
+- **Sekce se po přepnutí otevře na výchozí záložce**: Svaz na Kalendáři závodů (Nadcházející), Tréninky na Dnes, Vzpěrač měsíce na Videích.
+- Zvuk „Pípnutí“ nahradila **píšťalka** rozhodčího.
 - **Export tréninků do PDF** funguje i ve webové verzi (PDF se vytvoří v telefonu a nabídne ke sdílení nebo stažení).
 
 ### Aktualizace dat ze svazu

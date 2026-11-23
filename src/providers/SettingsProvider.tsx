@@ -67,6 +67,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           const saved = JSON.parse(raw);
           // dřívější volba „Systém“ už neexistuje – převezmeme aktuální vzhled telefonu
           if (saved.theme !== 'light' && saved.theme !== 'dark') saved.theme = Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
+          // zvuk „Pípnutí“ byl nahrazen píšťalkou
+          if (saved.restSound === 'beep') saved.restSound = 'whistle';
           setSettings((s) => ({ ...s, ...saved }));
         }
       })

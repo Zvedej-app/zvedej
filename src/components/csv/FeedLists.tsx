@@ -8,6 +8,7 @@ import { useFeed, useResults } from '../../hooks/useFeed';
 import { formatDate, todayISO } from '../../lib/date';
 import type { EventCategory, FeedItem, ResultItem } from '../../lib/types';
 import { radius } from '../../lib/theme';
+import { useTabEnter } from '../../lib/tabReset';
 import { useSettings } from '../../providers/SettingsProvider';
 import { Banner, Card, Chip, Empty, Loading, Row, T } from '../ui';
 
@@ -33,6 +34,7 @@ export function CalendarList({ width }: { width: number }) {
   const feed = useFeed('calendar');
   const results = useResults();
   const [view, setView] = useState<View_>('upcoming');
+  useTabEnter('index', () => setView('upcoming'));
   const today = todayISO();
 
   const events = useMemo(() => {

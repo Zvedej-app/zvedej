@@ -11,6 +11,7 @@ import { clubName } from '../../lib/clubs';
 import { currentMonthKey, formatMonth, timeLeftInMonth } from '../../lib/date';
 import { confirm, notify } from '../../lib/dialog';
 import { BLUE } from '../../lib/theme';
+import { useTabEnter } from '../../lib/tabReset';
 import type { ChallengeTheme, ChallengeVideo, MonthlyWinner } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { useSettings } from '../../providers/SettingsProvider';
@@ -34,6 +35,7 @@ export default function ChallengeScreen() {
   const [pagerKey, setPagerKey] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [rules, setRules] = useState(false);
+  useTabEnter('challenge', () => setView('reels'));
 
   const load = useCallback(async () => {
     try {

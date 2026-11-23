@@ -8,6 +8,7 @@ import { Avatar, type IconName } from '../../components/ui';
 import { useAuth } from '../../providers/AuthProvider';
 import { useSettings } from '../../providers/SettingsProvider';
 import type { TKey } from '../../lib/i18n';
+import { emitTabEnter } from '../../lib/tabReset';
 
 const ICONS: Record<string, { on: IconName; off: IconName; label: TKey }> = {
   training: { on: 'barbell', off: 'barbell-outline', label: 'tab.training' },
@@ -39,7 +40,11 @@ function InstaTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
         const onPress = () => {
           tap();
           const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-          if (!focused && !event.defaultPrevented) navigateToTab(route.key);
+          if (!focused && !event.defaultPrevented) {
+            // sekce se otevře na výchozí záložce
+            emitTabEnter(route.name);
+            navigateToTab(route.key);
+          }
         };
         let icon: React.ReactNode;
         let label: string;

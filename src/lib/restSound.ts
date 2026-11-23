@@ -1,11 +1,11 @@
 import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
-export type RestSound = 'none' | 'gong' | 'beep' | 'bell';
-export const REST_SOUNDS: RestSound[] = ['gong', 'beep', 'bell', 'none'];
+export type RestSound = 'none' | 'gong' | 'whistle' | 'bell';
+export const REST_SOUNDS: RestSound[] = ['gong', 'whistle', 'bell', 'none'];
 
 const SOURCES = {
   gong: require('../../assets/sounds/gong.wav'),
-  beep: require('../../assets/sounds/beep.wav'),
+  whistle: require('../../assets/sounds/whistle.wav'),
   bell: require('../../assets/sounds/bell.wav'),
 };
 

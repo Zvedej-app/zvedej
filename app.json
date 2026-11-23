@@ -68,7 +68,7 @@
           "color": "#11457E",
           "sounds": [
             "./assets/sounds/gong.wav",
-            "./assets/sounds/beep.wav",
+            "./assets/sounds/whistle.wav",
             "./assets/sounds/bell.wav"
           ]
         }
