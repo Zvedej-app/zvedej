@@ -61,8 +61,8 @@ function art({ inset, mono = false, text = true }) {
     }`;
 }
 
-// červené pozadí stejného odstínu jako v aplikaci (červená z loga ČSV), bílý nápis
-const BG = `<rect width="1024" height="1024" fill="${RED}"/>`;
+// jednobarevné modré pozadí, přesně modrá aplikace (#11457E jako tabulka Plány), bílý nápis
+const BG = `<rect width="1024" height="1024" fill="#11457E"/>`;
 
 /** nápis „Zvedej!“ písmem Jost (scripts/fonts, licence OFL) */
 function word({ width = 0.66, color = '#FFFFFF' } = {}) {
