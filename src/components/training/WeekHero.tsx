@@ -34,7 +34,7 @@ function Ring({ progress, size = 86, stroke = 9 }: { progress: number; size?: nu
         cx={size / 2}
         cy={size / 2}
         r={r}
-        stroke={progress >= 1 ? '#FFD23F' : '#FFFFFF'}
+        stroke={progress >= 1 ? '#F1B100' : '#FFFFFF'}
         strokeWidth={stroke}
         strokeLinecap="round"
         fill="none"
@@ -85,7 +85,7 @@ export function WeekHero({ data, plan }: { data: TrainingData; plan: TrainingPla
           <Ring progress={done / goal} />
           <View style={styles.ringCenter}>
             {reached ? (
-              <Ionicons name="trophy" size={26} color="#FFD23F" />
+              <Ionicons name="trophy" size={26} color="#F1B100" />
             ) : (
               <Text style={styles.ringText}>
                 {done}

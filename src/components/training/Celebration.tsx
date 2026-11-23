@@ -9,7 +9,7 @@ import { BLUE, FONTS, FLAG } from '../../lib/theme';
 import { useSettings } from '../../providers/SettingsProvider';
 import { Button } from '../ui';
 
-const COLORS = [FLAG.red, '#FFFFFF', '#FFD23F', '#4F86C9', FLAG.red, '#FFFFFF'];
+const COLORS = [FLAG.red, '#FFFFFF', '#F1B100', '#4F86C9', FLAG.red, '#FFFFFF'];
 const PIECES = 46;
 
 /** Jeden kousek konfet: padá s mírným kýváním a otáčením */
@@ -84,7 +84,7 @@ export function Celebration({ data, onClose }: { data: CelebrationData | null; o
       <View style={[styles.wrap, { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 24 }]}>
         <Animated.View style={{ alignItems: 'center', gap: 10, opacity: pop, transform: [{ scale }] }}>
           <View style={styles.medal}>
-            <Ionicons name="trophy" size={56} color="#FFD23F" />
+            <Ionicons name="trophy" size={56} color="#F1B100" />
           </View>
           <Text style={styles.title}>{t('cel.title')}</Text>
           <Text style={styles.cheer}>{t(`cel.cheer.${cheer}` as TKey)}</Text>
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     borderRadius: 52,
     backgroundColor: 'rgba(255,255,255,0.12)',
     borderWidth: 2,
-    borderColor: 'rgba(255,210,63,0.6)',
+    borderColor: '#F1B100',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   streak: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   streakText: { color: '#FFF', fontSize: 18, fontFamily: FONTS.bold },
   badgeHead: {
-    color: '#FFD23F',
+    color: '#F1B100',
     fontSize: 14,
     fontFamily: FONTS.semi,
     letterSpacing: 0.8,
