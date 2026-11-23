@@ -68,7 +68,7 @@
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
     <script>
-      // iOS Safari ignoruje user-scalable=no – zablokujeme gesto přiblížení i dvojité klepnutí
+      // iOS Safari ignoruje user-scalable=no – zablokujeme gesto přiblížení dvěma prsty
       (function () {
         var block = function (e) { e.preventDefault(); };
         document.addEventListener('gesturestart', block, { passive: false });
@@ -86,12 +86,26 @@
         window.addEventListener('scroll', function () { setTimeout(reset, 100); });
         if (window.visualViewport) window.visualViewport.addEventListener('resize', function () { setTimeout(reset, 50); });
         window.addEventListener('orientationchange', function () { setTimeout(reset, 300); });
-        var last = 0;
-        document.addEventListener('touchend', function (e) {
-          var now = Date.now();
-          if (now - last < 300) e.preventDefault();
-          last = now;
-        }, { passive: false });
+        // nová verze: při otevření aplikace zkontrolujeme, jestli na webu není novější sestavení
+        var current = function () {
+          var el = document.querySelector('script[src*="/entry-"]');
+          return el ? el.getAttribute('src') : null;
+        };
+        var checkUpdate = function () {
+          var mine = current();
+          if (!mine || !window.fetch) return;
+          fetch('/zvedej/?v=' + Date.now(), { cache: 'no-store' })
+            .then(function (r) { return r.text(); })
+            .then(function (html) {
+              var m = html.match(/src="([^"]*\/entry-[^"]*)"/);
+              if (m && m[1] !== mine) location.reload();
+            })
+            .catch(function () {});
+        };
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) checkUpdate(); });
+        window.addEventListener('load', function () { setTimeout(checkUpdate, 4000); });
+        // dvojité klepnutí neblokujeme v JS (rušilo by rychlá klepnutí na tlačítka) –
+        // přiblížení dvojitým klepnutím vypíná CSS touch-action: manipulation
       })();
     </script>
   </body>
