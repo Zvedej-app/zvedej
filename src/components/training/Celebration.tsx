@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: { color: '#FFF', fontSize: 34, fontFamily: FONTS.black, textAlign: 'center' },
-  cheer: { color: 'rgba(255,255,255,0.85)', fontSize: 17, fontFamily: FONTS.medium, textAlign: 'center' },
+  cheer: { color: 'rgba(255,255,255,0.85)', fontSize: 17, fontWeight: '500', textAlign: 'center' },
   stats: {
     flexDirection: 'row',
     alignSelf: 'stretch',
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   statValue: { color: '#FFF', fontSize: 26, fontFamily: FONTS.black },
-  statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 13, fontFamily: FONTS.medium },
+  statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '500' },
   streak: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   streakText: { color: '#FFF', fontSize: 18, fontFamily: FONTS.bold },
   badgeHead: {

@@ -177,7 +177,7 @@ npx eas-cli@latest build --platform all --profile production
 
 ### Motivace a vzhled
 
-- Písmo **Jost** (jako v ikoně) pro nadpisy, čísla a tlačítka; tlačítka a karty se při stisku pružně zmáčknou.
+- Písmo **Plus Jakarta Sans** pro nadpisy, čísla a tlačítka (běžný text je systémový); tlačítka a karty se při stisku pružně zmáčknou.
 - Záložka **Dnes**: pozdrav s heslem „Vytrvalost a odhodlání přinášejí výsledky“, karta se sérií týdnů (plamen), kroužkem týdenního cíle a pásem 7 dní.
 - Po dokončení tréninku **oslava** s konfetami, shrnutím (série, tonáž, čas) a nově získanými odznaky.
 - **Odznaky** (`src/lib/achievements.ts`) za milníky: první trénink, plán, maximum, 10/50/100 tréninků,

@@ -4,10 +4,10 @@ import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useFonts } from 'expo-font';
-import { Jost_500Medium } from '@expo-google-fonts/jost/500Medium';
-import { Jost_600SemiBold } from '@expo-google-fonts/jost/600SemiBold';
-import { Jost_700Bold } from '@expo-google-fonts/jost/700Bold';
-import { Jost_800ExtraBold } from '@expo-google-fonts/jost/800ExtraBold';
+import { PlusJakartaSans_500Medium } from '@expo-google-fonts/plus-jakarta-sans/500Medium';
+import { PlusJakartaSans_600SemiBold } from '@expo-google-fonts/plus-jakarta-sans/600SemiBold';
+import { PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans/700Bold';
+import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans/800ExtraBold';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AnimatedSplash } from '../components/AnimatedSplash';
 import { DialogHost } from '../components/DialogHost';
@@ -36,8 +36,13 @@ function App() {
   const { ready, colors, isDark } = useSettings();
   const auth = useAuth();
   const [splashDone, setSplashDone] = useState(false);
-  // písmo Jost; když se nenačte (např. offline), aplikace pokračuje se systémovým písmem
-  const [fontsLoaded, fontError] = useFonts({ Jost_500Medium, Jost_600SemiBold, Jost_700Bold, Jost_800ExtraBold });
+  // písmo Plus Jakarta Sans; když se nenačte (např. offline), aplikace pokračuje se systémovým písmem
+  const [fontsLoaded, fontError] = useFonts({
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+  });
   const allReady = ready && auth.ready && (fontsLoaded || !!fontError);
 
   useEffect(() => {

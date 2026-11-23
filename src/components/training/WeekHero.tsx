@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   flameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   big: { color: '#FFF', fontSize: 44, lineHeight: 48, fontFamily: FONTS.black },
-  sub: { color: 'rgba(255,255,255,0.85)', fontSize: 15, fontFamily: FONTS.medium },
+  sub: { color: 'rgba(255,255,255,0.85)', fontSize: 15, fontWeight: '500' },
   ton: { color: 'rgba(255,255,255,0.65)', fontSize: 13, marginTop: 4 },
   ringWrap: { alignItems: 'center', gap: 4 },
   ringCenter: { position: 'absolute', top: 0, height: 86, width: 86, alignItems: 'center', justifyContent: 'center' },

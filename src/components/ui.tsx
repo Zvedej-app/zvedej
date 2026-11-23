@@ -32,13 +32,13 @@ export type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type Variant = 'h1' | 'h2' | 'h3' | 'body' | 'small' | 'caption' | 'label';
 
 const VARIANTS: Record<Variant, TextStyle> = {
-  h1: { fontSize: 30, fontFamily: FONTS.black, letterSpacing: -0.4 },
-  h2: { fontSize: 23, fontFamily: FONTS.black, letterSpacing: -0.2 },
-  h3: { fontSize: 18, fontFamily: FONTS.bold },
+  h1: { fontSize: 28, fontFamily: FONTS.black, letterSpacing: -0.6 },
+  h2: { fontSize: 22, fontFamily: FONTS.black, letterSpacing: -0.4 },
+  h3: { fontSize: 17, fontFamily: FONTS.bold, letterSpacing: -0.1 },
   body: { fontSize: 15, lineHeight: 21 },
   small: { fontSize: 13, lineHeight: 18 },
   caption: { fontSize: 12, lineHeight: 16 },
-  label: { fontSize: 12.5, fontFamily: FONTS.semi, letterSpacing: 0.8, textTransform: 'uppercase' },
+  label: { fontSize: 12, fontFamily: FONTS.bold, letterSpacing: 0.6, textTransform: 'uppercase' },
 };
 
 export function T({
@@ -259,7 +259,7 @@ export function Button({
       ) : (
         <>
           {icon && <Ionicons name={icon} size={small ? 16 : 19} color={fg} />}
-          <RNText style={{ color: fg, fontFamily: FONTS.semi, fontSize: small ? 14 : 16, letterSpacing: 0.2 }}>{title}</RNText>
+          <RNText style={{ color: fg, fontFamily: FONTS.bold, fontSize: small ? 13.5 : 15.5, letterSpacing: 0 }}>{title}</RNText>
         </>
       )}
     </PressScale>

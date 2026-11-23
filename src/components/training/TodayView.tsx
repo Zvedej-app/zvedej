@@ -13,7 +13,6 @@ import { formatNumber, ROUND_KG } from '../../lib/units';
 import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
 import { useAuth } from '../../providers/AuthProvider';
-import { FONTS } from '../../lib/theme';
 import { WeekHero } from './WeekHero';
 import { Banner, Button, Card, Chip, Empty, Row, T } from '../ui';
 import { DayExercises } from './DayExercises';
@@ -69,7 +68,7 @@ export function TodayView() {
 
       <View style={{ gap: 2, paddingHorizontal: 2 }}>
         <T v="h1">{profile?.firstName ? t('tr.hello', { name: profile.firstName }) : t('tr.helloAnon')}</T>
-        <T muted style={{ fontFamily: FONTS.medium, fontSize: 16 }}>
+        <T muted style={{ fontWeight: '500', fontSize: 16 }}>
           {t('tr.motto')}
         </T>
       </View>
