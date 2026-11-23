@@ -5,7 +5,7 @@ import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { addDays, parseISODate, startOfWeek, toISODate, weekdayMon0 } from '../../lib/date';
 import { plural, type TKey } from '../../lib/i18n';
-import { BLUE, FONTS, FLAG, GOLD, GOLD_GLOW } from '../../lib/theme';
+import { BLUE, FONTS, FLAG } from '../../lib/theme';
 import { weekStats, weekStreak } from '../../lib/training';
 import type { TrainingData, TrainingPlan } from '../../lib/types';
 import { useSettings } from '../../providers/SettingsProvider';
@@ -27,26 +27,14 @@ function Ring({ progress, size = 86, stroke = 9 }: { progress: number; size?: nu
     }).start();
   }, [anim, progress]);
   const offset = anim.interpolate({ inputRange: [0, 1], outputRange: [c, 0] });
-  // kreslicí plocha je o okraj větší, aby se zlatá záře neořízla
-  const pad = 9;
-  const box = size + pad * 2;
-  const cx = box / 2;
   return (
-    <Svg width={box} height={box} style={{ margin: -pad, transform: [{ rotate: '-90deg' }] }}>
-      <Circle cx={cx} cy={cx} r={r} stroke="rgba(255,255,255,0.18)" strokeWidth={stroke} fill="none" />
-      {/* splněný cíl: zlatá záře pod kroužkem */}
-      {progress >= 1 && (
-        <>
-          <Circle cx={cx} cy={cx} r={r} stroke={GOLD} strokeOpacity={0.12} strokeWidth={stroke + 16} fill="none" />
-          <Circle cx={cx} cy={cx} r={r} stroke={GOLD} strokeOpacity={0.22} strokeWidth={stroke + 9} fill="none" />
-          <Circle cx={cx} cy={cx} r={r} stroke={GOLD} strokeOpacity={0.35} strokeWidth={stroke + 4} fill="none" />
-        </>
-      )}
+    <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
+      <Circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,0.18)" strokeWidth={stroke} fill="none" />
       <AnimatedCircle
-        cx={cx}
-        cy={cx}
+        cx={size / 2}
+        cy={size / 2}
         r={r}
-        stroke={progress >= 1 ? GOLD : '#FFFFFF'}
+        stroke={progress >= 1 ? '#F1B100' : '#FFFFFF'}
         strokeWidth={stroke}
         strokeLinecap="round"
         fill="none"
@@ -97,7 +85,7 @@ export function WeekHero({ data, plan }: { data: TrainingData; plan: TrainingPla
           <Ring progress={done / goal} />
           <View style={styles.ringCenter}>
             {reached ? (
-              <Ionicons name="trophy" size={28} color={GOLD} style={{ textShadowColor: GOLD_GLOW, textShadowRadius: 10 }} />
+              <Ionicons name="trophy" size={26} color="#F1B100" />
             ) : (
               <Text style={styles.ringText}>
                 {done}

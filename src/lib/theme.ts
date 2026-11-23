@@ -87,11 +87,6 @@ export const darkPalette: Palette = {
 };
 
 /** Písmo Plus Jakarta Sans (zaoblené, dobře čitelné) pro nadpisy, čísla a tlačítka; běžné věty a odstavce mají systémové písmo */
-/** zářivá zlatá pro úspěchy (splněný cíl, pohár, oslava) */
-export const GOLD = '#FFC21A';
-/** záře kolem zlatých prvků */
-export const GOLD_GLOW = 'rgba(255, 194, 26, 0.55)';
-
 export const FONTS = {
   black: 'PlusJakartaSans_800ExtraBold',
   bold: 'PlusJakartaSans_700Bold',
