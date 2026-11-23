@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { exerciseName } from '../../data/exercises';
 import { TEMPLATES } from '../../data/templates';
@@ -34,12 +34,6 @@ export function TodayView() {
   const [editing, setEditing] = useState(false);
   const day = plan?.days.find((d) => d.id === picked) ?? todayDay;
   const { profile } = useAuth();
-  // motivační věta: každý den jiná
-  const quote = useMemo(() => {
-    const d = new Date();
-    const day = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
-    return t(`tr.quote.${day % 10}` as TKey);
-  }, [t]);
   const wdName = (w: number) => t(`tr.weekdayFull.${w}` as TKey);
   const label = (d: PlanDay) => dayLabel(d, wdName, todayWd);
 
@@ -76,7 +70,7 @@ export function TodayView() {
       <View style={{ gap: 2, paddingHorizontal: 2 }}>
         <T v="h1">{profile?.firstName ? t('tr.hello', { name: profile.firstName }) : t('tr.helloAnon')}</T>
         <T muted style={{ fontFamily: FONTS.medium, fontSize: 16 }}>
-          {quote}
+          {t('tr.motto')}
         </T>
       </View>
 

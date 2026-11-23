@@ -14,7 +14,6 @@ import { BLUE, radius } from '../../lib/theme';
 import { ClubBadge } from '../ClubBadge';
 import { Avatar, Banner, Button, Card, Chip, Empty, Row, Stat, T } from '../ui';
 import { SocialActions } from './SocialActions';
-import { AchievementsCard } from './AchievementsCard';
 
 export function ProfileView({ profile, own, onRefresh }: { profile: Profile; own: boolean; onRefresh?: () => Promise<void> }) {
   const { t, colors, settings, locale } = useSettings();
@@ -131,7 +130,6 @@ export function ProfileView({ profile, own, onRefresh }: { profile: Profile; own
             </Row>
           )}
         </Card>
-        {own && <AchievementsCard />}
       </View>
 
       <Row style={[styles.gridHeader, { borderColor: colors.border }]}>
