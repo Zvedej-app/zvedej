@@ -12,6 +12,7 @@ import {
   type ScrollViewInstance,
 } from 'react-native';
 import { CalendarList, NewsList } from '../../components/csv/FeedLists';
+import { ClubBadge } from '../../components/ClubBadge';
 import { LionLogo } from '../../components/Logo';
 import { Avatar, IconButton, ListItem, Loading, Row, Screen, SearchBar, Segmented, T } from '../../components/ui';
 import { useDebounced } from '../../hooks/useDebounced';
@@ -24,7 +25,7 @@ import { useSettings } from '../../providers/SettingsProvider';
 type Tab = 'calendar' | 'news';
 
 export default function CsvScreen() {
-  const { t, colors } = useSettings();
+  const { t } = useSettings();
   const { width } = useWindowDimensions();
   const [tab, setTab] = useState<Tab>('calendar');
   const [q, setQ] = useState('');
@@ -44,7 +45,7 @@ export default function CsvScreen() {
   return (
     <Screen>
       <View style={{ alignItems: 'center', paddingTop: 6, paddingBottom: 4 }}>
-        <LionLogo size={46} color={colors.primary} />
+        <LionLogo height={64} />
       </View>
       <Row style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
         <View style={{ flex: 1 }}>
@@ -168,7 +169,7 @@ function SearchResults({ q }: { q: string }) {
           contentContainerStyle={{ paddingBottom: 24 }}
           renderItem={({ item }) => (
             <ListItem
-              icon="barbell-outline"
+              left={<ClubBadge club={item} size={34} />}
               title={item.name}
               subtitle={`${item.city} · ${t(item.region === 'cechy' ? 'csv.region.cechy' : 'csv.region.morava')}`}
               value={counts[item.id] ? `${counts[item.id]}` : undefined}

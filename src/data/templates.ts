@@ -18,10 +18,18 @@ const ex = (exerciseId: string, schemes: S[], pctOf?: string): PlanExercise => (
   ),
 });
 
+const WEEKDAY_NAMES = [
+  'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota', 'Neděle',
+  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
+  'Pondelok', 'Utorok', 'Streda', 'Štvrtok', 'Piatok', 'Nedeľa',
+];
+
+/** Dny pojmenované podle dne v týdnu se automaticky přejmenují podle dne, kdy je otevřeš. */
 const day = (name: string, weekdays: number[], exercises: PlanExercise[]): PlanDay => ({
   id: uid('pd'),
   name,
   weekdays,
+  nameAuto: WEEKDAY_NAMES.includes(name),
   exercises,
 });
 

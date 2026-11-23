@@ -21,7 +21,7 @@ export function WorkoutEditor({
 }: {
   exercises: LoggedExercise[];
   onChange: (ex: LoggedExercise[]) => void;
-  onSetDone?: () => void;
+  onSetDone?: (loggedExId: string, setIndex: number) => void;
 }) {
   const { t, colors, settings, tap } = useSettings();
   const { data } = useTraining();
@@ -43,7 +43,7 @@ export function WorkoutEditor({
           <Card key={e.id}>
             <Row>
               <View style={{ flex: 1 }}>
-                <T v="h3">{name}</T>
+                <T style={{ fontSize: 19, fontWeight: '800', lineHeight: 25 }}>{name}</T>
                 <T v="caption" muted>
                   {doneCount}/{plural(settings.lang, 'set', e.sets.length)}
                   {e.note ? ` · ${e.note}` : ''}
@@ -82,7 +82,7 @@ export function WorkoutEditor({
                   onPress={() => {
                     tap(s.done ? 'light' : 'success');
                     patchEx(e.id, (x) => ({ ...x, sets: x.sets.map((y, j) => (j === i ? { ...y, done: !y.done } : y)) }));
-                    if (!s.done) onSetDone?.();
+                    if (!s.done) onSetDone?.(e.id, i);
                   }}
                   style={[
                     styles.check,

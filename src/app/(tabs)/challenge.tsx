@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTopInset } from '../../lib/insets';
 import { ReelsPager } from '../../components/reels/ReelsPager';
 import { Avatar, Button, Chip, ListItem, Row, Sheet, T } from '../../components/ui';
 import { api, type VideoSort } from '../../lib/api';
@@ -20,7 +20,7 @@ type View_ = 'reels' | 'ranking' | 'winners';
 export default function ChallengeScreen() {
   const { t, settings, locale } = useSettings();
   const { session } = useAuth();
-  const insets = useSafeAreaInsets();
+  const topInset = useTopInset();
   const { width } = useWindowDimensions();
   const month = currentMonthKey();
   const [view, setView] = useState<View_>('reels');
@@ -74,7 +74,7 @@ export default function ChallengeScreen() {
     }
   };
 
-  const headerH = insets.top + 108;
+  const headerH = topInset + 108;
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
@@ -190,7 +190,7 @@ export default function ChallengeScreen() {
       )}
 
       {/* překryvná hlavička */}
-      <View style={[styles.header, { paddingTop: insets.top + 6 }]} pointerEvents="box-none">
+      <View style={[styles.header, { paddingTop: topInset + 6 }]} pointerEvents="box-none">
         <Row style={{ justifyContent: 'space-between', paddingHorizontal: 14 }}>
           <Pressable onPress={() => setRules(true)}>
             <T v="h3" color="#FFF">

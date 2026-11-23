@@ -12,7 +12,11 @@ export const CSV_BASE = 'https://www.vzpirani.cz';
 export const CSV_FEEDS = {
   calendar: `${CSV_BASE}/kalendar?action=atom`,
   news: `${CSV_BASE}/aktuality?action=atom`,
+  /** proběhlé závody (HTML archiv kalendáře) */
+  archive: `${CSV_BASE}/kalendar?action=archives`,
+  results: `${CSV_BASE}/rok-${new Date().getFullYear()}?action=atom`,
 };
+export type FeedKind = keyof typeof CSV_FEEDS;
 
 /** Limity videí pro výzvu Vzpěrač měsíce */
 export const VIDEO_MAX_SECONDS = 60;

@@ -1,14 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import { CSV_FEEDS, HAS_BACKEND, SUPABASE_ANON_KEY, SUPABASE_URL } from '../config';
-import { parseCalendar, parseNews } from '../rss';
-import type { FeedItem } from '../types';
-import { CALENDAR_SNAPSHOT, NEWS_SNAPSHOT } from '../../data/feedSnapshot';
+import { CSV_FEEDS, HAS_BACKEND, SUPABASE_ANON_KEY, SUPABASE_URL, type FeedKind } from '../config';
+import { parseArchiveHtml, parseCalendar, parseNews, parseResults } from '../rss';
+import type { FeedItem, ResultItem } from '../types';
+import { CALENDAR_SNAPSHOT, NEWS_SNAPSHOT, RESULTS_SNAPSHOT } from '../../data/feedSnapshot';
 
-const CACHE_KEY = (k: string) => `zvedej:feed:${k}`;
+const CACHE_KEY = (k: string) => `zvedej:feed2:${k}`;
 const MAX_AGE = 15 * 60 * 1000;
 
-async function fetchXml(kind: 'calendar' | 'news') {
+async function fetchText(kind: FeedKind): Promise<string> {
   const urls: { url: string; headers?: Record<string, string> }[] = [];
   if (HAS_BACKEND) {
     urls.push({
@@ -17,7 +17,7 @@ async function fetchXml(kind: 'calendar' | 'news') {
     });
   }
   // Nativní aplikace nemá omezení CORS, může číst web ČSV napřímo.
-  if (Platform.OS !== 'web' || !HAS_BACKEND) urls.push({ url: CSV_FEEDS[kind] });
+  if (Platform.OS !== 'web') urls.push({ url: CSV_FEEDS[kind] });
 
   let lastErr: unknown = null;
   for (const u of urls) {
@@ -29,7 +29,7 @@ async function fetchXml(kind: 'calendar' | 'news') {
         clearTimeout(timer);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const text = await r.text();
-        if (!text.includes('<item>')) throw new Error('Invalid feed');
+        if (text.length < 200) throw new Error('Invalid feed');
         return text;
       } catch (e) {
         lastErr = e;
@@ -39,31 +39,63 @@ async function fetchXml(kind: 'calendar' | 'news') {
   throw lastErr ?? new Error('feed unavailable');
 }
 
-export interface FeedResult {
-  items: FeedItem[];
+export interface FeedResult<T = FeedItem> {
+  items: T[];
+  /** true = zobrazuje se uložený snímek, živá data se nepodařilo načíst */
   stale: boolean;
 }
 
-export async function fetchFeedCached(kind: 'calendar' | 'news', force = false): Promise<FeedResult> {
-  let cached: { at: number; items: FeedItem[] } | null = null;
+async function cached<T>(key: string, force: boolean, load: () => Promise<T[]>, snapshot: T[]): Promise<FeedResult<T>> {
+  let hit: { at: number; items: T[] } | null = null;
   try {
-    const raw = await AsyncStorage.getItem(CACHE_KEY(kind));
-    if (raw) cached = JSON.parse(raw);
+    const raw = await AsyncStorage.getItem(CACHE_KEY(key));
+    if (raw) hit = JSON.parse(raw);
   } catch {}
-
-  if (!force && cached && Date.now() - cached.at < MAX_AGE) return { items: cached.items, stale: false };
-
+  if (!force && hit && Date.now() - hit.at < MAX_AGE) return { items: hit.items, stale: false };
   try {
-    const xml = await fetchXml(kind);
-    const items = kind === 'calendar' ? parseCalendar(xml) : parseNews(xml);
-    AsyncStorage.setItem(CACHE_KEY(kind), JSON.stringify({ at: Date.now(), items })).catch(() => {});
+    const items = await load();
+    AsyncStorage.setItem(CACHE_KEY(key), JSON.stringify({ at: Date.now(), items })).catch(() => {});
     return { items, stale: false };
   } catch {
-    if (cached) return { items: cached.items, stale: true };
-    return { items: kind === 'calendar' ? CALENDAR_SNAPSHOT : NEWS_SNAPSHOT, stale: true };
+    if (hit) return { items: hit.items, stale: true };
+    return { items: snapshot, stale: true };
   }
 }
 
+function mergeEvents(...lists: FeedItem[][]) {
+  const byId = new Map<string, FeedItem>();
+  for (const l of lists) for (const e of l) byId.set(e.id, e); // pozdější seznam (živý) přepíše starší
+  return [...byId.values()];
+}
+
+const FROM = `${new Date().getFullYear()}-01-01`;
+
+export function fetchFeedCached(kind: 'calendar' | 'news', force = false): Promise<FeedResult> {
+  if (kind === 'news') {
+    return cached('news', force, async () => parseNews(await fetchText('news')), NEWS_SNAPSHOT);
+  }
+  return cached(
+    'calendar',
+    force,
+    async () => {
+      const upcoming = parseCalendar(await fetchText('calendar'));
+      // proběhlé závody: uložený snímek doplněný o nejnovější archiv (pokud jde stáhnout)
+      let archive: FeedItem[] = [];
+      try {
+        archive = parseArchiveHtml(await fetchText('archive'));
+      } catch {}
+      return mergeEvents(CALENDAR_SNAPSHOT, archive, upcoming)
+        .filter((e) => (e.endDate ?? e.date ?? '') >= FROM)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''));
+    },
+    CALENDAR_SNAPSHOT,
+  );
+}
+
+export function fetchResultsCached(force = false): Promise<FeedResult<ResultItem>> {
+  return cached('results', force, async () => parseResults(await fetchText('results')), RESULTS_SNAPSHOT);
+}
+
 export async function clearFeedCache() {
-  await AsyncStorage.multiRemove([CACHE_KEY('calendar'), CACHE_KEY('news')]);
+  await AsyncStorage.multiRemove(['calendar', 'news', 'results'].map(CACHE_KEY));
 }

@@ -1,20 +1,47 @@
-import { Alert, Platform } from 'react-native';
+/**
+ * Dialogy a upozornění v designu aplikace (žádná šedá systémová okna).
+ * Vykresluje je <DialogHost /> v kořenovém layoutu.
+ */
+export interface ConfirmOptions {
+  ok: string;
+  cancel: string;
+  destructive?: boolean;
+  title?: string;
+}
 
-/** Potvrzovací dialog fungující na mobilu i na webu. */
-export function confirm(message: string, opts: { ok: string; cancel: string; destructive?: boolean }): Promise<boolean> {
-  if (Platform.OS === 'web') {
-    return Promise.resolve(typeof window !== 'undefined' ? window.confirm(message) : true);
-  }
+export type DialogRequest =
+  | { kind: 'confirm'; message: string; options: ConfirmOptions; resolve: (v: boolean) => void }
+  | { kind: 'notify'; message: string; resolve: () => void }
+  | { kind: 'toast'; message: string; id: number };
+
+type Listener = (r: DialogRequest) => void;
+let listener: Listener | null = null;
+let toastId = 0;
+
+export function subscribeDialogs(l: Listener) {
+  listener = l;
+  return () => {
+    if (listener === l) listener = null;
+  };
+}
+
+/** Potvrzovací dialog – vrací true po potvrzení. */
+export function confirm(message: string, options: ConfirmOptions): Promise<boolean> {
   return new Promise((resolve) => {
-    Alert.alert(message, undefined, [
-      { text: opts.cancel, style: 'cancel', onPress: () => resolve(false) },
-      { text: opts.ok, style: opts.destructive ? 'destructive' : 'default', onPress: () => resolve(true) },
-    ]);
+    if (!listener) return resolve(typeof window !== 'undefined' && typeof window.confirm === 'function' ? window.confirm(message) : true);
+    listener({ kind: 'confirm', message, options, resolve });
   });
 }
 
-export function notify(message: string) {
-  if (Platform.OS === 'web') {
-    if (typeof window !== 'undefined') window.alert(message);
-  } else Alert.alert(message);
+/** Informační okno s tlačítkem OK. */
+export function notify(message: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (!listener) return resolve();
+    listener({ kind: 'notify', message, resolve });
+  });
+}
+
+/** Krátká nenápadná zpráva dole (např. „Trénink uložen“). */
+export function toast(message: string) {
+  listener?.({ kind: 'toast', message, id: ++toastId });
 }

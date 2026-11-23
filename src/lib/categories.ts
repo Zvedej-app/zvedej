@@ -86,19 +86,26 @@ export function formatCategory(cat: string | null) {
   return cat.startsWith('+') ? `+${cat.slice(1)} kg` : `${cat} kg`;
 }
 
-/** Sinclairovy koeficienty (cyklus 2025–2028, dle kalkulačky ČSV). */
+/**
+ * Sinclairovy koeficienty (IWF) – stejné konstanty používá kalkulačka na webu ČSV.
+ * Sinclair = dvojboj × 10^(A · log10(hmotnost / b)²) pro hmotnost menší než b, jinak koeficient 1.
+ */
 export const SINCLAIR = {
   M: { A: 0.75194503, b: 175.508 },
-  F: { A: 0.783497, b: 153.655 },
+  F: { A: 0.783497476, b: 153.655 },
 };
 
 export function sinclairCoefficient(gender: Gender, bodyweight: number) {
+  if (!Number.isFinite(bodyweight) || bodyweight <= 0) return 1;
   const { A, b } = SINCLAIR[gender];
   if (bodyweight >= b) return 1;
-  return Math.pow(10, A * Math.pow(Math.log10(bodyweight / b), 2));
+  const x = Math.log10(bodyweight / b);
+  return Math.pow(10, A * x * x);
 }
 
+/** Jediné místo, kde se Sinclairovy body počítají (profil, kalkulačka, export). */
 export function sinclairTotal(gender: Gender, bodyweight: number, total: number) {
+  if (!Number.isFinite(total) || total <= 0) return 0;
   return total * sinclairCoefficient(gender, bodyweight);
 }
 

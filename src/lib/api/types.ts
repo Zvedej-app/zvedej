@@ -1,4 +1,15 @@
-import type { ChallengeTheme, ChallengeVideo, FeedItem, MonthlyWinner, Profile, TrainingData } from '../types';
+import type {
+  ChallengeTheme,
+  ChallengeVideo,
+  Conversation,
+  FeedItem,
+  FriendsOverview,
+  FriendStatus,
+  Message,
+  MonthlyWinner,
+  Profile,
+  TrainingData,
+} from '../types';
 
 export interface Session {
   userId: string;
@@ -55,6 +66,20 @@ export interface Backend {
   // tréninky
   loadTraining(userId: string): Promise<TrainingData | null>;
   saveTraining(userId: string, data: TrainingData): Promise<void>;
+
+  // přátelé
+  friendsOverview(): Promise<FriendsOverview>;
+  friendStatus(userId: string): Promise<FriendStatus>;
+  sendFriendRequest(userId: string): Promise<void>;
+  respondFriendRequest(userId: string, accept: boolean): Promise<void>;
+  removeFriend(userId: string): Promise<void>;
+
+  // zprávy
+  listConversations(): Promise<Conversation[]>;
+  listMessages(userId: string): Promise<Message[]>;
+  sendMessage(userId: string, body: string): Promise<Message>;
+  markRead(userId: string): Promise<void>;
+  unreadCount(): Promise<number>;
 
   // ČSV
   fetchFeed(kind: 'calendar' | 'news'): Promise<FeedItem[]>;

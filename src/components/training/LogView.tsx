@@ -4,7 +4,7 @@ import { SectionList, View } from 'react-native';
 import { exerciseName } from '../../data/exercises';
 import { formatDate, parseISODate, startOfWeek, toISODate, addDays } from '../../lib/date';
 import { logSetCount, logTonnage } from '../../lib/training';
-import { plural } from '../../lib/i18n';
+import { plural, type TKey } from '../../lib/i18n';
 import type { WorkoutLog } from '../../lib/types';
 import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
@@ -75,6 +75,11 @@ export function LogView() {
             {item.rpe ? (
               <T v="caption" muted>
                 RPE {item.rpe}
+              </T>
+            ) : null}
+            {item.feeling ? (
+              <T v="caption" muted>
+                {t(`tr.feeling.${item.feeling}` as TKey)}
               </T>
             ) : null}
           </Row>

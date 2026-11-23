@@ -1,32 +1,37 @@
+import { Image } from 'expo-image';
 import React from 'react';
-import Svg, { Defs, LinearGradient, Rect, Stop, G, Path, Circle } from 'react-native-svg';
+import Svg, { Defs, G, LinearGradient, Rect, Stop } from 'react-native-svg';
+
+/**
+ * Činka: od středu směrem ven největší kotouč → menší kotouče → uzávěr (zámek) → konec osy.
+ * Jedna definice slouží pro logo, ikonu i úvodní obrazovku.
+ */
+function Barbell({ color, accent }: { color: string; accent: string }) {
+  return (
+    <G>
+      {/* osa */}
+      <Rect x="4" y="46" width="192" height="8" rx="4" fill={color} />
+      {/* levá strana (od středu): velký → střední → malý kotouč → uzávěr */}
+      <Rect x="62" y="12" width="14" height="76" rx="4" fill={color} />
+      <Rect x="48" y="24" width="12" height="52" rx="3.5" fill={accent} />
+      <Rect x="38" y="34" width="8" height="32" rx="3" fill={color} />
+      <Rect x="29" y="40" width="7" height="20" rx="2" fill={accent} />
+      {/* pravá strana */}
+      <Rect x="124" y="12" width="14" height="76" rx="4" fill={color} />
+      <Rect x="140" y="24" width="12" height="52" rx="3.5" fill={accent} />
+      <Rect x="154" y="34" width="8" height="32" rx="3" fill={color} />
+      <Rect x="164" y="40" width="7" height="20" rx="2" fill={accent} />
+      {/* úchop uprostřed */}
+      <Rect x="84" y="44" width="32" height="12" rx="3" fill={accent} opacity={0.9} />
+    </G>
+  );
+}
 
 /** Logo aplikace Zvedej – činka */
-export function BarbellLogo({
-  size = 120,
-  color = '#FFFFFF',
-  accent = '#84A9FF',
-}: {
-  size?: number;
-  color?: string;
-  accent?: string;
-}) {
-  const w = size;
-  const h = size * 0.5;
+export function BarbellLogo({ size = 120, color = '#FFFFFF', accent = '#A9BFDC' }: { size?: number; color?: string; accent?: string }) {
   return (
-    <Svg width={w} height={h} viewBox="0 0 200 100">
-      {/* osa */}
-      <Rect x="6" y="46" width="188" height="8" rx="4" fill={color} />
-      {/* levá strana */}
-      <Rect x="22" y="14" width="16" height="72" rx="5" fill={color} />
-      <Rect x="41" y="24" width="12" height="52" rx="4" fill={accent} />
-      <Rect x="56" y="34" width="8" height="32" rx="3" fill={color} />
-      {/* pravá strana */}
-      <Rect x="162" y="14" width="16" height="72" rx="5" fill={color} />
-      <Rect x="147" y="24" width="12" height="52" rx="4" fill={accent} />
-      <Rect x="136" y="34" width="8" height="32" rx="3" fill={color} />
-      {/* úchop */}
-      <Rect x="84" y="44" width="32" height="12" rx="3" fill={accent} opacity={0.9} />
+    <Svg width={size} height={size * 0.5} viewBox="0 0 200 100">
+      <Barbell color={color} accent={accent} />
     </Svg>
   );
 }
@@ -37,52 +42,30 @@ export function AppIcon({ size = 96 }: { size?: number }) {
     <Svg width={size} height={size} viewBox="0 0 100 100">
       <Defs>
         <LinearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#2160F0" />
-          <Stop offset="1" stopColor="#0C2D7E" />
+          <Stop offset="0" stopColor="#1E5AA8" />
+          <Stop offset="1" stopColor="#09264A" />
         </LinearGradient>
       </Defs>
       <Rect x="0" y="0" width="100" height="100" rx="24" fill="url(#g)" />
       <G transform="translate(10 30) scale(0.4)">
-        <Rect x="6" y="46" width="188" height="8" rx="4" fill="#FFFFFF" />
-        <Rect x="22" y="14" width="16" height="72" rx="5" fill="#FFFFFF" />
-        <Rect x="41" y="24" width="12" height="52" rx="4" fill="#B5CCFF" />
-        <Rect x="56" y="34" width="8" height="32" rx="3" fill="#FFFFFF" />
-        <Rect x="162" y="14" width="16" height="72" rx="5" fill="#FFFFFF" />
-        <Rect x="147" y="24" width="12" height="52" rx="4" fill="#B5CCFF" />
-        <Rect x="136" y="34" width="8" height="32" rx="3" fill="#FFFFFF" />
-        <Rect x="84" y="44" width="32" height="12" rx="3" fill="#B5CCFF" />
+        <Barbell color="#FFFFFF" accent="#D7141A" />
       </G>
     </Svg>
   );
 }
 
-/**
- * Lev – symbol sekce Českého svazu vzpírání.
- * Dočasná ilustrace: až dorazí oficiální logo ČSV, nahraďte tuto komponentu
- * obrázkem (např. <Image source={require('../../assets/images/csv-logo.png')} />).
- */
-export function LionLogo({ size = 40, color = '#1249D1', bg = 'transparent' }: { size?: number; color?: string; bg?: string }) {
-  const mane = Array.from({ length: 12 }, (_, i) => i * 30);
+const LION = require('../../assets/images/csv-lion.png');
+/** poměr stran loga (šířka / výška) */
+export const LION_RATIO = 378 / 306;
+
+/** Logo Českého svazu vzpírání – lev s činkou (bez nápisu ČSV a „zal. 1893“). */
+export function LionLogo({ height = 40, opacity = 1 }: { height?: number; opacity?: number }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 100 100">
-      {bg !== 'transparent' && <Circle cx="50" cy="50" r="50" fill={bg} />}
-      <G>
-        {mane.map((deg) => (
-          <Path key={deg} d="M50 6 L58 24 L42 24 Z" fill={color} transform={`rotate(${deg} 50 52)`} />
-        ))}
-        <Circle cx="50" cy="52" r="27" fill={color} />
-        {/* uši */}
-        <Circle cx="33" cy="33" r="6" fill={color} />
-        <Circle cx="67" cy="33" r="6" fill={color} />
-        {/* obličej */}
-        <Circle cx="50" cy="55" r="19" fill={bg === 'transparent' ? '#FFFFFF' : bg} />
-        <Circle cx="43" cy="50" r="2.6" fill={color} />
-        <Circle cx="57" cy="50" r="2.6" fill={color} />
-        <Path d="M45 57 L55 57 L50 63 Z" fill={color} />
-        <Path d="M50 63 Q46 68 42 66 M50 63 Q54 68 58 66" stroke={color} strokeWidth="2" fill="none" strokeLinecap="round" />
-        {/* koruna – český lev */}
-        <Path d="M38 26 L42 17 L46 23 L50 14 L54 23 L58 17 L62 26 Z" fill={color} />
-      </G>
-    </Svg>
+    <Image
+      source={LION}
+      style={{ height, width: height * LION_RATIO, opacity }}
+      contentFit="contain"
+      accessibilityLabel="Český svaz vzpírání"
+    />
   );
 }

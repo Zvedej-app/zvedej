@@ -15,6 +15,14 @@ export function fromDisplay(value: number, unit: Unit) {
   return unit === 'kg' ? value : lbToKg(value);
 }
 
+/** Váhy se zaokrouhlují vždy na celá kila (žádné půlkilo). */
+export const ROUND_KG = 1;
+
+/** Hodnotu zadanou v dané jednotce převede na kg pro uložení (kg → celé číslo, lb → přesně). */
+export function toStoredKg(value: number, unit: Unit) {
+  return unit === 'kg' ? Math.round(value) : Math.round(lbToKg(value) * 100) / 100;
+}
+
 export function roundTo(value: number, step: number) {
   return Math.round(value / step) * step;
 }
@@ -32,8 +40,8 @@ export function formatNumber(n: number, decimals = 1) {
 
 export function formatWeight(kg: number | null | undefined, unit: Unit, opts?: { suffix?: boolean }) {
   if (kg === null || kg === undefined || Number.isNaN(kg)) return '—';
-  const v = unit === 'kg' ? kg : roundTo(kgToLb(kg), 0.5);
-  const s = formatNumber(v, unit === 'kg' ? 1 : 1);
+  const v = unit === 'kg' ? Math.round(kg) : Math.round(kgToLb(kg));
+  const s = formatNumber(v, 0);
   return opts?.suffix === false ? s : `${s} ${unit}`;
 }
 

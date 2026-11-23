@@ -2,6 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, SectionList, View } from 'react-native';
+import { ClubBadge } from '../components/ClubBadge';
 import { WeightSheet } from '../components/training/ToolsView';
 import {
   Avatar,
@@ -31,7 +32,7 @@ import {
 } from '../lib/categories';
 import { getClub, searchClubs } from '../lib/clubs';
 import type { AgeGroupId, Gender, Profile } from '../lib/types';
-import { formatNumber, formatWeight, fromDisplay, parseNum, roundTo, toDisplay } from '../lib/units';
+import { formatNumber, formatWeight, parseNum, toDisplay, toStoredKg } from '../lib/units';
 import { useAuth } from '../providers/AuthProvider';
 import { useSettings } from '../providers/SettingsProvider';
 
@@ -43,8 +44,8 @@ export default function ProfileEdit() {
   const { profile, session, saveProfile } = useAuth();
   const unit = settings.unit;
   const [p, setP] = useState<Profile | null>(profile);
-  const [snatch, setSnatch] = useState(profile?.prSnatch ? formatNumber(toDisplay(profile.prSnatch, unit)) : '');
-  const [cj, setCj] = useState(profile?.prCleanJerk ? formatNumber(toDisplay(profile.prCleanJerk, unit)) : '');
+  const [snatch, setSnatch] = useState(profile?.prSnatch ? String(Math.round(toDisplay(profile.prSnatch, unit))) : '');
+  const [cj, setCj] = useState(profile?.prCleanJerk ? String(Math.round(toDisplay(profile.prCleanJerk, unit))) : '');
   const [clubSheet, setClubSheet] = useState(false);
   const [yearSheet, setYearSheet] = useState(false);
   const [bwSheet, setBwSheet] = useState(false);
@@ -89,8 +90,8 @@ export default function ProfileEdit() {
         ageGroup: p.ageGroup,
         weightCategory: p.weightCategory,
         bodyweight: p.bodyweight,
-        prSnatch: s ? roundTo(fromDisplay(s, unit), 0.5) : null,
-        prCleanJerk: c ? roundTo(fromDisplay(c, unit), 0.5) : null,
+        prSnatch: s ? toStoredKg(s, unit) : null,
+        prCleanJerk: c ? toStoredKg(c, unit) : null,
       });
       router.back();
     } catch (e: any) {
@@ -247,16 +248,16 @@ export default function ProfileEdit() {
             <Field
               label={`${t('pr.snatch')} (${unit})`}
               value={snatch}
-              onChangeText={setSnatch}
-              keyboardType="decimal-pad"
+              onChangeText={(v) => setSnatch(v.replace(/[^0-9]/g, ''))}
+              keyboardType="number-pad"
               style={{ flex: 1 }}
               placeholder="0"
             />
             <Field
               label={`${t('pr.cj')} (${unit})`}
               value={cj}
-              onChangeText={setCj}
-              keyboardType="decimal-pad"
+              onChangeText={(v) => setCj(v.replace(/[^0-9]/g, ''))}
+              keyboardType="number-pad"
               style={{ flex: 1 }}
               placeholder="0"
             />
@@ -356,6 +357,7 @@ function ClubSheet({
           renderItem={({ item }) => (
             <View style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
               <ListItem
+                left={<ClubBadge club={item} size={32} />}
                 title={item.name}
                 subtitle={item.city}
                 onPress={() => onPick(item.id)}

@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   Platform,
@@ -9,7 +9,10 @@ import {
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
+import { webTick } from '../lib/tick';
 import { useSettings } from '../providers/SettingsProvider';
 import { T } from './ui';
 
@@ -39,7 +42,8 @@ export function Wheel<V extends string | number>({
   const initial = Math.max(0, values.indexOf(value));
   const [cur, setCur] = useState(initial);
   const curRef = useRef(initial);
-  const commitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const offsets = useMemo(() => values.map((_, i) => i * ITEM_H), [values]);
 
   // když se hodnota změní zvenku, posuň kolečko
   useEffect(() => {
@@ -60,19 +64,28 @@ export function Wheel<V extends string | number>({
   );
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const i = Math.min(values.length - 1, Math.max(0, Math.round(e.nativeEvent.contentOffset.y / ITEM_H)));
+    const y = e.nativeEvent.contentOffset.y;
+    const i = Math.min(values.length - 1, Math.max(0, Math.round(y / ITEM_H)));
     if (i !== curRef.current) {
       curRef.current = i;
       setCur(i);
-      if (settings.haptics && Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {});
+      if (settings.haptics) {
+        if (Platform.OS === 'web') webTick();
+        else Haptics.selectionAsync().catch(() => {});
+      }
     }
-    if (commitTimer.current) clearTimeout(commitTimer.current);
-    commitTimer.current = setTimeout(() => commit(curRef.current), 160);
+    // po doznění pohybu číslo přesně ukotvíme do středu výběru a teprve pak uložíme
+    if (settleTimer.current) clearTimeout(settleTimer.current);
+    settleTimer.current = setTimeout(() => {
+      const target = curRef.current * ITEM_H;
+      if (Math.abs(y - target) > 0.5) ref.current?.scrollToOffset({ offset: target, animated: true });
+      commit(curRef.current);
+    }, 110);
   };
 
   useEffect(
     () => () => {
-      if (commitTimer.current) clearTimeout(commitTimer.current);
+      if (settleTimer.current) clearTimeout(settleTimer.current);
     },
     [],
   );
@@ -94,14 +107,15 @@ export function Wheel<V extends string | number>({
           data={values}
           keyExtractor={(v, i) => `${v}-${i}`}
           showsVerticalScrollIndicator={false}
-          snapToInterval={ITEM_H}
+          snapToOffsets={offsets}
+          snapToAlignment="start"
           decelerationRate="fast"
           initialScrollIndex={initial}
           getItemLayout={(_, i) => ({ length: ITEM_H, offset: ITEM_H * i, index: i })}
           contentContainerStyle={{ paddingVertical: ITEM_H * 2 }}
           onScroll={onScroll}
           scrollEventThrottle={16}
-          onMomentumScrollEnd={(e) => commit(Math.round(e.nativeEvent.contentOffset.y / ITEM_H))}
+          style={webSnap}
           windowSize={7}
           initialNumToRender={15}
           renderItem={({ item, index }) => {
@@ -109,7 +123,7 @@ export function Wheel<V extends string | number>({
             return (
               <Pressable
                 onPress={() => ref.current?.scrollToOffset({ offset: index * ITEM_H, animated: true })}
-                style={{ height: ITEM_H, alignItems: 'center', justifyContent: 'center' }}
+                style={[{ height: ITEM_H, alignItems: 'center', justifyContent: 'center' }, webSnapItem]}
               >
                 <Text
                   style={{
@@ -130,6 +144,10 @@ export function Wheel<V extends string | number>({
     </View>
   );
 }
+
+// Na webu zajistí přesné ukotvení čísla CSS scroll-snap (prohlížeč „zacvakne“ vždy na číslo).
+const webSnap = (Platform.OS === 'web' ? { scrollSnapType: 'y mandatory', scrollPaddingTop: ITEM_H * 2 } : undefined) as StyleProp<ViewStyle>;
+const webSnapItem = (Platform.OS === 'web' ? { scrollSnapAlign: 'start' } : undefined) as StyleProp<ViewStyle>;
 
 export function range(from: number, to: number, step = 1) {
   const out: number[] = [];

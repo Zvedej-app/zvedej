@@ -2,6 +2,8 @@ export type Region = 'cechy' | 'morava';
 
 export interface Club {
   id: number;
+  /** logo klubu (URL), pokud ho svaz uvádí */
+  logo?: string | null;
   name: string;
   region: Region;
   city: string;
@@ -83,6 +85,16 @@ export interface MonthlyWinner {
   thumbnailUrl: string | null;
 }
 
+export type EventCategory = 'mcr' | 'liga' | 'other';
+
+export interface ResultItem {
+  id: string;
+  title: string;
+  link: string;
+  /** ISO čas poslední aktualizace */
+  updated: string | null;
+}
+
 export interface FeedItem {
   id: string;
   title: string;
@@ -92,6 +104,8 @@ export interface FeedItem {
   endDate?: string | null;
   place?: string | null;
   kind?: string | null;
+  /** MČR / liga / ostatní – podle toho se barevně odlišují karty */
+  category?: EventCategory;
   excerpt?: string | null;
   image?: string | null;
   attachments?: { title: string; url: string }[];
@@ -127,6 +141,8 @@ export interface PlanDay {
   name: string;
   /** 0 = pondělí … 6 = neděle */
   weekdays: number[];
+  /** true = název se řídí dnem v týdnu (Pondělí, Čtvrtek …) a mění se podle dne, kdy trénink otevřeš */
+  nameAuto?: boolean;
   exercises: PlanExercise[];
 }
 
@@ -172,6 +188,8 @@ export interface WorkoutLog {
   notes?: string;
   /** Subjektivní náročnost 1–10 */
   rpe?: number | null;
+  /** Rychlá reakce na trénink (klíč: easy | ok | hard | bad) */
+  feeling?: 'easy' | 'ok' | 'hard' | 'bad' | null;
   bodyweight?: number | null;
   durationMin?: number | null;
   createdAt: string;
@@ -184,5 +202,36 @@ export interface TrainingData {
   /** tréninková maxima v kg dle exerciseId */
   maxes: Record<string, number>;
   customExercises: { id: string; name: string }[];
+  /** cviky přidané uživatelem do sekce „Moje maxima“ (i bez zadané hodnoty) */
+  maxLifts?: string[];
   updatedAt: string;
+}
+
+/* ------------------------------ Přátelé a zprávy ------------------------------ */
+
+export type FriendStatus = 'none' | 'friends' | 'outgoing' | 'incoming';
+
+export interface FriendsOverview {
+  friends: Profile[];
+  /** žádosti, které čekají na moje přijetí */
+  incoming: Profile[];
+  /** žádosti, které jsem poslal já */
+  outgoing: Profile[];
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  recipientId: string;
+  body: string;
+  createdAt: string;
+  readAt: string | null;
+}
+
+export interface Conversation {
+  user: Profile;
+  last: Message;
+  unread: number;
+  /** zpráva od někoho, kdo není přítel, a ještě jsem neodpověděl */
+  isRequest: boolean;
 }

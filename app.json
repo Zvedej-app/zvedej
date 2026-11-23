@@ -18,7 +18,7 @@
     "android": {
       "package": "cz.sladkyvejvoda.zvedej",
       "adaptiveIcon": {
-        "backgroundColor": "#1249D1",
+        "backgroundColor": "#11457E",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -29,7 +29,7 @@
       "favicon": "./assets/favicon.png",
       "name": "Zvedej",
       "shortName": "Zvedej",
-      "themeColor": "#1249D1",
+      "themeColor": "#11457E",
       "backgroundColor": "#FFFFFF",
       "output": "single"
     },
@@ -41,7 +41,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#1249D1",
+          "backgroundColor": "#11457E",
           "image": "./assets/splash-icon.png",
           "imageWidth": 220,
           "dark": {
@@ -60,7 +60,20 @@
       ],
       "expo-localization",
       "expo-web-browser",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#11457E",
+          "sounds": [
+            "./assets/sounds/gong.wav",
+            "./assets/sounds/beep.wav",
+            "./assets/sounds/bell.wav"
+          ]
+        }
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": false,

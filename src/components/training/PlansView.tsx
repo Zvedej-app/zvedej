@@ -28,7 +28,14 @@ export function PlansView() {
           <T v="h3" style={{ flex: 1 }} numberOfLines={1}>
             {p.name || t('tr.newPlan')}
           </T>
-          {isRunning && <Ionicons name="radio-button-on" size={16} color={colors.success} />}
+          {isRunning && (
+            <Row gap={5}>
+              <Ionicons name="radio-button-on" size={16} color={colors.success} />
+              <T v="small" color={colors.success} style={{ fontWeight: '800' }}>
+                {t('tr.activeLabel')}
+              </T>
+            </Row>
+          )}
         </Row>
         <T v="small" muted>
           {formatDate(p.startDate, locale)}

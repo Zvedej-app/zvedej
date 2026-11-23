@@ -2,6 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTopInset } from '../lib/insets';
 import { ReelsPager } from '../components/reels/ReelsPager';
 import { IconButton, Loading } from '../components/ui';
 import { api } from '../lib/api';
@@ -13,6 +14,7 @@ export default function VideosScreen() {
   const { user, index } = useLocalSearchParams<{ user: string; index?: string }>();
   const { session } = useAuth();
   const insets = useSafeAreaInsets();
+  const topInset = useTopInset();
   const [videos, setVideos] = useState<ChallengeVideo[] | null>(null);
 
   useEffect(() => {
@@ -45,7 +47,7 @@ export default function VideosScreen() {
         color="#FFF"
         size={30}
         onPress={() => router.back()}
-        style={{ position: 'absolute', top: insets.top + 8, left: 10 }}
+        style={{ position: 'absolute', top: topInset + 8, left: 10 }}
       />
     </View>
   );

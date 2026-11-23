@@ -34,10 +34,14 @@ interface Ctx {
   changeFromNextWeek: (id: string) => string;
   duplicatePlan: (id: string) => string;
   setMax: (exerciseId: string, kg: number | null) => void;
+  /** přidá cvik do sekce Moje maxima */
+  addMaxLift: (exerciseId: string) => void;
+  /** odebere přidaný cvik z maxim (včetně zadané hodnoty) */
+  removeMaxLift: (exerciseId: string) => void;
   addCustomExercise: (name: string) => string;
   startWorkout: (w: Omit<ActiveWorkout, 'id' | 'startedAt'>) => void;
   updateActive: (fn: (w: ActiveWorkout) => ActiveWorkout) => void;
-  finishWorkout: (extra: Pick<WorkoutLog, 'notes' | 'rpe' | 'bodyweight'>) => WorkoutLog | null;
+  finishWorkout: (extra: Pick<WorkoutLog, 'notes' | 'rpe' | 'bodyweight' | 'feeling'>) => WorkoutLog | null;
   discardWorkout: () => void;
   saveLog: (log: WorkoutLog) => void;
   deleteLog: (id: string) => void;
@@ -181,6 +185,14 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
           if (kg && kg > 0) maxes[exerciseId] = kg;
           else delete maxes[exerciseId];
           return { ...d, maxes };
+        }),
+      addMaxLift: (exerciseId) =>
+        mutate((d) => ({ ...d, maxLifts: Array.from(new Set([...(d.maxLifts ?? []), exerciseId])) })),
+      removeMaxLift: (exerciseId) =>
+        mutate((d) => {
+          const maxes = { ...d.maxes };
+          delete maxes[exerciseId];
+          return { ...d, maxes, maxLifts: (d.maxLifts ?? []).filter((x) => x !== exerciseId) };
         }),
       addCustomExercise: (name) => {
         const id = uid('cx');

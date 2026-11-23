@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { currentMonthKey, prevMonthKey } from '../date';
 import { uuid } from '../id';
 import { fallbackTheme } from '../../data/themes';
-import type { ChallengeVideo, MonthlyWinner, Profile, TrainingData } from '../types';
+import type { ChallengeVideo, Conversation, FriendsOverview, FriendStatus, Message, MonthlyWinner, Profile, TrainingData } from '../types';
 import type { Backend, Session } from './types';
 import { fetchFeedCached } from './feeds';
 
@@ -18,6 +18,8 @@ const K = {
   likes: 'zvedej:demo:likes',
   training: (id: string) => `zvedej:demo:training:${id}`,
   seeded: 'zvedej:demo:seeded:v2',
+  friends: (id: string) => `zvedej:demo:friends:${id}`,
+  messages: (id: string) => `zvedej:demo:messages:${id}`,
 };
 
 interface DemoVideo {
@@ -228,6 +230,11 @@ async function ensureSeed() {
   await AsyncStorage.setItem(K.seeded, '1');
 }
 
+interface DemoFriend {
+  other: string;
+  status: 'friends' | 'outgoing' | 'incoming';
+}
+
 const listeners = new Set<(s: Session | null) => void>();
 const emit = (s: Session | null) => listeners.forEach((l) => l(s));
 
@@ -273,6 +280,29 @@ export function createDemoBackend(): Backend {
   async function videos() {
     await ensureSeed();
     return get<DemoVideo[]>(K.videos, []);
+  }
+
+  /** Přátelé a zprávy ukázkových uživatelů – při prvním otevření se nasadí ukázková data. */
+  async function friendRows(me: string): Promise<DemoFriend[]> {
+    const raw = await AsyncStorage.getItem(K.friends(me));
+    if (raw) return JSON.parse(raw);
+    const seed: DemoFriend[] = [
+      { other: 'demo-1', status: 'friends' },
+      { other: 'demo-2', status: 'incoming' },
+    ];
+    await set(K.friends(me), seed);
+    return seed;
+  }
+  async function messageRows(me: string): Promise<Message[]> {
+    const raw = await AsyncStorage.getItem(K.messages(me));
+    if (raw) return JSON.parse(raw);
+    const ago = (min: number) => new Date(Date.now() - min * 60000).toISOString();
+    const seed: Message[] = [
+      { id: uuid(), senderId: 'demo-1', recipientId: me, body: 'Ahoj! Jdeš zítra na trénink do Barbell Clubu?', createdAt: ago(95), readAt: null },
+      { id: uuid(), senderId: 'demo-5', recipientId: me, body: 'Čau, viděl jsem tvoje video z výzvy – paráda! Nechceš si někdy zatrénovat spolu?', createdAt: ago(300), readAt: null },
+    ];
+    await set(K.messages(me), seed);
+    return seed;
   }
 
   const backend: Backend = {
@@ -448,6 +478,101 @@ export function createDemoBackend(): Backend {
           };
         })
         .sort((a, b) => b.month.localeCompare(a.month));
+    },
+
+    async friendsOverview(): Promise<FriendsOverview> {
+      const me = (await session())?.userId;
+      if (!me) return { friends: [], incoming: [], outgoing: [] };
+      const [list, us] = await Promise.all([friendRows(me), users()]);
+      const pick = (s: DemoFriend['status']) =>
+        list.filter((f) => f.status === s).map((f) => us.find((u) => u.id === f.other)).filter(Boolean) as Profile[];
+      return { friends: pick('friends'), incoming: pick('incoming'), outgoing: pick('outgoing') };
+    },
+    async friendStatus(userId): Promise<FriendStatus> {
+      const me = (await session())?.userId;
+      if (!me || me === userId) return 'none';
+      const f = (await friendRows(me)).find((x) => x.other === userId);
+      return f ? (f.status === 'friends' ? 'friends' : f.status) : 'none';
+    },
+    async sendFriendRequest(userId) {
+      const me = (await session())?.userId;
+      if (!me) return;
+      const list = await friendRows(me);
+      if (list.some((f) => f.other === userId)) return;
+      await set(K.friends(me), [...list, { other: userId, status: 'outgoing' }]);
+    },
+    async respondFriendRequest(userId, accept) {
+      const me = (await session())?.userId;
+      if (!me) return;
+      const list = await friendRows(me);
+      await set(
+        K.friends(me),
+        accept ? list.map((f) => (f.other === userId ? { ...f, status: 'friends' as const } : f)) : list.filter((f) => f.other !== userId),
+      );
+    },
+    async removeFriend(userId) {
+      const me = (await session())?.userId;
+      if (!me) return;
+      await set(K.friends(me), (await friendRows(me)).filter((f) => f.other !== userId));
+    },
+
+    async listConversations(): Promise<Conversation[]> {
+      const me = (await session())?.userId;
+      if (!me) return [];
+      const [msgs, us, fr] = await Promise.all([messageRows(me), users(), friendRows(me)]);
+      const friendIds = new Set(fr.filter((f) => f.status === 'friends').map((f) => f.other));
+      const byUser = new Map<string, Message[]>();
+      for (const m of msgs) {
+        const other = m.senderId === me ? m.recipientId : m.senderId;
+        byUser.set(other, [...(byUser.get(other) ?? []), m]);
+      }
+      return [...byUser.entries()]
+        .map(([id, list]) => {
+          const sorted = [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+          const user = us.find((u) => u.id === id);
+          if (!user) return null;
+          return {
+            user,
+            last: sorted[0],
+            unread: list.filter((m) => m.recipientId === me && !m.readAt).length,
+            isRequest: !friendIds.has(id) && !list.some((m) => m.senderId === me),
+          } as Conversation;
+        })
+        .filter(Boolean)
+        .sort((a, b) => b!.last.createdAt.localeCompare(a!.last.createdAt)) as Conversation[];
+    },
+    async listMessages(userId) {
+      const me = (await session())?.userId;
+      if (!me) return [];
+      return (await messageRows(me))
+        .filter((m) => m.senderId === userId || m.recipientId === userId)
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    },
+    async sendMessage(userId, body) {
+      const me = (await session())?.userId;
+      if (!me) throw new Error('not signed in');
+      const [msgs, fr] = await Promise.all([messageRows(me), friendRows(me)]);
+      const isFriend = fr.some((f) => f.other === userId && f.status === 'friends');
+      const theyReplied = msgs.some((m) => m.senderId === userId);
+      const sent = msgs.filter((m) => m.senderId === me && m.recipientId === userId).length;
+      if (!isFriend && !theyReplied && sent >= 3) throw new Error('MESSAGE_REQUEST_LIMIT');
+      const m: Message = { id: uuid(), senderId: me, recipientId: userId, body: body.trim(), createdAt: new Date().toISOString(), readAt: null };
+      await set(K.messages(me), [...msgs, m]);
+      return m;
+    },
+    async markRead(userId) {
+      const me = (await session())?.userId;
+      if (!me) return;
+      const now = new Date().toISOString();
+      await set(
+        K.messages(me),
+        (await messageRows(me)).map((m) => (m.senderId === userId && !m.readAt ? { ...m, readAt: now } : m)),
+      );
+    },
+    async unreadCount() {
+      const me = (await session())?.userId;
+      if (!me) return 0;
+      return (await messageRows(me)).filter((m) => m.recipientId === me && !m.readAt).length;
     },
 
     async loadTraining(userId) {

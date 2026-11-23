@@ -1,5 +1,5 @@
 // Supabase Edge Function: proxy + cache RSS feedů webu vzpirani.cz
-// GET /functions/v1/csv-feed?feed=calendar|news
+// GET /functions/v1/csv-feed?feed=calendar|news|archive|results
 //
 // Proč: web ČSV neposílá CORS hlavičky a při 20 000 uživatelích by
 // přímé dotazy zbytečně zatěžovaly jejich server. Funkce drží odpověď
@@ -8,6 +8,8 @@
 const FEEDS: Record<string, string> = {
   calendar: 'https://www.vzpirani.cz/kalendar?action=atom',
   news: 'https://www.vzpirani.cz/aktuality?action=atom',
+  archive: 'https://www.vzpirani.cz/kalendar?action=archives',
+  results: `https://www.vzpirani.cz/rok-${new Date().getFullYear()}?action=atom`,
 };
 
 const TTL_MS = 15 * 60 * 1000;
@@ -58,7 +60,7 @@ Deno.serve(async (req) => {
   return new Response(body, {
     headers: {
       ...cors,
-      'content-type': 'application/rss+xml; charset=utf-8',
+      'content-type': feed === 'archive' ? 'text/html; charset=utf-8' : 'application/rss+xml; charset=utf-8',
       'cache-control': 'public, max-age=900, stale-while-revalidate=3600',
     },
   });

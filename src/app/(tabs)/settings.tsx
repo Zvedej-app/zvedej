@@ -2,12 +2,14 @@ import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
-import { Platform, Share, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { AppIcon } from '../../components/Logo';
 import { Banner, Button, Header, ListGroup, ListItem, Row, Screen, Segmented, Sheet, T } from '../../components/ui';
 import { range, Wheel } from '../../components/WheelPicker';
 import { api } from '../../lib/api';
 import { clearFeedCache } from '../../lib/api/feeds';
+import { exportTrainingPdf } from '../../lib/exportPdf';
+import { playRestSound, type RestSound } from '../../lib/restSound';
 import { CSV_BASE, FEEDBACK_EMAIL } from '../../lib/config';
 import { confirm, notify } from '../../lib/dialog';
 import { LANG_LABELS, type Lang } from '../../lib/i18n';
@@ -26,15 +28,11 @@ export default function SettingsScreen() {
   const [rest, setRest] = useState(settings.restSec);
 
   const exportData = async () => {
-    const json = JSON.stringify(data, null, 2);
-    if (Platform.OS === 'web') {
-      const blob = new Blob([json], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `zvedej-treninky-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-    } else {
-      await Share.share({ message: json, title: 'Zvedej – tréninky' });
+    try {
+      const owner = profile ? `${profile.firstName} ${profile.lastName}`.trim() : '';
+      await exportTrainingPdf(data, settings.lang, settings.unit, owner || 'Zvedej');
+    } catch {
+      notify(t('common.error'));
     }
   };
 
@@ -54,7 +52,6 @@ export default function SettingsScreen() {
                 options={[
                   { key: 'light', label: t('st.theme.light'), icon: 'sunny-outline' },
                   { key: 'dark', label: t('st.theme.dark'), icon: 'moon-outline' },
-                  { key: 'system', label: t('st.theme.system'), icon: 'phone-portrait-outline' },
                 ]}
               />
             </View>
@@ -84,16 +81,6 @@ export default function SettingsScreen() {
           </ListGroup>
 
           <ListGroup title={t('st.training')}>
-            <View style={{ padding: 12, gap: 8 }}>
-              <T v="small" muted>
-                {t('st.rounding')}
-              </T>
-              <Segmented
-                value={String(settings.roundingKg)}
-                onChange={(v) => update({ roundingKg: Number(v) })}
-                options={['0.5', '1', '2.5', '5'].map((v) => ({ key: v, label: `${v.replace('.', ',')} kg` }))}
-              />
-            </View>
             {settings.unit === 'kg' && (
               <View style={{ padding: 12, gap: 8 }}>
                 <T v="small" muted>
@@ -115,6 +102,27 @@ export default function SettingsScreen() {
                 setRestSheet(true);
               }}
             />
+            <View style={{ padding: 12, gap: 8 }}>
+              <T v="small" muted>
+                {t('st.sound')}
+              </T>
+              <Segmented<RestSound>
+                value={settings.restSound}
+                onChange={(restSound) => {
+                  update({ restSound });
+                  playRestSound(restSound);
+                }}
+                options={[
+                  { key: 'gong', label: t('st.sound.gong') },
+                  { key: 'beep', label: t('st.sound.beep') },
+                  { key: 'bell', label: t('st.sound.bell') },
+                  { key: 'none', label: t('st.sound.none') },
+                ]}
+              />
+            </View>
+            {Platform.OS !== 'web' && (
+              <ListItem icon="notifications-outline" title={t('st.notifyRest')} toggle={settings.restNotify} onToggle={(restNotify) => update({ restNotify })} />
+            )}
             {Platform.OS !== 'web' && (
               <ListItem
                 icon="pulse-outline"
@@ -150,7 +158,7 @@ export default function SettingsScreen() {
           </ListGroup>
 
           <ListGroup title={t('st.data')}>
-            <ListItem icon="download-outline" title={t('st.export')} onPress={exportData} />
+            <ListItem icon="document-text-outline" title={t('st.exportPdf')} onPress={exportData} />
             <ListItem
               icon="refresh-outline"
               title={t('st.clearCache')}

@@ -1,4 +1,4 @@
-import { getExercise } from '../data/exercises';
+import { getExercise, MAX_LIFTS } from '../data/exercises';
 import { addDays, parseISODate, startOfWeek, toISODate, todayISO, weekNumberSince, weekdayMon0 } from './date';
 import { uid } from './id';
 import type { LoadSpec, LoggedExercise, PlanDay, SetScheme, TrainingData, TrainingPlan, WorkoutLog } from './types';
@@ -173,4 +173,16 @@ export function clonePlan(p: TrainingPlan, patch: Partial<TrainingPlan>): Traini
 export function mergeTraining(local: TrainingData, remote: TrainingData | null): TrainingData {
   if (!remote) return local;
   return remote.updatedAt > local.updatedAt ? remote : local;
+}
+
+/** Název tréninkového dne. U automaticky pojmenovaných dnů se řídí dnem v týdnu, ve kterém trénink otevíráš. */
+export function dayLabel(day: PlanDay, weekdayName: (w: number) => string, refWeekday?: number) {
+  if (!day.nameAuto || day.weekdays.length === 0) return day.name;
+  const w = refWeekday !== undefined && day.weekdays.includes(refWeekday) ? refWeekday : day.weekdays[0];
+  return weekdayName(w);
+}
+
+/** Cviky v sekci „Moje maxima“: základní + přidané uživatelem + všechny, které mají zadanou hodnotu. */
+export function maxLiftIds(data: TrainingData) {
+  return Array.from(new Set([...MAX_LIFTS, ...(data.maxLifts ?? []), ...Object.keys(data.maxes)]));
 }

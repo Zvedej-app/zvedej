@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarbellLogo } from '../components/Logo';
 import { Banner, Button, Field, Row, T } from '../components/ui';
@@ -19,7 +19,7 @@ export default function AuthScreen() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
-  const notify = (m: string) => (Platform.OS === 'web' ? setMsg(m) : Alert.alert(m));
+  const notify = (m: string) => setMsg(m);
 
   const submit = async () => {
     if (!email.includes('@') || password.length < 6) return notify(t('auth.invalid'));

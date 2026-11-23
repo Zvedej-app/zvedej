@@ -46,8 +46,8 @@ function InstaTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
         if (route.name === 'index') {
           label = t('tab.csv');
           icon = (
-            <View style={{ opacity: focused ? 1 : 0.75 }}>
-              <LionLogo size={focused ? 30 : 28} color={focused ? colors.primary : fg} bg="transparent" />
+            <View style={{ opacity: focused ? 1 : 0.6 }}>
+              <LionLogo height={30} />
             </View>
           );
         } else if (route.name === 'profile') {
@@ -60,7 +60,7 @@ function InstaTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
         } else {
           const i = ICONS[route.name];
           label = t(i.label);
-          icon = <Ionicons name={focused ? i.on : i.off} size={27} color={focused && !dark ? colors.primary : fg} />;
+          icon = <Ionicons name={focused ? i.on : i.off} size={27} color={focused && !dark ? colors.accent : fg} />;
         }
         return (
           <Pressable
@@ -72,7 +72,7 @@ function InstaTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
             style={styles.item}
           >
             {icon}
-            <View style={[styles.dot, { backgroundColor: focused ? (dark ? '#FFF' : colors.primary) : 'transparent' }]} />
+            <View style={[styles.dot, { backgroundColor: focused ? (dark ? '#FFF' : colors.accent) : 'transparent' }]} />
           </Pressable>
         );
       })}

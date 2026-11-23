@@ -7,11 +7,13 @@ import { api, type UserStats } from '../../lib/api';
 import { ageGroupLabel, formatCategory, sinclairTotal } from '../../lib/categories';
 import { getClub } from '../../lib/clubs';
 import { formatMonth } from '../../lib/date';
-import { BLUE } from '../../lib/theme';
 import type { ChallengeVideo, Profile } from '../../lib/types';
 import { formatNumber, formatWeight } from '../../lib/units';
 import { useSettings } from '../../providers/SettingsProvider';
+import { BLUE, radius } from '../../lib/theme';
+import { ClubBadge } from '../ClubBadge';
 import { Avatar, Banner, Button, Card, Chip, Empty, Row, Stat, T } from '../ui';
+import { SocialActions } from './SocialActions';
 
 export function ProfileView({ profile, own, onRefresh }: { profile: Profile; own: boolean; onRefresh?: () => Promise<void> }) {
   const { t, colors, settings, locale } = useSettings();
@@ -23,7 +25,9 @@ export function ProfileView({ profile, own, onRefresh }: { profile: Profile; own
   const name = `${profile.firstName} ${profile.lastName}`.trim();
   const total = profile.prSnatch && profile.prCleanJerk ? profile.prSnatch + profile.prCleanJerk : null;
   const sinclair =
-    total && profile.gender && profile.bodyweight ? sinclairTotal(profile.gender, profile.bodyweight, total) : null;
+    total && profile.gender && profile.bodyweight
+      ? sinclairTotal(profile.gender, Math.round(profile.bodyweight), Math.round(total))
+      : null;
   const tile = Math.floor((width - 4) / 3);
   const incomplete = own && (!profile.clubId || !profile.weightCategory || !profile.prSnatch);
 
@@ -77,7 +81,15 @@ export function ProfileView({ profile, own, onRefresh }: { profile: Profile; own
           {profile.motto ? <T style={{ fontStyle: 'italic' }}>„{profile.motto}“</T> : null}
         </View>
         <Row style={{ flexWrap: 'wrap' }} gap={6}>
-          {club && <Chip icon="barbell-outline" label={club.name} onPress={() => router.push(`/club/${club.id}`)} />}
+          {club && (
+            <Pressable
+              onPress={() => router.push(`/club/${club.id}`)}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 7, paddingLeft: 6, paddingRight: 12, paddingVertical: 5, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}
+            >
+              <ClubBadge club={club} size={22} />
+              <T style={{ fontWeight: '600', fontSize: 13 }}>{club.name}</T>
+            </Pressable>
+          )}
           {profile.ageGroup && (
             <Chip icon="people-outline" label={ageGroupLabel(profile.ageGroup, profile.gender, settings.lang)} />
           )}
@@ -95,6 +107,7 @@ export function ProfileView({ profile, own, onRefresh }: { profile: Profile; own
             />
           </Row>
         )}
+        {!own && <SocialActions userId={profile.id} />}
         {incomplete && <Banner text={t('pr.completeProfile')} />}
 
         <Card>
@@ -106,11 +119,15 @@ export function ProfileView({ profile, own, onRefresh }: { profile: Profile; own
             <PR label={t('pr.cj')} value={formatWeight(profile.prCleanJerk, settings.unit)} />
             <PR label={t('pr.total')} value={formatWeight(total, settings.unit)} strong />
           </Row>
-          {sinclair && (
-            <T v="small" muted style={{ textAlign: 'right' }}>
-              {t('pr.sinclair')}: {formatNumber(sinclair, 2)} · {t('pr.bodyweight').toLowerCase()}{' '}
-              {formatWeight(profile.bodyweight, settings.unit)}
-            </T>
+          {sinclair !== null && (
+            <Row style={{ justifyContent: 'center', gap: 22, flexWrap: 'wrap', marginTop: 4 }}>
+              <T v="small" muted style={{ textAlign: 'center' }}>
+                {t('pr.sinclair')}: <T v="small" style={{ fontWeight: '800' }}>{formatNumber(sinclair, 2)}</T>
+              </T>
+              <T v="small" muted style={{ textAlign: 'center' }}>
+                {t('pr.bodyweight')}: <T v="small" style={{ fontWeight: '800' }}>{formatWeight(profile.bodyweight, settings.unit)}</T>
+              </T>
+            </Row>
           )}
         </Card>
       </View>

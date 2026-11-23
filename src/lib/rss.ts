@@ -1,4 +1,4 @@
-import type { FeedItem } from './types';
+import type { EventCategory, FeedItem, ResultItem } from './types';
 
 /**
  * Jednoduchý parser RSS feedů webu vzpirani.cz (kalendar?action=atom, aktuality?action=atom).
@@ -103,6 +103,60 @@ function items(xml: string) {
   return xml.match(/<item>[\s\S]*?<\/item>/gi) ?? [];
 }
 
+/** Určí kategorii závodu: MČR / liga / ostatní. */
+export function categorize(title: string, tag?: string | null): EventCategory {
+  const t = title.toLowerCase();
+  if (/mistrovství čr|mistrovstvi cr|amčr|\bmčr\b/.test(t) || tag === 'MČR') return 'mcr';
+  if (/liga|ligy|extralig/.test(t) || tag === 'Liga') return 'liga';
+  return 'other';
+}
+
+/** Archiv kalendáře (HTML stránka kalendar?action=archives) – proběhlé závody. */
+export function parseArchiveHtml(html: string): FeedItem[] {
+  const blocks = html.match(/<div class="article" data-article-id="\d+" data-article-tags="[^"]*">[\s\S]*?<hr class="cleaner">\s*<div class="leftFooter">/g) ?? [];
+  const out: FeedItem[] = [];
+  for (const b of blocks) {
+    const tags = b.match(/data-article-tags="([^"]*)"/)?.[1] ?? '';
+    const cat = parseCategory(decodeEntities(tags));
+    const a = b.match(/<h2><a href="([^"]+)">([\s\S]*?)<\/a><\/h2>/);
+    if (!a) continue;
+    const dates = [...b.matchAll(/(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/g)].slice(0, 2).map((m) => `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`);
+    const dateBlock = b.match(/Datum konání:([\s\S]*?)<\/span>\s*<\/span>|Datum konání:([\s\S]*?)<\/span>/);
+    const found = dateBlock ? [...dateBlock[0].matchAll(/(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/g)].map((m) => `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`) : dates;
+    const title = stripHtml(a[2]);
+    const link = `${BASE}${a[1]}`;
+    out.push({
+      id: link,
+      title,
+      link,
+      date: found[0] ?? null,
+      endDate: found[1] ?? null,
+      place: cat['Místo'] ?? null,
+      kind: cat['TS'] ?? null,
+      category: categorize(title, cat['TS']),
+      excerpt: null,
+      image: null,
+      attachments: [],
+    });
+  }
+  return out;
+}
+
+const BASE = 'https://www.vzpirani.cz';
+
+/** Feed výsledků soutěží (rok-2026?action=atom). */
+export function parseResults(xml: string): ResultItem[] {
+  return items(xml).map((it) => {
+    const link = decodeEntities(tag(it, 'link') ?? '').replace(/[?&]utm_[^&]*/g, '').replace(/&&/g, '&');
+    return {
+      id: link,
+      title: stripHtml(tag(it, 'title') ?? ''),
+      link: link.replace(/\?&/, '?'),
+      updated: rfcDate(tag(it, 'pubDate')),
+    };
+  });
+}
+
 export function parseCalendar(xml: string): FeedItem[] {
   return items(xml).map((it) => {
     const content = tag(it, 'content:encoded') ?? tag(it, 'description');
@@ -116,6 +170,7 @@ export function parseCalendar(xml: string): FeedItem[] {
       endDate: czDate(tag(it, 'endDate')),
       place: cat['Místo'] ?? null,
       kind: cat['TS'] ?? null,
+      category: categorize(stripHtml(tag(it, 'title') ?? ''), cat['TS']),
       excerpt: null,
       image: null,
       attachments: attachments(content),

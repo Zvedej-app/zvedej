@@ -18,7 +18,8 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomInset, useTopInset } from '../lib/insets';
 import { radius } from '../lib/theme';
 import { useSettings } from '../providers/SettingsProvider';
 
@@ -80,8 +81,15 @@ export function Screen({
   refreshControl?: React.ReactElement<any>;
 }) {
   const { colors } = useSettings();
+  const top = useTopInset();
+  const bottom = useBottomInset();
   return (
-    <SafeAreaView edges={edges} style={[{ flex: 1, backgroundColor: colors.bg }, style]}>
+    <View
+      style={[
+        { flex: 1, backgroundColor: colors.bg, paddingTop: edges.includes('top') ? top : 0, paddingBottom: edges.includes('bottom') ? bottom : 0 },
+        style,
+      ]}
+    >
       {scroll ? (
         <ScrollView
           contentContainerStyle={[{ padding: 16, paddingBottom: 40, gap: 14 }, contentStyle]}
@@ -93,7 +101,7 @@ export function Screen({
       ) : (
         children
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -248,8 +256,9 @@ export function Field({
   label,
   hint,
   style,
+  inputStyle,
   ...props
-}: TextInputProps & { label?: string; hint?: string; style?: StyleProp<ViewStyle> }) {
+}: TextInputProps & { label?: string; hint?: string; style?: StyleProp<ViewStyle>; inputStyle?: StyleProp<TextStyle> }) {
   const { colors } = useSettings();
   return (
     <View style={[{ gap: 6 }, style]}>
@@ -266,6 +275,7 @@ export function Field({
           webNoOutline,
           { color: colors.text, backgroundColor: colors.surface, borderColor: colors.border },
           props.multiline && { minHeight: 80, textAlignVertical: 'top', paddingTop: 12 },
+          inputStyle,
         ]}
       />
       {hint && (
@@ -335,7 +345,7 @@ export function Segmented<K extends string>({
               tap();
               onChange(o.key);
             }}
-            style={[styles.segmentItem, on && { backgroundColor: colors.primary }]}
+            style={[styles.segmentItem, on && { backgroundColor: colors.accent }]}
           >
             {o.icon && <Ionicons name={o.icon} size={15} color={on ? colors.onPrimary : colors.textMuted} />}
             <RNText
@@ -361,7 +371,7 @@ export function Chip({ label, on, onPress, icon }: { label: string; on?: boolean
       }}
       style={[
         styles.chip,
-        { borderColor: on ? colors.primary : colors.border, backgroundColor: on ? colors.primary : colors.surface },
+        { borderColor: on ? colors.accent : colors.border, backgroundColor: on ? colors.accent : colors.surface },
       ]}
     >
       {icon && <Ionicons name={icon} size={14} color={on ? colors.onPrimary : colors.text} />}
@@ -473,7 +483,7 @@ export function ListGroup({ children, title }: { children: React.ReactNode; titl
       <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         {items.map((c, i) => (
           <View key={i}>
-            {i > 0 && <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 52 }} />}
+            {i > 0 && <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.border, marginLeft: 14 }} />}
             {c}
           </View>
         ))}
@@ -492,8 +502,11 @@ export function ListItem({
   onToggle,
   danger,
   right,
+  left,
 }: {
   icon?: IconName;
+  /** vlastní prvek vlevo (např. logo klubu) místo ikony */
+  left?: React.ReactNode;
   title: string;
   subtitle?: string;
   value?: string;
@@ -507,7 +520,8 @@ export function ListItem({
   const color = danger ? colors.danger : colors.text;
   const content = (
     <Row style={{ paddingVertical: 12, paddingHorizontal: 14, minHeight: 52 }} gap={12}>
-      {icon && (
+      {left}
+      {icon && !left && (
         <View style={[styles.listIcon, { backgroundColor: danger ? 'transparent' : colors.primarySoft }]}>
           <Ionicons name={icon} size={18} color={danger ? colors.danger : colors.primary} />
         </View>

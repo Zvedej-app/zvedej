@@ -5,7 +5,17 @@ import { Platform } from 'react-native';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../config';
 import { currentMonthKey } from '../date';
 import { fallbackTheme } from '../../data/themes';
-import type { ChallengeTheme, ChallengeVideo, MonthlyWinner, Profile, TrainingData } from '../types';
+import type {
+  ChallengeTheme,
+  ChallengeVideo,
+  Conversation,
+  FriendsOverview,
+  FriendStatus,
+  Message,
+  MonthlyWinner,
+  Profile,
+  TrainingData,
+} from '../types';
 import type { Backend, Session, UploadVideoInput, VideoSort } from './types';
 import { fetchFeedCached } from './feeds';
 
@@ -62,6 +72,10 @@ function mapAuthor(r: Row | null) {
     avatarUrl: r?.avatar_url ?? null,
     clubId: r?.club_id ?? null,
   };
+}
+
+function mapMessage(r: Row): Message {
+  return { id: r.id, senderId: r.sender_id, recipientId: r.recipient_id, body: r.body, createdAt: r.created_at, readAt: r.read_at };
 }
 
 const monthDate = (key: string) => `${key}-01`;
@@ -329,6 +343,126 @@ export function createSupabaseBackend(): Backend {
         videoUrl: r.video?.video_url ?? '',
         thumbnailUrl: r.video?.thumbnail_url ?? null,
       }));
+    },
+
+    async friendsOverview(): Promise<FriendsOverview> {
+      const me = await myId();
+      if (!me) return { friends: [], incoming: [], outgoing: [] };
+      const { data, error } = await sb.from('friendships').select('*').or(`requester_id.eq.${me},addressee_id.eq.${me}`);
+      if (error) throw error;
+      const rows = (data ?? []) as Row[];
+      const ids = Array.from(new Set(rows.flatMap((r) => [r.requester_id, r.addressee_id]).filter((id: string) => id !== me)));
+      const { data: ps } = ids.length ? await sb.from('profiles').select('*').in('id', ids) : { data: [] as Row[] };
+      const byId = new Map((ps ?? []).map((p: Row) => [p.id as string, mapProfile(p)]));
+      const out: FriendsOverview = { friends: [], incoming: [], outgoing: [] };
+      for (const r of rows) {
+        const other = byId.get(r.requester_id === me ? r.addressee_id : r.requester_id);
+        if (!other) continue;
+        if (r.status === 'accepted') out.friends.push(other);
+        else if (r.addressee_id === me) out.incoming.push(other);
+        else out.outgoing.push(other);
+      }
+      return out;
+    },
+    async friendStatus(userId): Promise<FriendStatus> {
+      const me = await myId();
+      if (!me || me === userId) return 'none';
+      const { data } = await sb
+        .from('friendships')
+        .select('*')
+        .or(`and(requester_id.eq.${me},addressee_id.eq.${userId}),and(requester_id.eq.${userId},addressee_id.eq.${me})`)
+        .maybeSingle();
+      if (!data) return 'none';
+      if (data.status === 'accepted') return 'friends';
+      return data.requester_id === me ? 'outgoing' : 'incoming';
+    },
+    async sendFriendRequest(userId) {
+      const me = await myId();
+      if (!me) throw new Error('not signed in');
+      const { error } = await sb.from('friendships').insert({ requester_id: me, addressee_id: userId });
+      if (error && error.code !== '23505') throw error;
+    },
+    async respondFriendRequest(userId, accept) {
+      const me = await myId();
+      if (!me) throw new Error('not signed in');
+      const q = accept
+        ? sb.from('friendships').update({ status: 'accepted' }).eq('requester_id', userId).eq('addressee_id', me)
+        : sb.from('friendships').delete().eq('requester_id', userId).eq('addressee_id', me);
+      const { error } = await q;
+      if (error) throw error;
+    },
+    async removeFriend(userId) {
+      const me = await myId();
+      if (!me) return;
+      const { error } = await sb
+        .from('friendships')
+        .delete()
+        .or(`and(requester_id.eq.${me},addressee_id.eq.${userId}),and(requester_id.eq.${userId},addressee_id.eq.${me})`);
+      if (error) throw error;
+    },
+
+    async listConversations(): Promise<Conversation[]> {
+      const me = await myId();
+      if (!me) return [];
+      const { data, error } = await sb
+        .from('messages')
+        .select('*')
+        .or(`sender_id.eq.${me},recipient_id.eq.${me}`)
+        .order('created_at', { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      const msgs = (data ?? []).map(mapMessage);
+      const byUser = new Map<string, Message[]>();
+      for (const m of msgs) {
+        const other = m.senderId === me ? m.recipientId : m.senderId;
+        byUser.set(other, [...(byUser.get(other) ?? []), m]);
+      }
+      const ids = [...byUser.keys()];
+      if (!ids.length) return [];
+      const [{ data: ps }, overview] = await Promise.all([sb.from('profiles').select('*').in('id', ids), this.friendsOverview()]);
+      const friendIds = new Set(overview.friends.map((f) => f.id));
+      return (ps ?? [])
+        .map((p: Row) => {
+          const list = byUser.get(p.id)!;
+          const iReplied = list.some((m) => m.senderId === me);
+          return {
+            user: mapProfile(p),
+            last: list[0],
+            unread: list.filter((m) => m.recipientId === me && !m.readAt).length,
+            isRequest: !friendIds.has(p.id) && !iReplied,
+          };
+        })
+        .sort((a, b) => b.last.createdAt.localeCompare(a.last.createdAt));
+    },
+    async listMessages(userId) {
+      const me = await myId();
+      if (!me) return [];
+      const { data, error } = await sb
+        .from('messages')
+        .select('*')
+        .or(`and(sender_id.eq.${me},recipient_id.eq.${userId}),and(sender_id.eq.${userId},recipient_id.eq.${me})`)
+        .order('created_at', { ascending: true })
+        .limit(300);
+      if (error) throw error;
+      return (data ?? []).map(mapMessage);
+    },
+    async sendMessage(userId, body) {
+      const me = await myId();
+      if (!me) throw new Error('not signed in');
+      const { data, error } = await sb.from('messages').insert({ sender_id: me, recipient_id: userId, body: body.trim() }).select('*').single();
+      if (error) throw error;
+      return mapMessage(data);
+    },
+    async markRead(userId) {
+      const me = await myId();
+      if (!me) return;
+      await sb.from('messages').update({ read_at: new Date().toISOString() }).eq('sender_id', userId).eq('recipient_id', me).is('read_at', null);
+    },
+    async unreadCount() {
+      const me = await myId();
+      if (!me) return 0;
+      const { count } = await sb.from('messages').select('id', { count: 'exact', head: true }).eq('recipient_id', me).is('read_at', null);
+      return count ?? 0;
     },
 
     async loadTraining(userId) {

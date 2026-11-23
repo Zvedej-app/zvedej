@@ -17,6 +17,7 @@ import {
   Screen,
   T,
 } from '../../components/ui';
+import { ClubBadge } from '../../components/ClubBadge';
 import { api } from '../../lib/api';
 import { formatCategory } from '../../lib/categories';
 import { getClub } from '../../lib/clubs';
@@ -63,7 +64,12 @@ export default function ClubScreen() {
       />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 40 }}>
         <Card>
-          <T v="h2">{club.name}</T>
+          <Row gap={12}>
+            <ClubBadge club={club} size={48} />
+            <T v="h2" style={{ flex: 1 }}>
+              {club.name}
+            </T>
+          </Row>
           <T muted>
             {club.city} · {t(club.region === 'cechy' ? 'csv.region.cechy' : 'csv.region.morava')}
           </T>

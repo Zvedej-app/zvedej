@@ -9,62 +9,81 @@ export interface Palette {
   primaryStrong: string;
   primarySoft: string;
   onPrimary: string;
+  /** červený akcent z české vlajky */
+  accent: string;
+  accentSoft: string;
   danger: string;
   success: string;
   like: string;
   tabBar: string;
   overlay: string;
+  /** barvy typů závodů */
+  mcr: string;
+  liga: string;
+  other: string;
 }
 
-/** Modrobílá paleta aplikace Zvedej */
+/** Barvy české vlajky: modrá #11457E, červená #D7141A, bílá */
+export const FLAG = { blue: '#11457E', red: '#D7141A', white: '#FFFFFF' };
+
 export const BLUE = {
-  50: '#EEF4FF',
-  100: '#DCE7FF',
-  200: '#B5CCFF',
-  300: '#84A9FF',
-  400: '#4F80FA',
-  500: '#2160F0',
-  600: '#1249D1',
-  700: '#0E39A6',
-  800: '#0C2D7E',
-  900: '#081D52',
-  950: '#050F2E',
+  50: '#EEF2F7',
+  100: '#DDE6F2',
+  200: '#A9BFDC',
+  300: '#6F93C3',
+  400: '#3F6FAE',
+  500: '#1E5AA8',
+  600: '#11457E',
+  700: '#0B2F59',
+  800: '#09264A',
+  900: '#071B35',
+  950: '#07142A',
 };
 
 export const lightPalette: Palette = {
   bg: '#FFFFFF',
-  surface: '#F4F7FE',
-  surfaceAlt: BLUE[50],
-  border: '#DCE3F2',
+  surface: '#F5F7FA',
+  surfaceAlt: '#EEF2F7',
+  border: '#DCE3EC',
   text: '#0A1633',
-  textMuted: '#5B6B8C',
-  primary: BLUE[600],
-  primaryStrong: BLUE[700],
-  primarySoft: BLUE[100],
+  textMuted: '#5B6B84',
+  primary: FLAG.blue,
+  primaryStrong: '#0B2F59',
+  primarySoft: '#DDE6F2',
   onPrimary: '#FFFFFF',
-  danger: '#D92D3A',
-  success: '#12915A',
-  like: '#F0304E',
+  accent: FLAG.red,
+  accentSoft: '#FBE3E4',
+  danger: '#C4121A',
+  success: '#16A34A',
+  like: FLAG.red,
   tabBar: '#FFFFFF',
-  overlay: 'rgba(5,15,46,0.55)',
+  overlay: 'rgba(7,20,42,0.55)',
+  mcr: FLAG.red,
+  liga: FLAG.blue,
+  other: '#6B7A90',
 };
 
 export const darkPalette: Palette = {
-  bg: BLUE[950],
-  surface: '#0B1A44',
-  surfaceAlt: '#102356',
-  border: '#1C3170',
-  text: '#F2F6FF',
-  textMuted: '#9AABD3',
-  primary: BLUE[400],
-  primaryStrong: BLUE[300],
-  primarySoft: '#16307A',
+  bg: '#07142A',
+  surface: '#0E1F3D',
+  surfaceAlt: '#142A4D',
+  border: '#203A66',
+  text: '#F2F6FB',
+  textMuted: '#9DB0CC',
+  primary: '#4F86C9',
+  primaryStrong: '#8DB4E3',
+  primarySoft: '#16335E',
   onPrimary: '#FFFFFF',
+  accent: '#E8353B',
+  accentSoft: '#3B1520',
   danger: '#FF5A66',
-  success: '#3CCB8A',
-  like: '#FF4D6A',
-  tabBar: '#071437',
+  success: '#22C55E',
+  like: '#FF4D55',
+  tabBar: '#061226',
   overlay: 'rgba(0,0,0,0.6)',
+  mcr: '#E8353B',
+  liga: '#4F86C9',
+  other: '#8A97AB',
 };
 
 export const radius = { sm: 8, md: 12, lg: 18, xl: 26, pill: 999 };

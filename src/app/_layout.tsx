@@ -5,6 +5,8 @@ import * as SystemUI from 'expo-system-ui';
 import React, { useCallback, useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AnimatedSplash } from '../components/AnimatedSplash';
+import { DialogHost } from '../components/DialogHost';
+import { RestNotificationBridge } from '../components/RestNotificationBridge';
 import { AuthProvider, useAuth } from '../providers/AuthProvider';
 import { SettingsProvider, useSettings } from '../providers/SettingsProvider';
 import { TrainingProvider } from '../providers/TrainingProvider';
@@ -53,6 +55,10 @@ function App() {
             <Stack.Screen name="profile-edit" options={{ presentation: 'modal' }} />
             <Stack.Screen name="upload" options={{ presentation: 'modal' }} />
             <Stack.Screen name="plan/[id]" />
+            <Stack.Screen name="plans" />
+            <Stack.Screen name="friends" />
+            <Stack.Screen name="messages" />
+            <Stack.Screen name="chat/[id]" />
             <Stack.Screen name="workout" options={{ gestureEnabled: false }} />
             <Stack.Screen name="log/[id]" />
             <Stack.Screen name="user/[id]" />
@@ -64,6 +70,8 @@ function App() {
           </Stack.Protected>
         </Stack>
       )}
+      <DialogHost />
+      <RestNotificationBridge />
       {!splashDone && <AnimatedSplash ready={allReady} onDone={done} />}
     </>
   );

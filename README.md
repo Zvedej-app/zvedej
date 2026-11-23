@@ -3,7 +3,7 @@
 Mobilní aplikace pro vzpěrače z Čech a Moravy – tréninky, osobní rekordy, výzva **Vzpěrač měsíce**
 ve stylu Instagram Reels a napojení na web Českého svazu vzpírání.
 
-*By Sladky&Vejvoda*
+*By Sladký&Vejvoda*
 
 | Úvod | Svaz | Tréninky | Plán – kolečka |
 |---|---|---|---|
@@ -17,11 +17,11 @@ Ovládání jako na Instagramu – spodní lišta s ikonami:
 
 | Ikona | Sekce | Co umí |
 |---|---|---|
-| 🦁 lev | **Svaz (ČSV)** | Kalendář závodů a novinky z [vzpirani.cz](https://www.vzpirani.cz) (dvě poloviny – přepínání i swipem), vyhledávání vzpěračů a klubů registrovaných v aplikaci, detail klubu s navigací, webem a sociálními sítěmi |
+| 🦁 lev | **Svaz (ČSV)** | Kalendář závodů (nadcházející, **proběhlé od 1. 1.**, **výsledky soutěží**) a novinky z [vzpirani.cz](https://www.vzpirani.cz). Závody jsou barevně odlišené: **MČR** červeně, **liga** modře, **ostatní** šedě. Vyhledávání vzpěračů a klubů, detail klubu s navigací, webem a sociálními sítěmi |
 | 🏋️ činka | **Tréninky** | Viz níže |
 | ▶️ | **Vzpěrač měsíce** | Videa na celou obrazovku (reels), lajk dvojklikem, téma měsíce, odpočet do konce hlasování, pořadí, síň vítězů, nahlášení nevhodného videa |
 | ⚙️ | **Nastavení** | Světlý / tmavý / systémový režim, čeština / angličtina / slovenština, kg / lb, zaokrouhlování vah, výchozí osa, výchozí pauza mezi sériemi, vibrace, automatické přehrávání a ztlumení videí, viditelnost profilu ve vyhledávání, export tréninků, smazání účtu |
-| 👤 fotka | **Profil** | Jméno, příjmení, nepovinná fotka a motto, klub, pohlaví, rok narození, věková a hmotnostní kategorie, osobáky ze závodů (trh, nadhoz, dvojboj, Sinclair), mřížka nahraných videí, počet lajků a výher |
+| 👤 fotka | **Profil** (vlevo nahoře **přátelé** a **zprávy**) | Jméno, příjmení, nepovinná fotka a motto, klub, pohlaví, rok narození, věková a hmotnostní kategorie, osobáky ze závodů (trh, nadhoz, dvojboj, Sinclair), mřížka nahraných videí, počet lajků a výher |
 
 ### Tréninky – jak jsou navržené
 
@@ -145,3 +145,37 @@ npx eas-cli@latest build --platform all --profile production
   vhodné odsouhlasit se svazem.
 - Push notifikace (nové téma, vyhlášení vítěze) přes `expo-notifications`.
 - Administrace témat a moderace nahlášených videí (zatím přímo v Supabase).
+
+
+## Novinky ve verzi 1.1
+
+- **Barvy české vlajky** (modrá `#11457E`, červená `#D7141A`, bílá), světlý i tmavý režim. Barvy jsou na jednom místě: `src/lib/theme.ts`.
+- **Plány** mají vlastní tlačítko nad přepínačem Dnes / Deník / Nástroje. Nový plán se tvoří **průvodcem ve 3 krocích** (základ → dny → cviky), plán má **celý kalendář** pro výběr data začátku.
+- **Dny se pojmenují podle dne v týdnu**. Trénink přiřazený více dnům (např. Po + Čt) se jmenuje podle dne, kdy ho otevřeš.
+- **Dnešní trénink jde upravit přímo v záložce Dnes** (tlačítko Upravit), změny se uloží do plánu.
+- **Moje maxima**: lze přidat libovolný cvik, ze kterého se počítají procenta. Tabulka procent byla odstraněna.
+- **Váhy jen v celých kilech** (žádné půlkilo). Kolečko pro výběr čísel se přesně „zacvakne“ do středu a cvakne při každém čísle.
+- **Kalkulačka kotoučů**: kotouče se řadí od největšího po nejmenší, uzávěr je až za nimi, zobrazuje se jen jedna strana osy.
+- **Časovač pauzy**: modrý podklad, červený pruh ubíhá zprava doleva, pod časem je další cvik s váhou; po skončení zvuk (gong / pípnutí / zvonek / bez zvuku, nastavuje se v Nastavení) a velké odškrtnutí dalšího nástupu.
+- **Upozornění na pauzu na zamčené obrazovce** s tlačítkem „Odškrtnout nástup“ (`expo-notifications`, jen iOS/Android).
+- Po dokončení tréninku rychlé reakce (Easy, Tak akorát, Docela na …, Dnes to nešlo).
+- **Přátelé a zprávy**: žádosti o přátelství, soukromý chat. Zprávy od nepřátel se zobrazí v „Žádostech o zprávy“ (nejvýš 3 zprávy do odpovědi).
+- Export tréninků do **PDF**. Nastavení bez volby „Systém“ a bez zaokrouhlování.
+
+### Aktualizace dat ze svazu
+
+```bash
+npm run update:clubs
+```
+
+```bash
+npm run update:feeds
+```
+
+První příkaz stáhne kluby, druhý kalendář včetně archivu proběhlých závodů, novinky a výsledky (uloží se jako záložní snímek `src/data/feedSnapshot.ts`).
+
+### Omezení
+
+- Živý odpočet na zamčené obrazovce (Live Activity v iOS, průběžné oznámení s odpočtem v Androidu) vyžaduje nativní kód, který zde není. Aplikace pošle oznámení ve chvíli, kdy pauza skončí.
+- Loga klubů: svaz je v evidenci neuvádí, ikona klubu proto zatím zobrazuje iniciály. Pole `logo` v `src/data/clubs.ts` je připravené.
+- Při migraci databáze nahraj i `supabase/migrations/20261123000000_social.sql` (přátelé a zprávy).
