@@ -87,13 +87,13 @@ export function formatCategory(cat: string | null) {
 }
 
 /**
- * Sinclairovy koeficienty pro olympijský cyklus 2025–2028.
- * Ověřeno proti oficiálním tabulkám „Sinclair Coefficients (2025-2028)“ (shoda na 6 desetinných míst).
+ * Sinclairovy koeficienty 2021–2024, stejné jako kalkulačka powerlifter.cz
+ * (tabulky.aspx?f=sinclair). Ověřeno proti její tabulce, shoda na 6 desetinných míst.
  * Sinclair = dvojboj × 10^(A · log10(hmotnost / b)²) pro hmotnost menší než b, jinak koeficient 1.
  */
 export const SINCLAIR = {
-  M: { A: 0.700767794, b: 201.159007 },
-  F: { A: 0.674107962, b: 163.918008 },
+  M: { A: 0.722762521, b: 193.609 },
+  F: { A: 0.787004341, b: 153.757 },
 };
 
 export function sinclairCoefficient(gender: Gender, bodyweight: number) {

@@ -166,7 +166,7 @@ npx eas-cli@latest build --platform all --profile production
 
 - **Červená z loga ČSV** (`#C0000C`, stejný odstín jako činka a koruna lva) ve všech místech aplikace.
 - **Bez zoomu**: aplikace se dá posouvat jen nahoru a dolů, přiblížení prsty i dvojitým klepnutím je vypnuté.
-- **Sinclair 2025–2028** (IWF): muži A = 0,700767794, b = 201,159007; ženy A = 0,674107962, b = 163,918008.
+- **Sinclair 2021–2024** jako kalkulačka powerlifter.cz: muži A = 0,722762521, b = 193,609; ženy A = 0,787004341, b = 153,757.
 - **Kalkulačka kotoučů**: jen levá část osy, kotouče, uzávěr a kousek osy za ním. Malé kotouče (0,5 / 1 / 1,5 / 2 kg) jsou zvlášť vpravo od uzávěru.
 - **Úvodní obrazovka**: činka se dvěma červenými a jedním modrým kotoučem, uzávěrem a bílým půlkilem, nápis Zvedej je mezi kotouči.
 - **Časovač pauzy**: červený podklad, modrá plynule ubývá s rozmazaným („mlhavým“) okrajem. Zvuky na konci pauzy jsou dvakrát delší a ostřejší.
