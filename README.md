@@ -196,5 +196,5 @@ První příkaz stáhne kluby, druhý kalendář včetně archivu proběhlých z
 ### Omezení
 
 - Živý odpočet na zamčené obrazovce funguje jen v nativní aplikaci (vývojový build `eas build --profile development` nebo build pro obchod), ne v Expo Go ani ve webové verzi na ploše iPhonu. Ve webové verzi to iOS neumožňuje.
-- Loga klubů jsou v `assets/images/clubs/<id>.png` a `src/data/clubLogos.ts` (30 z 51 klubů, staženo z webů a facebookových stránek klubů). Kluby bez loga mají iniciály.
+- Loga klubů jsou v `assets/images/clubs/<id>.png` a `src/data/clubLogos.ts` (42 z 51 klubů, staženo z webů a facebookových stránek klubů). Kluby bez loga mají iniciály.
 - Při migraci databáze nahraj i `supabase/migrations/20261123000000_social.sql` (přátelé a zprávy).

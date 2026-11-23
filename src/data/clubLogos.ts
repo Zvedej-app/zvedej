@@ -1,8 +1,10 @@
-// Loga klubů (staženo z webů a facebookových stránek klubů, 2026-11).
+// Loga klubů (staženo z webů a facebookových stránek klubů, 2026-11; Meziboří dodal uživatel).
+// Sokolské jednoty bez vlastního loga mají znak České obce sokolské, TJ Šumperk má bílé logo na tmavém podkladu.
 // Klub bez loga se zobrazí iniciálami. Nové logo: PNG do assets/images/clubs/<id klubu>.png a řádek sem.
 
 export const CLUB_LOGOS: Record<number, number> = {
   3: require('../../assets/images/clubs/3.png'),
+  4: require('../../assets/images/clubs/4.png'),
   5: require('../../assets/images/clubs/5.png'),
   6: require('../../assets/images/clubs/6.png'),
   7: require('../../assets/images/clubs/7.png'),
@@ -14,18 +16,28 @@ export const CLUB_LOGOS: Record<number, number> = {
   14: require('../../assets/images/clubs/14.png'),
   15: require('../../assets/images/clubs/15.png'),
   16: require('../../assets/images/clubs/16.png'),
+  17: require('../../assets/images/clubs/17.png'),
   18: require('../../assets/images/clubs/18.png'),
   19: require('../../assets/images/clubs/19.png'),
   20: require('../../assets/images/clubs/20.png'),
   21: require('../../assets/images/clubs/21.png'),
+  24: require('../../assets/images/clubs/24.png'),
   25: require('../../assets/images/clubs/25.png'),
   27: require('../../assets/images/clubs/27.png'),
   28: require('../../assets/images/clubs/28.png'),
   30: require('../../assets/images/clubs/30.png'),
   31: require('../../assets/images/clubs/31.png'),
   32: require('../../assets/images/clubs/32.png'),
+  33: require('../../assets/images/clubs/33.png'),
+  34: require('../../assets/images/clubs/34.png'),
+  35: require('../../assets/images/clubs/35.png'),
+  36: require('../../assets/images/clubs/36.png'),
+  37: require('../../assets/images/clubs/37.png'),
+  38: require('../../assets/images/clubs/38.png'),
   40: require('../../assets/images/clubs/40.png'),
+  42: require('../../assets/images/clubs/42.png'),
   44: require('../../assets/images/clubs/44.png'),
+  45: require('../../assets/images/clubs/45.png'),
   46: require('../../assets/images/clubs/46.png'),
   47: require('../../assets/images/clubs/47.png'),
   48: require('../../assets/images/clubs/48.png'),
