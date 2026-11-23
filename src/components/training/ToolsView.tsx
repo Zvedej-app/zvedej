@@ -214,7 +214,7 @@ function BarbellSide({ plates, collars, unit }: { plates: number[]; collars: boo
           )}
           {/* malé kotouče samostatně na ose vpravo od uzávěru */}
           {small.length > 0 && (
-            <View style={{ marginLeft: 14, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+            <View style={{ marginLeft: 3, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
               {small.map((p, i) => (
                 <Plate key={i} p={p} unit={unit} />
               ))}
