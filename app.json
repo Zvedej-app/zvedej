@@ -18,7 +18,7 @@
     "android": {
       "package": "cz.sladkyvejvoda.zvedej",
       "adaptiveIcon": {
-        "backgroundColor": "#11457E",
+        "backgroundColor": "#0A3666",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -29,7 +29,7 @@
       "favicon": "./assets/favicon.png",
       "name": "Zvedej",
       "shortName": "Zvedej",
-      "themeColor": "#11457E",
+      "themeColor": "#0A3666",
       "backgroundColor": "#FFFFFF",
       "output": "single"
     },
@@ -41,7 +41,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#11457E",
+          "backgroundColor": "#0A3666",
           "image": "./assets/splash-icon.png",
           "imageWidth": 220,
           "dark": {
@@ -65,7 +65,7 @@
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
-          "color": "#11457E",
+          "color": "#0A3666",
           "sounds": [
             "./assets/sounds/gong.wav",
             "./assets/sounds/whistle.wav",

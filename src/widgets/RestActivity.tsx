@@ -20,7 +20,7 @@ export type RestActivityProps = {
   nextLabel: string;
 };
 
-const BLUE = '#11457E';
+const BLUE = '#0A3666';
 const RED = '#C0000C';
 
 const RestActivity = (props: RestActivityProps, env: LiveActivityEnvironment) => {

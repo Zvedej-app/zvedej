@@ -149,7 +149,7 @@ npx eas-cli@latest build --platform all --profile production
 
 ## Novinky ve verzi 1.1
 
-- **Barvy české vlajky** (modrá `#11457E`, červená `#C0000C`, bílá), světlý i tmavý režim. Barvy jsou na jednom místě: `src/lib/theme.ts`.
+- **Barvy české vlajky** (modrá `#0A3666`, červená `#C0000C`, bílá), světlý i tmavý režim. Barvy jsou na jednom místě: `src/lib/theme.ts`.
 - **Plány** mají vlastní tlačítko nad přepínačem Dnes / Deník / Nástroje. Nový plán se tvoří **průvodcem ve 3 krocích** (základ → dny → cviky), plán má **celý kalendář** pro výběr data začátku.
 - **Dny se pojmenují podle dne v týdnu**. Trénink přiřazený více dnům (např. Po + Čt) se jmenuje podle dne, kdy ho otevřeš.
 - **Dnešní trénink jde upravit přímo v záložce Dnes** (tlačítko Upravit), změny se uloží do plánu.
