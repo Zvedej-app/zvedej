@@ -1,16 +1,31 @@
 import { Image } from 'expo-image';
 import React from 'react';
 import { View } from 'react-native';
+import { CLUB_LOGOS } from '../data/clubLogos';
 import type { Club } from '../lib/types';
 import { useSettings } from '../providers/SettingsProvider';
 import { T } from './ui';
 
-/** Ikona klubu: logo, pokud ho svaz uvádí, jinak iniciály klubu. */
-export function ClubBadge({ club, size = 28 }: { club: Pick<Club, 'name' | 'logo'> | null | undefined; size?: number }) {
+/** Ikona klubu: jeho logo (src/data/clubLogos.ts nebo URL z dat), jinak iniciály klubu. */
+export function ClubBadge({
+  club,
+  size = 28,
+}: {
+  club: (Pick<Club, 'name' | 'logo'> & { id?: number }) | null | undefined;
+  size?: number;
+}) {
   const { colors } = useSettings();
   if (!club) return null;
-  if (club.logo) {
-    return <Image source={{ uri: club.logo }} style={{ width: size, height: size, borderRadius: size / 4 }} contentFit="contain" />;
+  const local = club.id != null ? CLUB_LOGOS[club.id] : undefined;
+  if (local || club.logo) {
+    return (
+      <Image
+        source={local ?? { uri: club.logo! }}
+        style={{ width: size, height: size }}
+        contentFit="contain"
+        accessibilityLabel={club.name}
+      />
+    );
   }
   const initials = club.name
     .replace(/[^\p{L}\s]/gu, '')
