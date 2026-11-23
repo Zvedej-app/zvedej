@@ -59,6 +59,30 @@
         height: 100%;
         flex: 1;
       }
+      /*
+       * Aplikace na ploše iPhonu (průhledný stavový řádek): iOS kreslí stránku od horního okraje
+       * pod hodinami, ale její výšku (100 %) počítá bez stavového řádku – dole by zůstala mezera
+       * velká jako stavový řádek a celá aplikace by byla „posunutá nahoru“. Výšku proto
+       * natáhneme na celou obrazovku.
+       */
+      @media (display-mode: standalone) {
+        html,
+        body {
+          bottom: auto;
+          height: 100vh;
+        }
+        #root {
+          height: 100vh;
+        }
+      }
+      html.ios-pwa,
+      html.ios-pwa body {
+        bottom: auto;
+        height: 100vh;
+      }
+      html.ios-pwa #root {
+        height: 100vh;
+      }
     </style>
   </head>
 
@@ -68,6 +92,8 @@
     <!-- The root element for your Expo app. -->
     <div id="root"></div>
     <script>
+      // starší iOS nezná display-mode: standalone – rozpoznáme aplikaci na ploše podle navigator.standalone
+      if (window.navigator.standalone) document.documentElement.classList.add('ios-pwa');
       // iOS Safari ignoruje user-scalable=no – zablokujeme gesto přiblížení dvěma prsty
       (function () {
         var block = function (e) { e.preventDefault(); };

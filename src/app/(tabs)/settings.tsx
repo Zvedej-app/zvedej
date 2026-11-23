@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { ScreenDiagnostics } from '../../components/ScreenDiagnostics';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
@@ -222,6 +223,7 @@ export default function SettingsScreen() {
             <T v="small" muted>
               {t('app.by')}
             </T>
+            <ScreenDiagnostics />
           </View>
         </Screen>
       </View>
