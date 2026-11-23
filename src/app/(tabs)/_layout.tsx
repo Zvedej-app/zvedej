@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomInset } from '../../lib/insets';
 import { LionLogo } from '../../components/Logo';
 import { Avatar, type IconName } from '../../components/ui';
 import { useAuth } from '../../providers/AuthProvider';
@@ -19,7 +19,7 @@ const ICONS: Record<string, { on: IconName; off: IconName; label: TKey }> = {
 
 /** Spodní lišta ve stylu Instagramu – jen ikony, aktivní ikona je plná. */
 function InstaTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
-  const insets = useSafeAreaInsets();
+  const bottomInset = useBottomInset();
   const { colors, t, tap } = useSettings();
   const { profile } = useAuth();
   const dark = state.routes[state.index]?.name === 'challenge';
@@ -31,7 +31,7 @@ function InstaTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
       style={[
         desktop ? [styles.side, { borderRightColor: dark ? '#222' : colors.border }] : styles.bar,
         {
-          paddingBottom: desktop ? 16 : Math.max(insets.bottom, 8),
+          paddingBottom: desktop ? 16 : Math.max(bottomInset, 8),
           backgroundColor: dark ? '#000000' : colors.tabBar,
           borderTopColor: dark ? '#222' : colors.border,
         },

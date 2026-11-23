@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { Animated, Easing, Modal, Platform, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomInset } from '../../lib/insets';
 import { plural, type TKey } from '../../lib/i18n';
 import { BLUE, FONTS, FLAG } from '../../lib/theme';
 import { useSettings } from '../../providers/SettingsProvider';
@@ -63,6 +64,7 @@ export interface CelebrationData {
 
 /** Oslava po dokončení tréninku: konfety a shrnutí. */
 export function Celebration({ data, onClose }: { data: CelebrationData | null; onClose: () => void }) {
+  const bottomInset = useBottomInset();
   const { t, settings } = useSettings();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -79,7 +81,7 @@ export function Celebration({ data, onClose }: { data: CelebrationData | null; o
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <LinearGradient colors={[BLUE[500], BLUE[600], BLUE[800]]} style={StyleSheet.absoluteFill} />
-      <View style={[styles.wrap, { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 24 }]}>
+      <View style={[styles.wrap, { paddingTop: insets.top + 40, paddingBottom: bottomInset + 24 }]}>
         <Animated.View style={{ alignItems: 'center', gap: 10, opacity: pop, transform: [{ scale }] }}>
           <View style={styles.medal}>
             <Ionicons name="trophy" size={56} color="#F1B100" />

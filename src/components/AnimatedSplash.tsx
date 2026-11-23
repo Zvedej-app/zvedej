@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomInset } from '../lib/insets';
 import { BLUE } from '../lib/theme';
 import { BarbellHalf } from './Logo';
 
@@ -13,7 +13,7 @@ import { BarbellHalf } from './Logo';
 const MIN_MS = 2600;
 
 export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () => void }) {
-  const insets = useSafeAreaInsets();
+  const bottomInset = useBottomInset();
   const { width } = useWindowDimensions();
   // velikost poloviny činky podle šířky displeje (uprostřed je nápis Zvedej)
   // na úzkých displejích se mezera i nápis zmenší, aby se činka vešla
@@ -68,8 +68,8 @@ export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () =
         </Animated.View>
         <View style={[styles.floor, { width: half * 2 + titleW }]} />
       </View>
-      <Text style={[styles.byWord, styles.byWrap, { bottom: insets.bottom + 86 }]}>By</Text>
-      <Text style={[styles.by, styles.byWrap, { bottom: insets.bottom + 40 }]}>{'Sladký&Vejvoda'}</Text>
+      <Text style={[styles.byWord, styles.byWrap, { bottom: bottomInset + 86 }]}>By</Text>
+      <Text style={[styles.by, styles.byWrap, { bottom: bottomInset + 40 }]}>{'Sladký&Vejvoda'}</Text>
     </Animated.View>
   );
 }

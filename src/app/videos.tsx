@@ -1,8 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTopInset } from '../lib/insets';
+import { useBottomInset, useTopInset } from '../lib/insets';
 import { useIsDesktop } from '../lib/layout';
 import { ReelsPager } from '../components/reels/ReelsPager';
 import { IconButton, Loading } from '../components/ui';
@@ -14,7 +13,7 @@ import { useAuth } from '../providers/AuthProvider';
 export default function VideosScreen() {
   const { user, index } = useLocalSearchParams<{ user: string; index?: string }>();
   const { session } = useAuth();
-  const insets = useSafeAreaInsets();
+  const bottomInset = useBottomInset();
   const topInset = useTopInset();
   const [videos, setVideos] = useState<ChallengeVideo[] | null>(null);
   const desktop = useIsDesktop();
@@ -38,7 +37,7 @@ export default function VideosScreen() {
             videos={videos}
             myUserId={session?.userId ?? null}
             initialIndex={Number(index ?? 0)}
-            bottomInset={insets.bottom}
+            bottomInset={bottomInset}
             onLike={async (v, liked) => {
               setVideos((l) =>
                 (l ?? []).map((x) =>

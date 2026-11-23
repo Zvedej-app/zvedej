@@ -19,7 +19,6 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomInset, useTopInset } from '../lib/insets';
 import { CONTENT_MAX, CONTENT_WIDE_MAX, useIsDesktop } from '../lib/layout';
 import { FONTS, radius } from '../lib/theme';
@@ -636,8 +635,8 @@ export function Sheet({
   right?: React.ReactNode;
   full?: boolean;
 }) {
+  const bottomInset = useBottomInset();
   const { colors } = useSettings();
-  const insets = useSafeAreaInsets();
   // na počítači se panel zobrazí jako dialog uprostřed obrazovky
   const desktop = useIsDesktop();
   return (
@@ -653,7 +652,7 @@ export function Sheet({
               styles.sheet,
               {
                 backgroundColor: colors.bg,
-                paddingBottom: Math.max(insets.bottom, 16),
+                paddingBottom: Math.max(bottomInset, 16),
                 maxHeight: '92%',
               },
               full && { height: '92%' },
