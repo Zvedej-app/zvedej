@@ -61,11 +61,12 @@ function art({ inset, mono = false, text = true }) {
     }`;
 }
 
-// jednobarevné modré pozadí, přesně modrá aplikace (#11457E jako tabulka Plány), bílý nápis
-const BG = `<rect width="1024" height="1024" fill="#11457E"/>`;
+// bílé pozadí, tmavě modrý nápis
+const BG = `<rect width="1024" height="1024" fill="#FFFFFF"/>`;
+const TEXT = '#0A3666';
 
 /** nápis „Zvedej!“ písmem Jost (scripts/fonts, licence OFL) */
-function word({ width = 0.66, color = '#FFFFFF' } = {}) {
+function word({ width = 0.66, color = TEXT } = {}) {
   // písmo 800, šířka nápisu ≈ 3,05 × velikost písma
   const fs = (1024 * width) / 3.05;
   return `<text x="512" y="${512 + fs * 0.24}" text-anchor="middle" font-family="Jost" font-weight="800"
@@ -84,7 +85,8 @@ const files = [
   // Android adaptivní ikona: popředí musí být v bezpečné zóně (střední 66 %)
   { out: 'assets/android-icon-background.png', size: 1024, svg: svg(BG), opaque: true },
   { out: 'assets/android-icon-foreground.png', size: 1024, svg: svg(word({ width: 0.56 })), transparent: true },
-  { out: 'assets/android-icon-monochrome.png', size: 1024, svg: svg(word({ width: 0.56 })), transparent: true },
+  // monochromatickou ikonu si Android přebarví sám – stačí bílý tvar
+  { out: 'assets/android-icon-monochrome.png', size: 1024, svg: svg(word({ width: 0.56, color: '#FFFFFF' })), transparent: true },
   // splash: kresba na průhledném pozadí (barvu pozadí nastavuje app.json)
   { out: 'assets/splash-icon.png', size: 1024, svg: svg(art({ inset: 20 })), transparent: true },
 ];
