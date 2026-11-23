@@ -20,7 +20,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Klíče Supabase z GitHub Secrets (Settings → Secrets and variables → Actions).
+      # Když chybí, aplikace se sestaví v demo režimu (data jen v zařízení).
       - run: npm run build:web
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+          EXPO_PUBLIC_FEEDBACK_EMAIL: ${{ secrets.EXPO_PUBLIC_FEEDBACK_EMAIL }}
       - name: Publish to gh-pages
         run: |
           cd dist
