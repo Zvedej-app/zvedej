@@ -1,13 +1,16 @@
-// Vygeneruje ikony aplikace (iOS, Android, web/PWA, splash) ze stejné kresby činky jako úvodní obrazovka.
+// Vygeneruje ikony aplikace (iOS, Android, web/PWA): nápis „Zvedej!“ na černo-modrém přechodu.
+// Obrázek pro nativní úvodní obrazovku (splash) je činka jako v animované úvodní obrazovce.
 // Spuštění: node scripts/make-icons.mjs   (potřebuje Playwright s Chromiem)
 import { createRequire } from 'node:module';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+const FONT = readFileSync(join(root, 'scripts/fonts/jost-latin-800-normal.woff2')).toString('base64');
 
 const RED = '#C0000C';
 const BLUE_PLATE = '#1E5AA8';
@@ -58,23 +61,32 @@ function art({ inset, mono = false, text = true }) {
     }`;
 }
 
-const BG = `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-  <stop offset="0" stop-color="#1E5AA8"/><stop offset="0.55" stop-color="#11457E"/><stop offset="1" stop-color="#0A2A5C"/>
+// černo-modrý přechod zleva doprava: černá sahá zhruba do třetiny, pak plynule modrá aplikace
+const BG = `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+  <stop offset="0" stop-color="#000000"/><stop offset="0.33" stop-color="#03101F"/><stop offset="1" stop-color="#11457E"/>
 </linearGradient></defs><rect width="1024" height="1024" fill="url(#g)"/>`;
+
+/** nápis „Zvedej!“ písmem Jost (scripts/fonts, licence OFL) */
+function word({ width = 0.66, color = '#FFFFFF' } = {}) {
+  // písmo 800, šířka nápisu ≈ 3,05 × velikost písma
+  const fs = (1024 * width) / 3.05;
+  return `<text x="512" y="${512 + fs * 0.24}" text-anchor="middle" font-family="Jost" font-weight="800"
+    font-size="${fs}" letter-spacing="${-fs * 0.01}" fill="${color}">Zvedej!</text>`;
+}
 
 const svg = (body) => `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">${body}</svg>`;
 
 const files = [
   // iOS / obecná ikona – bez průhlednosti, iOS si rohy zaoblí sám
-  { out: 'assets/icon.png', size: 1024, svg: svg(BG + art({ inset: 64 })) },
-  { out: 'public/apple-touch-icon.png', size: 180, svg: svg(BG + art({ inset: 64 })) },
-  { out: 'public/logo192.png', size: 192, svg: svg(BG + art({ inset: 64 })) },
-  { out: 'public/logo512.png', size: 512, svg: svg(BG + art({ inset: 64 })) },
-  { out: 'assets/favicon.png', size: 64, svg: svg(BG + art({ inset: 60, text: false })) },
+  { out: 'assets/icon.png', size: 1024, svg: svg(BG + word()) },
+  { out: 'public/apple-touch-icon.png', size: 180, svg: svg(BG + word()) },
+  { out: 'public/logo192.png', size: 192, svg: svg(BG + word()) },
+  { out: 'public/logo512.png', size: 512, svg: svg(BG + word()) },
+  { out: 'assets/favicon.png', size: 64, svg: svg(BG + word({ width: 0.9 })) },
   // Android adaptivní ikona: popředí musí být v bezpečné zóně (střední 66 %)
   { out: 'assets/android-icon-background.png', size: 1024, svg: svg(BG), opaque: true },
-  { out: 'assets/android-icon-foreground.png', size: 1024, svg: svg(art({ inset: 215 })), transparent: true },
-  { out: 'assets/android-icon-monochrome.png', size: 1024, svg: svg(art({ inset: 215, mono: true })), transparent: true },
+  { out: 'assets/android-icon-foreground.png', size: 1024, svg: svg(word({ width: 0.56 })), transparent: true },
+  { out: 'assets/android-icon-monochrome.png', size: 1024, svg: svg(word({ width: 0.56 })), transparent: true },
   // splash: kresba na průhledném pozadí (barvu pozadí nastavuje app.json)
   { out: 'assets/splash-icon.png', size: 1024, svg: svg(art({ inset: 20 })), transparent: true },
 ];
@@ -84,10 +96,12 @@ const page = await browser.newPage();
 for (const f of files) {
   await page.setViewportSize({ width: f.size, height: f.size });
   await page.setContent(
-    `<html><body style="margin:0;background:transparent">
-      <img src="data:image/svg+xml;base64,${Buffer.from(f.svg).toString('base64')}" width="${f.size}" height="${f.size}" style="display:block"/>
-    </body></html>`,
+    `<html><head><style>
+      @font-face { font-family: 'Jost'; font-weight: 800; src: url(data:font/woff2;base64,${FONT}) format('woff2'); }
+      svg { display: block; width: ${f.size}px; height: ${f.size}px; }
+    </style></head><body style="margin:0;background:transparent">${f.svg}</body></html>`,
   );
+  await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(150);
   const buf = await page.screenshot({ omitBackground: !!f.transparent, clip: { x: 0, y: 0, width: f.size, height: f.size } });
   mkdirSync(dirname(join(root, f.out)), { recursive: true });
