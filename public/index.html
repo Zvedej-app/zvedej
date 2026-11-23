@@ -29,6 +29,17 @@
         overflow: hidden;
         overscroll-behavior: none;
       }
+      /* stránka se nesmí posunout (iOS ji po zavření klávesnice nechával posunutou nahoru) */
+      html,
+      body {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        margin: 0;
+      }
       /* aplikace se posouvá jen nahoru a dolů – žádné přibližování ani posun do stran */
       html,
       body,
@@ -63,6 +74,18 @@
         document.addEventListener('gesturestart', block, { passive: false });
         document.addEventListener('gesturechange', block, { passive: false });
         document.addEventListener('touchmove', function (e) { if (e.scale && e.scale !== 1) e.preventDefault(); }, { passive: false });
+        // iOS po zavření klávesnice nechá celou stránku posunutou nahoru – vrátíme ji zpět
+        var reset = function () {
+          var a = document.activeElement;
+          if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) return;
+          if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
+          if (document.body.scrollTop) document.body.scrollTop = 0;
+          if (document.documentElement.scrollTop) document.documentElement.scrollTop = 0;
+        };
+        document.addEventListener('focusout', function () { setTimeout(reset, 50); setTimeout(reset, 350); });
+        window.addEventListener('scroll', function () { setTimeout(reset, 100); });
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', function () { setTimeout(reset, 50); });
+        window.addEventListener('orientationchange', function () { setTimeout(reset, 300); });
         var last = 0;
         document.addEventListener('touchend', function (e) {
           var now = Date.now();

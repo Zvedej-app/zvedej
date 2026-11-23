@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
   Keyboard,
+  Pressable,
   ScrollView,
   View,
   useWindowDimensions,
@@ -19,7 +20,7 @@ import { useDebounced } from '../../hooks/useDebounced';
 import { api } from '../../lib/api';
 import { clubName, searchClubs } from '../../lib/clubs';
 import { formatCategory } from '../../lib/categories';
-import { useTabEnter } from '../../lib/tabReset';
+import { emitTabEnter, useTabEnter } from '../../lib/tabReset';
 import type { Profile } from '../../lib/types';
 import { useSettings } from '../../providers/SettingsProvider';
 
@@ -37,6 +38,7 @@ export default function CsvScreen() {
     setTab('calendar');
     setQ('');
     setSearching(false);
+    Keyboard.dismiss();
     pager.current?.scrollTo({ x: 0, animated: false });
   });
 
@@ -52,9 +54,15 @@ export default function CsvScreen() {
 
   return (
     <Screen>
-      <View style={{ alignItems: 'center', paddingTop: 6, paddingBottom: 4 }}>
+      {/* klepnutí na lva vrátí sekci na výchozí záložku */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('tab.csv')}
+        onPress={() => emitTabEnter('index')}
+        style={{ alignItems: 'center', paddingTop: 6, paddingBottom: 4 }}
+      >
         <LionLogo height={64} />
-      </View>
+      </Pressable>
       <Row style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
         <View style={{ flex: 1 }}>
           <SearchBar value={q} onChangeText={setQ} placeholder={t('csv.searchPlaceholder')} onFocus={() => setSearching(true)} />

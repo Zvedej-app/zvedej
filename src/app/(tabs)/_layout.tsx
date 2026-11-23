@@ -40,11 +40,10 @@ function InstaTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
         const onPress = () => {
           tap();
           const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-          if (!focused && !event.defaultPrevented) {
-            // sekce se otevře na výchozí záložce
-            emitTabEnter(route.name);
-            navigateToTab(route.key);
-          }
+          if (event.defaultPrevented) return;
+          // sekce se otevře na výchozí záložce – i při klepnutí na ikonu sekce, ve které už jsem
+          emitTabEnter(route.name);
+          if (!focused) navigateToTab(route.key);
         };
         let icon: React.ReactNode;
         let label: string;
