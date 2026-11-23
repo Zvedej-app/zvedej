@@ -9,6 +9,9 @@ const SOURCES = {
   bell: require('../../assets/sounds/bell.wav'),
 };
 
+/** V nativní aplikaci není potřeba nic odemykat (na webu viz restSound.web.ts). */
+export function primeRestSound(_kind: RestSound) {}
+
 /** Přehraje zvolený zvuk (i při ztlumeném tlačítku telefonu). */
 export async function playRestSound(kind: RestSound) {
   if (kind === 'none') return;

@@ -177,11 +177,11 @@ npx eas-cli@latest build --platform all --profile production
 
 ### Motivace a vzhled
 
+- Zvuk konce pauzy na webu (aplikace na ploše iPhonu) se odemkne při odškrtnutí série, takže zazní po každé pauze (`src/lib/restSound.web.ts`).
+
 - Písmo **Plus Jakarta Sans** pro nadpisy, čísla a tlačítka (běžný text je systémový); tlačítka a karty se při stisku pružně zmáčknou.
 - Záložka **Dnes**: pozdrav s heslem „Vytrvalost a odhodlání přinášejí výsledky“, karta se sérií týdnů (plamen), kroužkem týdenního cíle a pásem 7 dní.
-- Po dokončení tréninku **oslava** s konfetami, shrnutím (série, tonáž, čas) a nově získanými odznaky.
-- **Odznaky** (`src/lib/achievements.ts`) za milníky: první trénink, plán, maximum, 10/50/100 tréninků,
-  série 4/12 týdnů, 10/100 tun. Zobrazí se při oslavě po tréninku, ve kterém byly získány.
+- Po dokončení tréninku **oslava** s konfetami a shrnutím (série, tonáž, čas, série týdnů).
 
 ### Zobrazení na počítači
 

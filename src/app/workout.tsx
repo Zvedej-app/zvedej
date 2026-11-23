@@ -8,7 +8,6 @@ import { WeightSheet } from '../components/training/ToolsView';
 import { WorkoutEditor } from '../components/training/WorkoutEditor';
 import { Celebration, type CelebrationData } from '../components/training/Celebration';
 import { formatTonnage } from '../components/training/format';
-import { ACHIEVEMENTS, unlockedIds } from '../lib/achievements';
 import { logSetCount, logTonnage, weekStreak } from '../lib/training';
 import { Button, Chip, Empty, Field, Header, IconButton, Row, Screen, Sheet, T } from '../components/ui';
 import { range, Wheel } from '../components/WheelPicker';
@@ -24,7 +23,7 @@ import {
   setupRestNotifications,
   showRestOngoing,
 } from '../lib/restNotifications';
-import { playRestSound } from '../lib/restSound';
+import { playRestSound, primeRestSound } from '../lib/restSound';
 import { radius } from '../lib/theme';
 import type { LoggedExercise, WorkoutLog } from '../lib/types';
 import { formatWeight } from '../lib/units';
@@ -164,6 +163,8 @@ export default function WorkoutScreen() {
 
   const startRest = useCallback(
     async (ms: number, next: NextSet | null) => {
+      // pauza začíná dotykem (odškrtnutí série) – na webu tím odemkneme zvuk konce pauzy
+      primeRestSound(settings.restSound);
       const prev = restRef.current;
       if (prev) cancelRestNotification(prev.notifId);
       const until = Date.now() + ms;
@@ -471,7 +472,6 @@ export default function WorkoutScreen() {
             title={t('tr.finish')}
             onPress={() => {
               stopRest();
-              const before = unlockedIds(training.data);
               const log = training.finishWorkout({ notes: notes.trim() || undefined, rpe, bodyweight: bw, feeling });
               setFinishing(false);
               if (!log) {
@@ -481,14 +481,12 @@ export default function WorkoutScreen() {
               }
               // stav po uložení (data v kontextu se aktualizují až po překreslení)
               const after = { ...training.data, logs: [log, ...training.data.logs.filter((l) => l.id !== log.id)] };
-              const now = unlockedIds(after);
               tap();
               setCelebrate({
                 sets: logSetCount(log),
                 tonnage: formatTonnage(logTonnage(log), settings.unit),
                 minutes: log.durationMin ?? null,
                 streak: weekStreak(after),
-                badges: ACHIEVEMENTS.filter((a) => now.has(a.id) && !before.has(a.id)),
               });
             }}
           />

@@ -3,7 +3,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { Animated, Easing, Modal, Platform, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Achievement } from '../../lib/achievements';
 import { plural, type TKey } from '../../lib/i18n';
 import { BLUE, FONTS, FLAG } from '../../lib/theme';
 import { useSettings } from '../../providers/SettingsProvider';
@@ -60,10 +59,9 @@ export interface CelebrationData {
   tonnage: string;
   minutes: number | null;
   streak: number;
-  badges: Achievement[];
 }
 
-/** Oslava po dokončení tréninku: konfety, shrnutí a nově získané odznaky. */
+/** Oslava po dokončení tréninku: konfety a shrnutí. */
 export function Celebration({ data, onClose }: { data: CelebrationData | null; onClose: () => void }) {
   const { t, settings } = useSettings();
   const { width, height } = useWindowDimensions();
@@ -102,23 +100,6 @@ export function Celebration({ data, onClose }: { data: CelebrationData | null; o
             <Text style={styles.streakText}>
               {plural(settings.lang, 'week', data.streak)} {t('cel.inRow')}
             </Text>
-          </View>
-        )}
-
-        {data.badges.length > 0 && (
-          <View style={{ gap: 10, alignSelf: 'stretch' }}>
-            <Text style={styles.badgeHead}>{t('cel.newBadge')}</Text>
-            {data.badges.map((b) => (
-              <View key={b.id} style={styles.badge}>
-                <View style={[styles.badgeIcon, { backgroundColor: b.color }]}>
-                  <Ionicons name={b.icon} size={24} color="#FFF" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.badgeTitle}>{t(b.title)}</Text>
-                  <Text style={styles.badgeDesc}>{t(b.desc)}</Text>
-                </View>
-              </View>
-            ))}
           </View>
         )}
 
@@ -170,23 +151,4 @@ const styles = StyleSheet.create({
   statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '500' },
   streak: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   streakText: { color: '#FFF', fontSize: 18, fontFamily: FONTS.bold },
-  badgeHead: {
-    color: '#F1B100',
-    fontSize: 14,
-    fontFamily: FONTS.semi,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 16,
-    padding: 12,
-  },
-  badgeIcon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
-  badgeTitle: { color: '#FFF', fontSize: 17, fontFamily: FONTS.bold },
-  badgeDesc: { color: 'rgba(255,255,255,0.75)', fontSize: 13 },
 });
