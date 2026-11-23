@@ -5,7 +5,9 @@
 -- =====================================================================
 
 create extension if not exists pg_trgm;
-create extension if not exists unaccent;
+-- unaccent musí být ve schématu extensions (f_unaccent níže ho volá s plnou cestou)
+create schema if not exists extensions;
+create extension if not exists unaccent with schema extensions;
 
 -- unaccent() není IMMUTABLE, pro indexy potřebujeme obal
 create or replace function public.f_unaccent(text)
