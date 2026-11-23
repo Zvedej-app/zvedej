@@ -72,11 +72,18 @@ const TEXT = '#0A3666';
  * s bílou obručí a otvorem. Kotouč a vycentrování se dopočítají v prohlížeči (viz layoutLogo).
  * `width` = maximální šířka loga jako podíl plátna, `mono` = jednobarevná bílá verze (Android).
  */
+// vyrovnání řádků (dopočítá se kalibrací níže): velikost písma řádku „dej“ a jeho vodorovný posun,
+// aby byl stejně široký jako „Zve“ (rozestup písmen zůstává přirozený)
+let FIT = { fs: 330, dx: 0 };
+
+/** účaří řádku „dej“: kotouč nad j musí mít od „Zve“ stejnou mezeru při jakékoli velikosti písma */
+const dejY = () => 500 + 0.88 * FIT.fs;
+
 function logo({ width = 0.7, height = 0.72, color = TEXT, mono = false } = {}) {
   const c = mono ? '#FFFFFF' : color;
   return `<g class="logo" data-w="${width}" data-h="${height}" data-mono="${mono ? 1 : 0}">
-    <text x="0" y="470" font-family="Jost" font-weight="800" font-size="330" letter-spacing="-6" fill="${c}">Zve</text>
-    <text class="dej" x="0" y="800" font-family="Jost" font-weight="800" font-size="330" letter-spacing="-6" fill="${c}">de\u0237</text>
+    <text class="zve" x="0" y="470" font-family="Jost" font-weight="800" font-size="330" letter-spacing="-6" fill="${c}">Zve</text>
+    <text class="dej" x="${FIT.dx}" y="${dejY()}" font-family="Jost" font-weight="800" font-size="${FIT.fs}" letter-spacing="${(-6 * FIT.fs) / 330}" fill="${c}">de\u0237</text>
     <g class="plate"></g></g>`;
 }
 
@@ -87,8 +94,9 @@ function layoutLogo(RED) {
     const bb = t.getBBox();
     const last = t.getSubStringLength(t.getNumberOfChars() - 1, 1);
     const cx = bb.x + bb.width - last + last * 0.6;
-    const cy = 800 - 330 * 0.47 - 330 * 0.24;
-    const s = 330 * 0.2 * 1.3;
+    const fs = parseFloat(t.getAttribute('font-size'));
+    const cy = parseFloat(t.getAttribute('y')) - fs * 0.47 - fs * 0.24;
+    const s = fs * 0.2 * 1.3;
     const mono = g.dataset.mono === '1';
     // kotouč: červený (v mono verzi bílý), bílá obruč a otvor jsou vyříznuté maskou, aby byly průhledné
     const id = 'm' + Math.random().toString(36).slice(2);
@@ -105,7 +113,7 @@ function layoutLogo(RED) {
 
 const svg = (body) => `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">${body}</svg>`;
 
-const files = [
+const makeFiles = () => [
   // iOS / obecná ikona – bez průhlednosti, iOS si rohy zaoblí sám
   { out: 'assets/icon.png', size: 1024, svg: svg(BG + logo()) },
   { out: 'public/apple-touch-icon.png', size: 180, svg: svg(BG + logo()) },
@@ -123,15 +131,61 @@ const files = [
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
-for (const f of files) {
-  await page.setViewportSize({ width: f.size, height: f.size });
-  await page.setContent(
-    `<html><head><style>
+
+const html = (f) => `<html><head><style>
       @font-face { font-family: 'Jost'; font-weight: 800; src: url(data:font/woff2;base64,${FONT}) format('woff2'); unicode-range: U+0000-00FF; }
       @font-face { font-family: 'Jost'; font-weight: 800; src: url(data:font/woff2;base64,${FONT_EXT}) format('woff2'); unicode-range: U+0100-024F; }
       svg { display: block; width: ${f.size}px; height: ${f.size}px; }
-    </style></head><body style="margin:0;background:transparent">${f.svg}</body></html>`,
-  );
+    </style></head><body style="margin:0;background:transparent">${f.svg}</body></html>`;
+
+/** vykreslí logo a změří skutečnou (vybarvenou) šířku obou řádků v pixelech */
+async function measure() {
+  await page.setViewportSize({ width: 1024, height: 1024 });
+  await page.setContent(html({ size: 1024, svg: svg(BG + logo()) }));
+  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(`(${layoutLogo.toString()})(${JSON.stringify(RED)})`);
+  const png = (await page.screenshot()).toString('base64');
+  return page.evaluate(async (png) => {
+    const img = new Image();
+    img.src = 'data:image/png;base64,' + png;
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    const x = c.getContext('2d');
+    x.drawImage(img, 0, 0);
+    const d = x.getImageData(0, 0, c.width, c.height).data;
+    // modré pixely nápisu, po řádcích
+    const rows = [];
+    for (let y = 0; y < c.height; y++) {
+      let l = -1, r = -1;
+      for (let i = 0; i < c.width; i++) {
+        const o = (y * c.width + i) * 4;
+        if (d[o] < 80 && d[o + 2] > 60 && d[o + 2] - d[o] > 40) { if (l < 0) l = i; r = i; }
+      }
+      rows.push([l, r]);
+    }
+    // rozdělit na dva řádky textu podle prázdné mezery
+    const lines = []; let cur = null;
+    rows.forEach(([l, r], y) => {
+      if (l >= 0) { if (!cur) { cur = { l, r }; lines.push(cur); } cur.l = Math.min(cur.l, l); cur.r = Math.max(cur.r, r); }
+      else cur = null;
+    });
+    return lines;
+  }, png);
+}
+
+for (let k = 0; k < 8; k++) {
+  const [z, d] = await measure();
+  const diff = (z.r - z.l) - (d.r - d.l);
+  const shift = z.l - d.l;
+  if (Math.abs(diff) < 2 && Math.abs(shift) < 2) break;
+  // px na plátně → jednotky loga je zhruba 1 : 1,6 (logo se zvětšuje), iterace to doladí
+  FIT = { fs: FIT.fs * ((z.r - z.l) / (d.r - d.l)), dx: FIT.dx + shift * 1.6 };
+}
+console.log('vyrovnání řádků:', FIT);
+for (const f of makeFiles()) {
+  await page.setViewportSize({ width: f.size, height: f.size });
+  await page.setContent(html(f));
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(`(${layoutLogo.toString()})(${JSON.stringify(RED)})`);
   await page.waitForTimeout(150);
