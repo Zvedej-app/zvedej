@@ -189,16 +189,18 @@ function Plate({ p, unit }: { p: number; unit: 'kg' | 'lb' }) {
   );
 }
 
+/** délka kusu osy vlevo od kotoučů */
+const SHAFT_W = 44;
+
 function BarbellSide({ plates, collars, unit }: { plates: number[]; collars: boolean; unit: 'kg' | 'lb' }) {
-  const { colors } = useSettings();
   const big = plates.filter((p) => !isSmallPlate(p, unit));
   const small = plates.filter((p) => isSmallPlate(p, unit));
   return (
     <View style={styles.barWrap}>
-      {/* osa zleva až k místu, kde začínají kotouče */}
-      <View style={[styles.shaft, { width: '30%' }]} />
-      <View style={{ position: 'absolute', left: '30%', top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center' }}>
-        {/* objímka osy jen pod kotouči, uzávěrem a malým kouskem za ním */}
+      {/* krátký kus osy zleva až k místu, kde začínají kotouče */}
+      <View style={[styles.shaft, { width: SHAFT_W }]} />
+      <View style={{ position: 'absolute', left: SHAFT_W, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center' }}>
+        {/* objímka osy pod kotouči, uzávěrem, malými kotouči a kouskem za nimi */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, paddingRight: 12 }}>
           <View style={styles.sleeve} />
           {big.map((p, i) => (
@@ -210,20 +212,15 @@ function BarbellSide({ plates, collars, unit }: { plates: number[]; collars: boo
               <View style={styles.collarLine} />
             </View>
           )}
-        </View>
-        {/* malé kotouče samostatně vpravo od uzávěru */}
-        {small.length > 0 && (
-          <View style={{ marginLeft: 16, alignItems: 'center', gap: 4 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+          {/* malé kotouče samostatně na ose vpravo od uzávěru */}
+          {small.length > 0 && (
+            <View style={{ marginLeft: 14, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
               {small.map((p, i) => (
                 <Plate key={i} p={p} unit={unit} />
               ))}
             </View>
-            <Text style={{ fontSize: 10, fontWeight: '700', color: colors.textMuted }}>
-              {small.map((p) => formatNumber(p)).join(' + ')}
-            </Text>
-          </View>
-        )}
+          )}
+        </View>
       </View>
     </View>
   );
