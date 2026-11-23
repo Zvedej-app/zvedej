@@ -6,6 +6,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useBottomInset } from '../lib/insets';
 import { WeightSheet } from '../components/training/ToolsView';
 import { WorkoutEditor } from '../components/training/WorkoutEditor';
+import { Celebration, type CelebrationData } from '../components/training/Celebration';
+import { formatTonnage } from '../components/training/format';
+import { ACHIEVEMENTS, unlockedIds } from '../lib/achievements';
+import { logSetCount, logTonnage, weekStreak } from '../lib/training';
 import { Button, Chip, Empty, Field, Header, IconButton, ListItem, Row, Screen, Sheet, T } from '../components/ui';
 import { range, Wheel } from '../components/WheelPicker';
 import { exerciseName } from '../data/exercises';
@@ -32,7 +36,15 @@ const RPE = range(1, 10, 0.5);
 
 function withAlpha(hex: string, alpha: number) {
   const h = hex.replace('#', '');
-  const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
+  const n = parseInt(
+    h.length === 3
+      ? h
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : h,
+    16,
+  );
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
 }
 
@@ -110,7 +122,8 @@ function findNext(exs: LoggedExercise[], fromEx: string, fromSet: number, nameOf
   // nejdřív další série stejného cviku, potom první nedokončená série dalších cviků
   const cur = exs[exIdx];
   if (cur) for (let i = fromSet + 1; i < cur.sets.length; i++) if (!cur.sets[i].done) return pick(cur, i);
-  for (let k = exIdx + 1; k < exs.length; k++) for (let i = 0; i < exs[k].sets.length; i++) if (!exs[k].sets[i].done) return pick(exs[k], i);
+  for (let k = exIdx + 1; k < exs.length; k++)
+    for (let i = 0; i < exs[k].sets.length; i++) if (!exs[k].sets[i].done) return pick(exs[k], i);
   for (let k = 0; k <= exIdx; k++) for (let i = 0; i < exs[k].sets.length; i++) if (!exs[k].sets[i].done) return pick(exs[k], i);
   return null;
 }
@@ -129,6 +142,7 @@ export default function WorkoutScreen() {
   const now = useNow(250, !!rest && !rest.over);
   const clock = useNow(1000, true);
   const [finishing, setFinishing] = useState(false);
+  const [celebrate, setCelebrate] = useState<CelebrationData | null>(null);
   const [notes, setNotes] = useState('');
   const [feeling, setFeeling] = useState<WorkoutLog['feeling']>(null);
   const [rpe, setRpe] = useState(7);
@@ -178,7 +192,9 @@ export default function WorkoutScreen() {
           setIndex: next.setIndex,
           labels: { done: t('tr.markDone'), rest: t('tr.rest'), next: t('tr.upNext') },
         });
-        const endsAt = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(until));
+        const endsAt = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(
+          new Date(until),
+        );
         showRestOngoing({
           title: `${t('tr.rest')} → ${endsAt}`,
           body: `${t('tr.upNext')}: ${next.name} · ${load}`,
@@ -195,13 +211,16 @@ export default function WorkoutScreen() {
   const restOver = rest?.over;
   useEffect(() => {
     if (!restUntil || restOver) return;
-    const id = setTimeout(() => {
-      tap('success');
-      playRestSound(settings.restSound);
-      markRestOver();
-      hideRestOngoing();
-      setRest((r) => (r ? { ...r, over: true, notifId: null } : r));
-    }, Math.max(0, restUntil - Date.now()));
+    const id = setTimeout(
+      () => {
+        tap('success');
+        playRestSound(settings.restSound);
+        markRestOver();
+        hideRestOngoing();
+        setRest((r) => (r ? { ...r, over: true, notifId: null } : r));
+      },
+      Math.max(0, restUntil - Date.now()),
+    );
     return () => clearTimeout(id);
   }, [restUntil, restOver, settings.restSound, tap]);
 
@@ -249,6 +268,21 @@ export default function WorkoutScreen() {
     startRest(left, r.next).then(() => setRest((x) => (x ? { ...x, total: Math.max(x.total + ms, left) } : x)));
   };
 
+  // po dokončení tréninku: oslava (aktivní trénink už neexistuje)
+  if (celebrate) {
+    return (
+      <Screen>
+        <Celebration
+          data={celebrate}
+          onClose={() => {
+            setCelebrate(null);
+            router.back();
+          }}
+        />
+      </Screen>
+    );
+  }
+
   if (!active) {
     return (
       <Screen>
@@ -288,7 +322,14 @@ export default function WorkoutScreen() {
           icon="trash-outline"
           title={t('tr.discard')}
           onPress={async () => {
-            if (!(await confirm(t('common.confirmDelete'), { ok: t('common.delete'), cancel: t('common.cancel'), destructive: true }))) return;
+            if (
+              !(await confirm(t('common.confirmDelete'), {
+                ok: t('common.delete'),
+                cancel: t('common.cancel'),
+                destructive: true,
+              }))
+            )
+              return;
             stopRest();
             training.discardWorkout();
             router.back();
@@ -317,7 +358,12 @@ export default function WorkoutScreen() {
                   )}
                 </View>
                 {rest.next && (
-                  <Pressable accessibilityRole="checkbox" accessibilityLabel={t('tr.markDone')} onPress={checkNext} style={styles.bigCheck}>
+                  <Pressable
+                    accessibilityRole="checkbox"
+                    accessibilityLabel={t('tr.markDone')}
+                    onPress={checkNext}
+                    style={styles.bigCheck}
+                  >
                     <Ionicons name="checkmark" size={34} color="#FFF" />
                   </Pressable>
                 )}
@@ -352,7 +398,11 @@ export default function WorkoutScreen() {
       )}
 
       <Sheet visible={finishing} onClose={() => setFinishing(false)} title={t('tr.finish')}>
-        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingBottom: 8 }} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          style={{ flexShrink: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingBottom: 8 }}
+          keyboardShouldPersistTaps="handled"
+        >
           <Field
             label={t('tr.workoutNotes')}
             value={notes}
@@ -365,26 +415,66 @@ export default function WorkoutScreen() {
           </T>
           <Row style={{ flexWrap: 'wrap' }} gap={8}>
             {FEELINGS.map((f) => (
-              <Chip key={f} label={t(`tr.feeling.${f}` as TKey)} on={feeling === f} onPress={() => setFeeling(feeling === f ? null : f)} />
+              <Chip
+                key={f}
+                label={t(`tr.feeling.${f}` as TKey)}
+                on={feeling === f}
+                onPress={() => setFeeling(feeling === f ? null : f)}
+              />
             ))}
           </Row>
           <Row style={{ justifyContent: 'space-around' }}>
-            <Wheel label={t('tr.rpe')} values={RPE} value={rpe} onChange={setRpe} width={140} format={(v) => String(v).replace('.', ',')} />
+            <Wheel
+              label={t('tr.rpe')}
+              values={RPE}
+              value={rpe}
+              onChange={setRpe}
+              width={140}
+              format={(v) => String(v).replace('.', ',')}
+            />
           </Row>
-          <ListItem icon="scale-outline" title={t('tr.bodyweight')} value={bw ? formatWeight(bw, settings.unit) : '—'} onPress={() => setBwSheet(true)} />
+          <ListItem
+            icon="scale-outline"
+            title={t('tr.bodyweight')}
+            value={bw ? formatWeight(bw, settings.unit) : '—'}
+            onPress={() => setBwSheet(true)}
+          />
           <Button
             icon="checkmark-circle-outline"
             title={t('tr.finish')}
             onPress={() => {
               stopRest();
-              training.finishWorkout({ notes: notes.trim() || undefined, rpe, bodyweight: bw, feeling });
+              const before = unlockedIds(training.data);
+              const log = training.finishWorkout({ notes: notes.trim() || undefined, rpe, bodyweight: bw, feeling });
               setFinishing(false);
-              toast(t('tr.finished'));
-              router.back();
+              if (!log) {
+                toast(t('tr.finished'));
+                router.back();
+                return;
+              }
+              // stav po uložení (data v kontextu se aktualizují až po překreslení)
+              const after = { ...training.data, logs: [log, ...training.data.logs.filter((l) => l.id !== log.id)] };
+              const now = unlockedIds(after);
+              tap();
+              setCelebrate({
+                sets: logSetCount(log),
+                tonnage: formatTonnage(logTonnage(log), settings.unit),
+                minutes: log.durationMin ?? null,
+                streak: weekStreak(after),
+                badges: ACHIEVEMENTS.filter((a) => now.has(a.id) && !before.has(a.id)),
+              });
             }}
           />
         </ScrollView>
-        <WeightSheet visible={bwSheet} title={t('tr.bodyweight')} kg={bw ?? 80} min={30} onClose={() => setBwSheet(false)} onSave={setBw} onClear={() => setBw(null)} />
+        <WeightSheet
+          visible={bwSheet}
+          title={t('tr.bodyweight')}
+          kg={bw ?? 80}
+          min={30}
+          onClose={() => setBwSheet(false)}
+          onSave={setBw}
+          onClear={() => setBw(null)}
+        />
       </Sheet>
     </Screen>
   );

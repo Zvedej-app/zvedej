@@ -7,14 +7,17 @@ import { TEMPLATES } from '../../data/templates';
 import { formatDate, todayISO, weekdayMon0 } from '../../lib/date';
 import { toast } from '../../lib/dialog';
 import type { TKey } from '../../lib/i18n';
-import { activePlan, dayForDate, dayLabel, planWeek, upcomingPlan, weekStats, weekStreak, workoutFromDay } from '../../lib/training';
+import { activePlan, dayForDate, dayLabel, planWeek, upcomingPlan, workoutFromDay } from '../../lib/training';
 import type { PlanDay, TrainingPlan } from '../../lib/types';
 import { formatNumber, ROUND_KG } from '../../lib/units';
 import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
-import { Banner, Button, Card, Chip, Empty, Row, Stat, T } from '../ui';
+import { useAuth } from '../../providers/AuthProvider';
+import { FONTS } from '../../lib/theme';
+import { WeekHero } from './WeekHero';
+import { Banner, Button, Card, Chip, Empty, Row, T } from '../ui';
 import { DayExercises } from './DayExercises';
-import { formatTonnage, schemeLabel } from './format';
+import { schemeLabel } from './format';
 import { createPlanFromTemplate } from './planActions';
 
 export function TodayView() {
@@ -30,8 +33,13 @@ export function TodayView() {
   const [picked, setPicked] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const day = plan?.days.find((d) => d.id === picked) ?? todayDay;
-  const stats = useMemo(() => weekStats(data), [data]);
-  const streak = useMemo(() => weekStreak(data), [data]);
+  const { profile } = useAuth();
+  // motivační věta: každý den jiná
+  const quote = useMemo(() => {
+    const d = new Date();
+    const day = Math.floor((d.getTime() - new Date(d.getFullYear(), 0, 0).getTime()) / 86400000);
+    return t(`tr.quote.${day % 10}` as TKey);
+  }, [t]);
   const wdName = (w: number) => t(`tr.weekdayFull.${w}` as TKey);
   const label = (d: PlanDay) => dayLabel(d, wdName, todayWd);
 
@@ -65,11 +73,14 @@ export function TodayView() {
         </Card>
       )}
 
-      <Card style={{ flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 16 }}>
-        <Stat value={stats.count} label={`${t('tr.workouts')} · ${t('tr.thisWeek').toLowerCase()}`} />
-        <Stat value={formatTonnage(stats.tonnage, settings.unit)} label={t('tr.tonnage')} />
-        <Stat value={streak} label={t('tr.streak')} />
-      </Card>
+      <View style={{ gap: 2, paddingHorizontal: 2 }}>
+        <T v="h1">{profile?.firstName ? t('tr.hello', { name: profile.firstName }) : t('tr.helloAnon')}</T>
+        <T muted style={{ fontFamily: FONTS.medium, fontSize: 16 }}>
+          {quote}
+        </T>
+      </View>
+
+      <WeekHero data={data} plan={plan} />
 
       {plan ? (
         <>
@@ -85,11 +96,15 @@ export function TodayView() {
             <T v="h2">{plan.name}</T>
             <T v="small" muted>
               {t('tr.since', { date: formatDate(plan.startDate, locale) })}
-              {plan.weeklyIncrementPct ? ` · ${t('tr.progression').toLowerCase()} +${formatNumber(plan.weeklyIncrementPct)} %` : ''}
+              {plan.weeklyIncrementPct
+                ? ` · ${t('tr.progression').toLowerCase()} +${formatNumber(plan.weeklyIncrementPct)} %`
+                : ''}
             </T>
             {plan.weeks ? (
               <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.primarySoft, overflow: 'hidden' }}>
-                <View style={{ width: `${Math.min(100, (week / plan.weeks) * 100)}%`, height: 6, backgroundColor: colors.accent }} />
+                <View
+                  style={{ width: `${Math.min(100, (week / plan.weeks) * 100)}%`, height: 6, backgroundColor: colors.accent }}
+                />
               </View>
             ) : null}
             <T v="caption" muted>
@@ -98,7 +113,10 @@ export function TodayView() {
           </Card>
 
           {upcoming && (
-            <Banner icon="calendar-outline" text={`${upcoming.name} – ${t('tr.since', { date: formatDate(upcoming.startDate, locale) })}`} />
+            <Banner
+              icon="calendar-outline"
+              text={`${upcoming.name} – ${t('tr.since', { date: formatDate(upcoming.startDate, locale) })}`}
+            />
           )}
 
           <View style={{ gap: 8 }}>
@@ -122,9 +140,15 @@ export function TodayView() {
           </View>
 
           {day && (
-            <Card>
+            <Card style={{ borderRadius: 22, padding: 18, gap: 10 }}>
+              <T v="label" color={colors.accent}>
+                {todayDay && day.id === todayDay.id ? t('tr.todayTitle') : t('tr.todaysWorkout')} · {day.exercises.length}{' '}
+                {t('tr.exercisesCount')}
+              </T>
               <Row style={{ justifyContent: 'space-between' }}>
-                <T style={{ fontSize: 22, fontWeight: '800', flex: 1 }}>{label(day)}</T>
+                <T v="h1" style={{ flex: 1, fontSize: 26 }}>
+                  {label(day)}
+                </T>
                 <Chip
                   icon={editing ? 'checkmark' : 'create-outline'}
                   label={editing ? t('tr.editDone') : t('common.edit')}
@@ -145,8 +169,11 @@ export function TodayView() {
                 <>
                   {day.exercises.length === 0 && <T muted>{t('tr.noExercises')}</T>}
                   {day.exercises.map((e, i) => (
-                    <View key={e.id} style={{ paddingVertical: 8, gap: 2, borderTopWidth: i ? 1 : 0, borderTopColor: colors.border }}>
-                      <T style={{ fontSize: 18, fontWeight: '800' }}>{exerciseName(e.exerciseId, settings.lang, data.customExercises, e.customName)}</T>
+                    <View
+                      key={e.id}
+                      style={{ paddingVertical: 8, gap: 2, borderTopWidth: i ? 1 : 0, borderTopColor: colors.border }}
+                    >
+                      <T v="h3">{exerciseName(e.exerciseId, settings.lang, data.customExercises, e.customName)}</T>
                       {e.schemes.map((s) => (
                         <T key={s.id} style={{ fontSize: 15 }} muted>
                           {schemeLabel(s, data, plan, week, settings.unit, ROUND_KG)}
@@ -156,7 +183,12 @@ export function TodayView() {
                   ))}
                 </>
               )}
-              <Button icon="play" title={active ? t('tr.continue') : t('tr.start')} onPress={() => start(plan, day)} />
+              <Button
+                icon="play"
+                title={active ? t('tr.continue') : t('tr.start')}
+                onPress={() => start(plan, day)}
+                style={{ minHeight: 56, borderRadius: 16, backgroundColor: colors.accent }}
+              />
             </Card>
           )}
         </>

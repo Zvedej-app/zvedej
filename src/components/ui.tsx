@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import React from 'react';
 import {
   ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -21,7 +22,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomInset, useTopInset } from '../lib/insets';
 import { CONTENT_MAX, CONTENT_WIDE_MAX, useIsDesktop } from '../lib/layout';
-import { radius } from '../lib/theme';
+import { FONTS, radius } from '../lib/theme';
 import { useSettings } from '../providers/SettingsProvider';
 
 export type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -31,13 +32,13 @@ export type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type Variant = 'h1' | 'h2' | 'h3' | 'body' | 'small' | 'caption' | 'label';
 
 const VARIANTS: Record<Variant, TextStyle> = {
-  h1: { fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
-  h2: { fontSize: 22, fontWeight: '800', letterSpacing: -0.3 },
-  h3: { fontSize: 17, fontWeight: '700' },
+  h1: { fontSize: 30, fontFamily: FONTS.black, letterSpacing: -0.4 },
+  h2: { fontSize: 23, fontFamily: FONTS.black, letterSpacing: -0.2 },
+  h3: { fontSize: 18, fontFamily: FONTS.bold },
   body: { fontSize: 15, lineHeight: 21 },
   small: { fontSize: 13, lineHeight: 18 },
   caption: { fontSize: 12, lineHeight: 16 },
-  label: { fontSize: 12, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase' },
+  label: { fontSize: 12.5, fontFamily: FONTS.semi, letterSpacing: 0.8, textTransform: 'uppercase' },
 };
 
 export function T({
@@ -157,12 +158,53 @@ export function Card({
   const s = [styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, style];
   if (onPress)
     return (
-      <Pressable onPress={onPress} style={({ pressed }) => [s, pressed && { opacity: 0.85 }]}>
+      <PressScale onPress={onPress} style={s} scaleTo={0.98}>
         {children}
-      </Pressable>
+      </PressScale>
     );
   return <View style={s}>{children}</View>;
 }
+
+/**
+ * Pressable, který se při stisku pružně zmáčkne (hmatová odezva jako u nativních aplikací).
+ * Na webu i v telefonu běží animace v nativním vlákně, kde to jde.
+ */
+export function PressScale({
+  children,
+  onPress,
+  style,
+  scaleTo = 0.96,
+  disabled,
+  accessibilityLabel,
+  accessibilityRole = 'button',
+}: {
+  children: React.ReactNode;
+  onPress?: () => void;
+  style?: StyleProp<ViewStyle>;
+  scaleTo?: number;
+  disabled?: boolean;
+  accessibilityLabel?: string;
+  accessibilityRole?: 'button' | 'tab' | 'link';
+}) {
+  const [scale] = React.useState(() => new Animated.Value(1));
+  const to = (v: number) =>
+    Animated.spring(scale, { toValue: v, useNativeDriver: Platform.OS !== 'web', speed: 40, bounciness: v === 1 ? 8 : 0 }).start();
+  return (
+    <AnimatedPressable
+      accessibilityRole={accessibilityRole}
+      accessibilityLabel={accessibilityLabel}
+      disabled={disabled}
+      onPress={onPress}
+      onPressIn={() => to(scaleTo)}
+      onPressOut={() => to(1)}
+      style={[style, { transform: [{ scale }] }]}
+    >
+      {children}
+    </AnimatedPressable>
+  );
+}
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function Row({ children, style, gap = 8 }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; gap?: number }) {
   return <View style={[{ flexDirection: 'row', alignItems: 'center', gap }, style]}>{children}</View>;
@@ -204,29 +246,23 @@ export function Button({
           : 'transparent';
   const fg = kind === 'primary' || kind === 'danger' ? colors.onPrimary : colors.primary;
   return (
-    <Pressable
-      accessibilityRole="button"
+    <PressScale
       disabled={disabled || loading}
       onPress={() => {
         tap();
         onPress?.();
       }}
-      style={({ pressed }) => [
-        styles.btn,
-        small && styles.btnSmall,
-        { backgroundColor: bg, opacity: disabled ? 0.45 : pressed ? 0.8 : 1 },
-        style,
-      ]}
+      style={[styles.btn, small && styles.btnSmall, { backgroundColor: bg, opacity: disabled ? 0.45 : 1 }, style]}
     >
       {loading ? (
         <ActivityIndicator color={fg} />
       ) : (
         <>
           {icon && <Ionicons name={icon} size={small ? 16 : 19} color={fg} />}
-          <RNText style={{ color: fg, fontWeight: '700', fontSize: small ? 13 : 15 }}>{title}</RNText>
+          <RNText style={{ color: fg, fontFamily: FONTS.semi, fontSize: small ? 14 : 16, letterSpacing: 0.2 }}>{title}</RNText>
         </>
       )}
-    </Pressable>
+    </PressScale>
   );
 }
 
@@ -425,7 +461,7 @@ export function Avatar({ uri, name, size = 44, ring }: { uri?: string | null; na
 export function Stat({ value, label }: { value: string | number; label: string }) {
   return (
     <View style={{ alignItems: 'center', minWidth: 64 }}>
-      <T v="h3">{value}</T>
+      <T v="h2">{value}</T>
       <T v="caption" muted>
         {label}
       </T>

@@ -86,5 +86,13 @@ export const darkPalette: Palette = {
   other: '#8A97AB',
 };
 
+/** Písmo Jost (stejné jako v ikoně aplikace) pro nadpisy, čísla a tlačítka; text odstavců zůstává systémový */
+export const FONTS = {
+  black: 'Jost_800ExtraBold',
+  bold: 'Jost_700Bold',
+  semi: 'Jost_600SemiBold',
+  medium: 'Jost_500Medium',
+};
+
 export const radius = { sm: 8, md: 12, lg: 18, xl: 26, pill: 999 };
 export const space = (n: number) => n * 4;

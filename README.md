@@ -175,6 +175,14 @@ npx eas-cli@latest build --platform all --profile production
 - Zvuk „Pípnutí“ nahradila **píšťalka** rozhodčího.
 - **Export tréninků do PDF** funguje i ve webové verzi (PDF se vytvoří v telefonu a nabídne ke sdílení nebo stažení).
 
+### Motivace a vzhled
+
+- Písmo **Jost** (jako v ikoně) pro nadpisy, čísla a tlačítka; tlačítka a karty se při stisku pružně zmáčknou.
+- Záložka **Dnes**: pozdrav s denní motivační větou, karta se sérií týdnů (plamen), kroužkem týdenního cíle a pásem 7 dní.
+- Po dokončení tréninku **oslava** s konfetami, shrnutím (série, tonáž, čas) a nově získanými odznaky.
+- **Odznaky** v profilu (`src/lib/achievements.ts`) za milníky: první trénink, plán, maximum, 10/50/100 tréninků,
+  série 4/12 týdnů, 10/100 tun. Odměňují pokrok, nic netrestají.
+
 ### Zobrazení na počítači
 
 Webová verze v okně širším než 900 px (`src/lib/layout.ts`) přepne rozložení: navigace je v panelu vlevo, obsah ve sloupci uprostřed,
