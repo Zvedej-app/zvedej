@@ -16,8 +16,12 @@ export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () =
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   // velikost poloviny činky podle šířky displeje (uprostřed je nápis Zvedej)
-  const titleW = 170;
+  // na úzkých displejích se mezera i nápis zmenší, aby se činka vešla
+  const titleW = Math.max(130, Math.min(196, width - 40 - 140));
   const half = Math.min(130, Math.max(70, (width - 40 - titleW) / 2));
+  const titleSize = Math.round(titleW * 0.225);
+  // tloušťka osy stejná jako v kresbě konců činky (8 z 120)
+  const barH = (half * 8) / 120;
   const [lift] = useState(() => new Animated.Value(0));
   const [fade] = useState(() => new Animated.Value(1));
   const [text] = useState(() => new Animated.Value(0));
@@ -53,9 +57,10 @@ export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () =
         {/* činka jako na závodech: nápis Zvedej je v prostoru mezi kotouči */}
         <Animated.View style={[styles.barbell, { transform: [{ translateY }] }]}>
           <BarbellHalf height={half} />
-          <View style={[styles.titleWrap, { width: titleW }]}>
-            <View style={styles.barBehind} />
-            <Animated.Text style={[styles.title, { opacity: text }]} numberOfLines={1}>
+          <View style={[styles.titleWrap, { width: titleW, height: half }]}>
+            <View style={[styles.barBehind, { height: barH, borderRadius: barH / 2 }]} />
+            {/* nápis je kousek nad osou */}
+            <Animated.Text style={[styles.title, { opacity: text, bottom: half / 2 + 6, fontSize: titleSize, lineHeight: titleSize + 4 }]} numberOfLines={1}>
               Zvedej
             </Animated.Text>
           </View>
@@ -63,10 +68,8 @@ export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () =
         </Animated.View>
         <View style={[styles.floor, { width: half * 2 + titleW }]} />
       </View>
-      <View style={[styles.byWrap, { bottom: insets.bottom + 64 }]}>
-        <Text style={styles.byWord}>By</Text>
-        <Text style={styles.by}>{'Sladký&Vejvoda'}</Text>
-      </View>
+      <Text style={[styles.byWord, styles.byWrap, { bottom: insets.bottom + 86 }]}>By</Text>
+      <Text style={[styles.by, styles.byWrap, { bottom: insets.bottom + 40 }]}>{'Sladký&Vejvoda'}</Text>
     </Animated.View>
   );
 }
@@ -75,19 +78,21 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   barbell: { flexDirection: 'row', alignItems: 'center' },
   titleWrap: { alignItems: 'center', justifyContent: 'center' },
-  // osa pokračuje i pod nápisem, nápis má kolem sebe pozadí, aby byl čitelný
-  barBehind: { position: 'absolute', left: -2, right: -2, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.35)' },
+  // střední část osy mezi kotouči (nápis je nad ní)
+  barBehind: { position: 'absolute', left: -1, right: -1, backgroundColor: '#FFFFFF' },
   floor: { height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.25)', marginTop: 18 },
   title: {
     color: '#FFFFFF',
-    fontSize: 34,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
     fontWeight: '900',
-    letterSpacing: 0.3,
-    paddingHorizontal: 6,
+    letterSpacing: 0.5,
     textShadowColor: 'rgba(5,15,46,0.55)',
     textShadowRadius: 8,
   },
-  byWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', gap: 2 },
-  byWord: { color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '600', letterSpacing: 1.2, textAlign: 'center' },
-  by: { color: 'rgba(255,255,255,0.92)', fontSize: 15, fontWeight: '700', letterSpacing: 1.2, textAlign: 'center' },
+  byWrap: { position: 'absolute', left: 0, right: 0 },
+  byWord: { color: 'rgba(255,255,255,0.75)', fontSize: 14, fontWeight: '300', letterSpacing: 1.2, textAlign: 'center' },
+  by: { color: 'rgba(255,255,255,0.92)', fontSize: 16, fontWeight: '300', letterSpacing: 1.2, textAlign: 'center' },
 });
