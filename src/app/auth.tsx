@@ -7,10 +7,12 @@ import { Banner, Button, Field, Row, T } from '../components/ui';
 import { api } from '../lib/api';
 import { LANG_LABELS, type Lang } from '../lib/i18n';
 import { BLUE } from '../lib/theme';
+import { useIsDesktop } from '../lib/layout';
 import { useSettings } from '../providers/SettingsProvider';
 
 export default function AuthScreen() {
   const { t, colors, settings, update } = useSettings();
+  const desktop = useIsDesktop();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -39,8 +41,9 @@ export default function AuthScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <LinearGradient colors={[BLUE[500], BLUE[800]]} style={styles.hero}>
+    // na počítači: vlevo modrá úvodní plocha s logem, vpravo formulář
+    <View style={{ flex: 1, backgroundColor: colors.bg, flexDirection: desktop ? 'row' : 'column' }}>
+      <LinearGradient colors={[BLUE[500], BLUE[800]]} style={desktop ? { flex: 1, justifyContent: 'center' } : styles.hero}>
         <SafeAreaView edges={['top']} style={{ alignItems: 'center', gap: 6, paddingBottom: 28, paddingTop: 24 }}>
           <BarbellLogo size={150} color="#FFFFFF" accent={BLUE[200]} />
           <T v="h1" color="#FFFFFF" style={{ fontSize: 40, fontWeight: '900' }}>
@@ -52,8 +55,14 @@ export default function AuthScreen() {
         </SafeAreaView>
       </LinearGradient>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={desktop ? { width: 520, justifyContent: 'center' } : { flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={[{ padding: 20, gap: 12 }, desktop && { padding: 48, flexGrow: 1, justifyContent: 'center' }]}
+          keyboardShouldPersistTaps="handled"
+        >
           <T v="h2">{mode === 'login' ? t('auth.login') : t('auth.register')}</T>
           {mode === 'register' && (
             <Row gap={10}>

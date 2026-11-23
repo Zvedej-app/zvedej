@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTopInset } from '../lib/insets';
+import { useIsDesktop } from '../lib/layout';
 import { ReelsPager } from '../components/reels/ReelsPager';
 import { IconButton, Loading } from '../components/ui';
 import { api } from '../lib/api';
@@ -16,6 +17,8 @@ export default function VideosScreen() {
   const insets = useSafeAreaInsets();
   const topInset = useTopInset();
   const [videos, setVideos] = useState<ChallengeVideo[] | null>(null);
+  const desktop = useIsDesktop();
+  const { height } = useWindowDimensions();
 
   useEffect(() => {
     api
@@ -25,23 +28,28 @@ export default function VideosScreen() {
   }, [user]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#000' }}>
-      {videos === null ? (
-        <Loading />
-      ) : (
-        <ReelsPager
-          videos={videos}
-          myUserId={session?.userId ?? null}
-          initialIndex={Number(index ?? 0)}
-          bottomInset={insets.bottom}
-          onLike={async (v, liked) => {
-            setVideos((l) =>
-              (l ?? []).map((x) => (x.id === v.id ? { ...x, likedByMe: liked, likesCount: x.likesCount + (liked ? 1 : -1) } : x)),
-            );
-            await api.setLike(v.id, liked).catch(() => setVideos((l) => (l ?? []).map((x) => (x.id === v.id ? v : x))));
-          }}
-        />
-      )}
+    <View style={{ flex: 1, backgroundColor: '#000', alignItems: desktop ? 'center' : undefined }}>
+      {/* na počítači videa ve sloupci na výšku uprostřed */}
+      <View style={desktop ? { flex: 1, width: Math.max(420, Math.round(height * 0.6)) } : { flex: 1 }}>
+        {videos === null ? (
+          <Loading />
+        ) : (
+          <ReelsPager
+            videos={videos}
+            myUserId={session?.userId ?? null}
+            initialIndex={Number(index ?? 0)}
+            bottomInset={insets.bottom}
+            onLike={async (v, liked) => {
+              setVideos((l) =>
+                (l ?? []).map((x) =>
+                  x.id === v.id ? { ...x, likedByMe: liked, likesCount: x.likesCount + (liked ? 1 : -1) } : x,
+                ),
+              );
+              await api.setLike(v.id, liked).catch(() => setVideos((l) => (l ?? []).map((x) => (x.id === v.id ? v : x))));
+            }}
+          />
+        )}
+      </View>
       <IconButton
         name="chevron-back"
         color="#FFF"

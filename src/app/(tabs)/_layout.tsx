@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs, type BottomTabBarProps } from 'expo-router/js-tabs';
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LionLogo } from '../../components/Logo';
 import { Avatar, type IconName } from '../../components/ui';
@@ -9,6 +9,7 @@ import { useAuth } from '../../providers/AuthProvider';
 import { useSettings } from '../../providers/SettingsProvider';
 import type { TKey } from '../../lib/i18n';
 import { emitTabEnter } from '../../lib/tabReset';
+import { SIDEBAR_WIDTH, useIsDesktop } from '../../lib/layout';
 
 const ICONS: Record<string, { on: IconName; off: IconName; label: TKey }> = {
   training: { on: 'barbell', off: 'barbell-outline', label: 'tab.training' },
@@ -23,18 +24,21 @@ function InstaTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   const { profile } = useAuth();
   const dark = state.routes[state.index]?.name === 'challenge';
   const fg = dark ? '#FFFFFF' : colors.text;
+  const desktop = useIsDesktop();
 
   return (
     <View
       style={[
-        styles.bar,
+        desktop ? [styles.side, { borderRightColor: dark ? '#222' : colors.border }] : styles.bar,
         {
-          paddingBottom: Math.max(insets.bottom, 8),
+          paddingBottom: desktop ? 16 : Math.max(insets.bottom, 8),
           backgroundColor: dark ? '#000000' : colors.tabBar,
           borderTopColor: dark ? '#222' : colors.border,
         },
       ]}
     >
+      {/* na počítači: postranní panel s názvem aplikace nahoře */}
+      {desktop && <Text style={[styles.brand, { color: dark ? '#FFFFFF' : colors.text }]}>Zvedej</Text>}
       {state.routes.map((route, index) => {
         const focused = state.index === index;
         const onPress = () => {
@@ -73,10 +77,29 @@ function InstaTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
             accessibilityLabel={label}
             accessibilityState={{ selected: focused }}
             onPress={onPress}
-            style={styles.item}
+            style={(state) =>
+              desktop
+                ? [
+                    styles.sideItem,
+                    // na webu Pressable hlásí i najetí myší
+                    ((state as { hovered?: boolean }).hovered || focused) && {
+                      backgroundColor: dark ? '#1A1A1A' : colors.surface,
+                    },
+                  ]
+                : styles.item
+            }
           >
-            {icon}
-            <View style={[styles.dot, { backgroundColor: focused ? (dark ? '#FFF' : colors.accent) : 'transparent' }]} />
+            {desktop ? (
+              <>
+                <View style={styles.sideIcon}>{icon}</View>
+                <Text style={[styles.sideLabel, { color: fg, fontWeight: focused ? '800' : '500' }]}>{label}</Text>
+              </>
+            ) : (
+              <>
+                {icon}
+                <View style={[styles.dot, { backgroundColor: focused ? (dark ? '#FFF' : colors.accent) : 'transparent' }]} />
+              </>
+            )}
           </Pressable>
         );
       })}
@@ -85,8 +108,19 @@ function InstaTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
 }
 
 export default function TabsLayout() {
+  // na počítači (široké okno v prohlížeči) je navigace vlevo, na telefonu dole
+  const desktop = useIsDesktop();
+  const { colors } = useSettings();
   return (
-    <Tabs tabBar={(p) => <InstaTabBar {...p} />} screenOptions={{ headerShown: false }}>
+    <Tabs
+      tabBar={(p) => <InstaTabBar {...p} />}
+      screenOptions={{
+        headerShown: false,
+        tabBarPosition: desktop ? 'left' : 'bottom',
+        // pozadí kolem sloupce s obsahem na počítači
+        sceneStyle: { backgroundColor: colors.bg },
+      }}
+    >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="training" />
       <Tabs.Screen name="challenge" />
@@ -105,4 +139,15 @@ const styles = StyleSheet.create({
   item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4, minHeight: 44 },
   avatarWrap: { borderWidth: 2, borderRadius: 20, padding: 1 },
   dot: { width: 4, height: 4, borderRadius: 2 },
+  side: {
+    width: SIDEBAR_WIDTH,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    paddingTop: 28,
+    paddingHorizontal: 12,
+    gap: 4,
+  },
+  brand: { fontSize: 30, fontWeight: '900', letterSpacing: -0.5, paddingHorizontal: 12, marginBottom: 24 },
+  sideItem: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, paddingHorizontal: 12, borderRadius: 12 },
+  sideIcon: { width: 40, alignItems: 'center' },
+  sideLabel: { fontSize: 17 },
 });

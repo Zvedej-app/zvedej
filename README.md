@@ -175,6 +175,12 @@ npx eas-cli@latest build --platform all --profile production
 - Zvuk „Pípnutí“ nahradila **píšťalka** rozhodčího.
 - **Export tréninků do PDF** funguje i ve webové verzi (PDF se vytvoří v telefonu a nabídne ke sdílení nebo stažení).
 
+### Zobrazení na počítači
+
+Webová verze v okně širším než 900 px (`src/lib/layout.ts`) přepne rozložení: navigace je v panelu vlevo, obsah ve sloupci uprostřed,
+Svaz ve dvou sloupcích (kalendář a novinky vedle sebe), videa Vzpěrače měsíce ve sloupci na výšku, vyskakovací panely jako dialog
+uprostřed a přihlášení na dvě poloviny. Na telefonu (aplikace i web v mobilu) se nic nemění.
+
 ### Aktualizace dat ze svazu
 
 ```bash

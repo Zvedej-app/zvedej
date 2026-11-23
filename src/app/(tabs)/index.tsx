@@ -21,6 +21,7 @@ import { api } from '../../lib/api';
 import { clubName, searchClubs } from '../../lib/clubs';
 import { formatCategory } from '../../lib/categories';
 import { emitTabEnter, useTabEnter } from '../../lib/tabReset';
+import { CONTENT_WIDE_MAX, SIDEBAR_WIDTH, useIsDesktop } from '../../lib/layout';
 import type { Profile } from '../../lib/types';
 import { useSettings } from '../../providers/SettingsProvider';
 
@@ -28,7 +29,11 @@ type Tab = 'calendar' | 'news';
 
 export default function CsvScreen() {
   const { t } = useSettings();
-  const { width } = useWindowDimensions();
+  const { width: winW } = useWindowDimensions();
+  const desktop = useIsDesktop();
+  // na počítači: obsah vedle postranního panelu, nejvýš CONTENT_WIDE_MAX, dva sloupce vedle sebe
+  const width = desktop ? Math.min(winW - SIDEBAR_WIDTH, CONTENT_WIDE_MAX) : winW;
+  const colW = Math.floor(width / 2);
   const [tab, setTab] = useState<Tab>('calendar');
   const [q, setQ] = useState('');
   const [searching, setSearching] = useState(false);
@@ -53,7 +58,7 @@ export default function CsvScreen() {
   };
 
   return (
-    <Screen>
+    <Screen wide>
       {/* klepnutí na lva vrátí sekci na výchozí záložku */}
       <Pressable
         accessibilityRole="button"
@@ -82,6 +87,22 @@ export default function CsvScreen() {
 
       {searching ? (
         <SearchResults q={q} />
+      ) : desktop ? (
+        // na počítači kalendář a novinky vedle sebe, bez přepínání
+        <View style={{ flex: 1, flexDirection: 'row' }}>
+          <View style={{ width: colW, flex: 1 }}>
+            <T v="h3" style={{ paddingHorizontal: 16, paddingTop: 4 }}>
+              {t('csv.calendar')}
+            </T>
+            <CalendarList width={colW} />
+          </View>
+          <View style={{ width: colW, flex: 1 }}>
+            <T v="h3" style={{ paddingHorizontal: 16, paddingTop: 4 }}>
+              {t('csv.news')}
+            </T>
+            <NewsList width={colW} />
+          </View>
+        </View>
       ) : (
         <>
           <View style={{ paddingHorizontal: 16 }}>

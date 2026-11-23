@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomInset, useTopInset } from '../lib/insets';
+import { CONTENT_MAX, CONTENT_WIDE_MAX, useIsDesktop } from '../lib/layout';
 import { radius } from '../lib/theme';
 import { useSettings } from '../providers/SettingsProvider';
 
@@ -72,9 +73,12 @@ export function Screen({
   style,
   contentStyle,
   refreshControl,
+  wide,
 }: {
   children: React.ReactNode;
   scroll?: boolean;
+  /** na počítači širší obsah (např. dva sloupce) */
+  wide?: boolean;
   edges?: ('top' | 'bottom' | 'left' | 'right')[];
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
@@ -83,10 +87,18 @@ export function Screen({
   const { colors } = useSettings();
   const top = useTopInset();
   const bottom = useBottomInset();
+  const desktop = useIsDesktop();
   return (
     <View
       style={[
-        { flex: 1, backgroundColor: colors.bg, paddingTop: edges.includes('top') ? top : 0, paddingBottom: edges.includes('bottom') ? bottom : 0 },
+        {
+          flex: 1,
+          backgroundColor: colors.bg,
+          paddingTop: edges.includes('top') ? top : 0,
+          paddingBottom: edges.includes('bottom') ? bottom : 0,
+        },
+        // na počítači je obsah ve sloupci uprostřed, aby řádky nebyly přes celou obrazovku
+        desktop && { width: '100%', maxWidth: wide ? CONTENT_WIDE_MAX : CONTENT_MAX, alignSelf: 'center' },
         style,
       ]}
     >
@@ -590,11 +602,16 @@ export function Sheet({
 }) {
   const { colors } = useSettings();
   const insets = useSafeAreaInsets();
+  // na počítači se panel zobrazí jako dialog uprostřed obrazovky
+  const desktop = useIsDesktop();
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+    <Modal visible={visible} transparent animationType={desktop ? 'fade' : 'slide'} onRequestClose={onClose} statusBarTranslucent>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: colors.overlay }]} onPress={onClose} />
-        <View style={{ flex: 1, justifyContent: 'flex-end' }} pointerEvents="box-none">
+        <View
+          style={{ flex: 1, justifyContent: desktop ? 'center' : 'flex-end', alignItems: desktop ? 'center' : undefined }}
+          pointerEvents="box-none"
+        >
           <View
             style={[
               styles.sheet,
@@ -604,9 +621,11 @@ export function Sheet({
                 maxHeight: '92%',
               },
               full && { height: '92%' },
+              desktop && { width: 520, maxHeight: '86%', borderRadius: 20, paddingTop: 16 },
+              desktop && full && { height: '86%' },
             ]}
           >
-            <View style={[styles.grabber, { backgroundColor: colors.border }]} />
+            {!desktop && <View style={[styles.grabber, { backgroundColor: colors.border }]} />}
             {(title || right) && (
               <Row style={{ justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 8 }}>
                 <T v="h3" style={{ flex: 1 }}>
