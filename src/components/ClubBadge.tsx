@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import React from 'react';
 import { View } from 'react-native';
-import { CLUB_LOGOS } from '../data/clubLogos';
+import { CLUB_LOGOS, CLUB_LOGOS_DARK_INK } from '../data/clubLogos';
 import type { Club } from '../lib/types';
 import { useSettings } from '../providers/SettingsProvider';
 import { T } from './ui';
@@ -14,11 +14,11 @@ export function ClubBadge({
   club: (Pick<Club, 'name' | 'logo'> & { id?: number }) | null | undefined;
   size?: number;
 }) {
-  const { colors } = useSettings();
+  const { colors, isDark } = useSettings();
   if (!club) return null;
   const local = club.id != null ? CLUB_LOGOS[club.id] : undefined;
   if (local || club.logo) {
-    return (
+    const img = (
       <Image
         source={local ?? { uri: club.logo! }}
         style={{ width: size, height: size }}
@@ -26,6 +26,30 @@ export function ClubBadge({
         accessibilityLabel={club.name}
       />
     );
+    // logo s tmavou kresbou by v tmavém režimu zaniklo – podložíme ho světlým kruhem
+    if (isDark && club.id != null && CLUB_LOGOS_DARK_INK.has(club.id)) {
+      const pad = Math.round(size * 0.12);
+      return (
+        <View
+          style={{
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            backgroundColor: '#F4F6F9',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Image
+            source={local ?? { uri: club.logo! }}
+            style={{ width: size - pad * 2, height: size - pad * 2 }}
+            contentFit="contain"
+            accessibilityLabel={club.name}
+          />
+        </View>
+      );
+    }
+    return img;
   }
   const initials = club.name
     .replace(/[^\p{L}\s]/gu, '')

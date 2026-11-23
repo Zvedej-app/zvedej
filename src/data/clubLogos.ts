@@ -1,4 +1,4 @@
-// Loga klubů (staženo z webů a facebookových stránek klubů, 2026-11; Meziboří dodal uživatel).
+// Loga klubů (staženo z webů a facebookových stránek klubů, 2026-11; Meziboří, Horní Suchá, Rotava, Sokolov a Slavoj Plzeň dodal uživatel).
 // Sokolské jednoty bez vlastního loga mají znak České obce sokolské, TJ Šumperk má bílé logo na tmavém podkladu.
 // Klub bez loga se zobrazí iniciálami. Nové logo: PNG do assets/images/clubs/<id klubu>.png a řádek sem.
 
@@ -8,6 +8,7 @@ export const CLUB_LOGOS: Record<number, number> = {
   5: require('../../assets/images/clubs/5.png'),
   6: require('../../assets/images/clubs/6.png'),
   7: require('../../assets/images/clubs/7.png'),
+  8: require('../../assets/images/clubs/8.png'),
   9: require('../../assets/images/clubs/9.png'),
   10: require('../../assets/images/clubs/10.png'),
   11: require('../../assets/images/clubs/11.png'),
@@ -23,6 +24,7 @@ export const CLUB_LOGOS: Record<number, number> = {
   21: require('../../assets/images/clubs/21.png'),
   24: require('../../assets/images/clubs/24.png'),
   25: require('../../assets/images/clubs/25.png'),
+  26: require('../../assets/images/clubs/26.png'),
   27: require('../../assets/images/clubs/27.png'),
   28: require('../../assets/images/clubs/28.png'),
   30: require('../../assets/images/clubs/30.png'),
@@ -46,3 +48,6 @@ export const CLUB_LOGOS: Record<number, number> = {
   51: require('../../assets/images/clubs/51.png'),
   54: require('../../assets/images/clubs/54.png'),
 };
+
+/** loga s tmavým písmem/kresbou na průhledném pozadí – v tmavém režimu dostanou světlý kruh */
+export const CLUB_LOGOS_DARK_INK = new Set<number>([5, 6, 13, 15, 26, 31, 40, 42, 44, 54]);
