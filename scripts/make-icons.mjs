@@ -61,10 +61,8 @@ function art({ inset, mono = false, text = true }) {
     }`;
 }
 
-// černo-modrý přechod zleva doprava: černá sahá zhruba do třetiny, od dvou třetin přesně modrá aplikace (#11457E jako Plány)
-const BG = `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
-  <stop offset="0" stop-color="#000000"/><stop offset="0.2" stop-color="#000000"/><stop offset="0.68" stop-color="#11457E"/><stop offset="1" stop-color="#11457E"/>
-</linearGradient></defs><rect width="1024" height="1024" fill="url(#g)"/>`;
+// červené pozadí stejného odstínu jako v aplikaci (červená z loga ČSV), bílý nápis
+const BG = `<rect width="1024" height="1024" fill="${RED}"/>`;
 
 /** nápis „Zvedej!“ písmem Jost (scripts/fonts, licence OFL) */
 function word({ width = 0.66, color = '#FFFFFF' } = {}) {
