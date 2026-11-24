@@ -11,7 +11,7 @@ import { range, Wheel } from '../WheelPicker';
 
 const SETS = range(1, 20);
 const REPS = range(1, 30);
-const PCT = range(30, 120, 1);
+const PCT = range(20, 150, 1);
 const RPE = range(5, 10, 0.5);
 const KG_VALUES = range(0, 400, 1);
 const LB_VALUES = range(0, 880, 1);
