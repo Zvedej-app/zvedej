@@ -7,11 +7,16 @@ import { BarbellHalf } from './Logo';
 
 /**
  * Úvodní obrazovka při načítání: název aplikace Zvedej, logo činky
- * a dole „By Sladký&Vejvoda“. Činka se zvedá a dopadá na zem; aplikace se otevře
- * až po druhém dopadu (a jen pokud je už načtená – jinak po dalším dopadu).
+ * a dole „By Sladký&Vejvoda“. Činka spadne z malé výšky na zem a jako skutečná
+ * gumová činka se několikrát odrazí, pokaždé méně, až zůstane ležet.
+ * Pak se ještě ~0,5 s „načítá“ a obrazovka plynule zmizí.
  */
-/** po kolikátém dopadu se aplikace otevře */
-const LANDINGS = 2;
+/** jak dlouho činka leží na zemi, než obrazovka zmizí (ms) */
+const REST_MS = 500;
+/** výšky odrazů jako podíl výchozí výšky (každý odraz ztratí většinu energie) */
+const BOUNCES = [0.3, 0.09, 0.025];
+/** doba pádu z výchozí výšky (ms); ostatní časy podle fyziky t ~ √h */
+const FALL_MS = 520;
 
 export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () => void }) {
   const bottomInset = useBottomInset();
@@ -33,34 +38,58 @@ export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () =
     doneRef.current = onDone;
   }, [ready, onDone]);
 
+  // výchozí výška pádu nad zemí (px) podle velikosti činky
+  const drop = Math.round(half * 0.42);
+
   useEffect(() => {
     let alive = true;
-    let landings = 0;
-    // jeden zdvih: nahoru, krátká výdrž, pád na zem
-    const rep = () => {
-      Animated.sequence([
-        Animated.timing(lift, { toValue: 1, duration: 650, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-        Animated.delay(150),
-        Animated.timing(lift, { toValue: 0, duration: 550, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
-      ]).start(({ finished }) => {
-        if (!alive || !finished) return;
-        landings += 1;
-        if (landings >= LANDINGS && readyRef.current) {
-          // činka dopadla podruhé – chvilku leží na zemi a obrazovka zmizí
-          Animated.timing(fade, { toValue: 0, duration: 380, delay: 120, useNativeDriver: true }).start(() => doneRef.current());
-          return;
-        }
-        setTimeout(() => alive && rep(), 120);
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    lift.setValue(drop);
+    // pád = zrychlení dolů (kvadratická křivka), odraz = zpomalení nahoru – jako skutečná parabola
+    const fall = (h: number) =>
+      Animated.timing(lift, {
+        toValue: 0,
+        duration: FALL_MS * Math.sqrt(h / drop),
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
       });
+    const rise = (h: number) =>
+      Animated.timing(lift, {
+        toValue: h,
+        duration: FALL_MS * Math.sqrt(h / drop),
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      });
+    const steps: Animated.CompositeAnimation[] = [Animated.delay(250), fall(drop)];
+    for (const k of BOUNCES) steps.push(rise(drop * k), fall(drop * k));
+
+    // činka leží; obrazovka zmizí 0,5 s po zastavení (nebo až se aplikace dočte)
+    const finish = () => {
+      if (!alive) return;
+      if (!readyRef.current) {
+        timer = setTimeout(finish, 100);
+        return;
+      }
+      Animated.timing(fade, { toValue: 0, duration: 380, useNativeDriver: true }).start(() => doneRef.current());
     };
-    rep();
+    Animated.sequence(steps).start(({ finished }) => {
+      if (!alive || !finished) return;
+      timer = setTimeout(finish, REST_MS);
+    });
     Animated.timing(text, { toValue: 1, duration: 700, delay: 200, useNativeDriver: true }).start();
     return () => {
       alive = false;
+      if (timer) clearTimeout(timer);
     };
-  }, [lift, text, fade]);
+  }, [lift, text, fade, drop]);
 
-  const translateY = lift.interpolate({ inputRange: [0, 1], outputRange: [14, -22] });
+  // lift = výška nad zemí v px. restY posune činku tak, aby kotouče ležely přímo na čáře podlahy
+  // (podlaha je 18 px pod řádkem činky, kotouče jsou v kresbě o ~7,8 % výšky odsazené od spodku)
+  const restY = 18 + half * 0.078;
+  const translateY = lift.interpolate({ inputRange: [0, 200], outputRange: [restY, restY - 200] });
+  // stín na zemi: čím níž činka je, tím je stín tmavší a širší
+  const shadowOpacity = lift.interpolate({ inputRange: [0, drop], outputRange: [0.45, 0.12], extrapolate: 'clamp' });
+  const shadowScale = lift.interpolate({ inputRange: [0, drop], outputRange: [1, 0.75], extrapolate: 'clamp' });
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, { opacity: fade, zIndex: 100 }]} pointerEvents={ready ? 'none' : 'auto'}>
@@ -72,13 +101,23 @@ export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () =
           <View style={[styles.titleWrap, { width: titleW, height: half }]}>
             <View style={[styles.barBehind, { height: barH, borderRadius: barH / 2 }]} />
             {/* nápis je kousek nad osou */}
-            <Animated.Text style={[styles.title, { opacity: text, bottom: half / 2 + 6, fontSize: titleSize, lineHeight: titleSize + 4 }]} numberOfLines={1}>
+            <Animated.Text
+              style={[styles.title, { opacity: text, bottom: half / 2 + 6, fontSize: titleSize, lineHeight: titleSize + 4 }]}
+              numberOfLines={1}
+            >
               Zvedej
             </Animated.Text>
           </View>
           <BarbellHalf height={half} flip />
         </Animated.View>
-        <View style={[styles.floor, { width: half * 2 + titleW }]} />
+        <View style={[styles.floor, { width: half * 2 + titleW }]}>
+          <Animated.View
+            style={[
+              styles.shadow,
+              { width: half * 2 + titleW * 0.9, opacity: shadowOpacity, transform: [{ scaleX: shadowScale }] },
+            ]}
+          />
+        </View>
       </View>
       <Text style={[styles.byWord, styles.byWrap, { bottom: bottomInset + 86 }]}>By</Text>
       <Text style={[styles.by, styles.byWrap, { bottom: bottomInset + 40 }]}>{'Sladký&Vejvoda'}</Text>
@@ -88,11 +127,12 @@ export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () =
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  barbell: { flexDirection: 'row', alignItems: 'center' },
+  barbell: { flexDirection: 'row', alignItems: 'center', zIndex: 2 },
   titleWrap: { alignItems: 'center', justifyContent: 'center' },
   // střední část osy mezi kotouči (nápis je nad ní)
   barBehind: { position: 'absolute', left: -1, right: -1, backgroundColor: '#FFFFFF' },
-  floor: { height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.25)', marginTop: 18 },
+  floor: { height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.25)', marginTop: 18, alignItems: 'center' },
+  shadow: { position: 'absolute', top: -5, height: 8, borderRadius: 999, backgroundColor: 'rgba(0,0,20,0.9)' },
   title: {
     color: '#FFFFFF',
     position: 'absolute',
