@@ -87,9 +87,6 @@ export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () =
   // (podlaha je 18 px pod řádkem činky, kotouče jsou v kresbě o ~7,8 % výšky odsazené od spodku)
   const restY = 18 + half * 0.078;
   const translateY = lift.interpolate({ inputRange: [0, 200], outputRange: [restY, restY - 200] });
-  // stín na zemi: čím níž činka je, tím je stín tmavší a širší
-  const shadowOpacity = lift.interpolate({ inputRange: [0, drop], outputRange: [0.45, 0.12], extrapolate: 'clamp' });
-  const shadowScale = lift.interpolate({ inputRange: [0, drop], outputRange: [1, 0.75], extrapolate: 'clamp' });
 
   return (
     <Animated.View style={[StyleSheet.absoluteFill, { opacity: fade, zIndex: 100 }]} pointerEvents={ready ? 'none' : 'auto'}>
@@ -110,14 +107,7 @@ export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () =
           </View>
           <BarbellHalf height={half} flip />
         </Animated.View>
-        <View style={[styles.floor, { width: half * 2 + titleW }]}>
-          <Animated.View
-            style={[
-              styles.shadow,
-              { width: half * 2 + titleW * 0.9, opacity: shadowOpacity, transform: [{ scaleX: shadowScale }] },
-            ]}
-          />
-        </View>
+        <View style={[styles.floor, { width: half * 2 + titleW }]} />
       </View>
       <Text style={[styles.byWord, styles.byWrap, { bottom: bottomInset + 86 }]}>By</Text>
       <Text style={[styles.by, styles.byWrap, { bottom: bottomInset + 40 }]}>{'Sladký&Vejvoda'}</Text>
@@ -131,8 +121,7 @@ const styles = StyleSheet.create({
   titleWrap: { alignItems: 'center', justifyContent: 'center' },
   // střední část osy mezi kotouči (nápis je nad ní)
   barBehind: { position: 'absolute', left: -1, right: -1, backgroundColor: '#FFFFFF' },
-  floor: { height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.25)', marginTop: 18, alignItems: 'center' },
-  shadow: { position: 'absolute', top: -5, height: 8, borderRadius: 999, backgroundColor: 'rgba(0,0,20,0.9)' },
+  floor: { height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.25)', marginTop: 18 },
   title: {
     color: '#FFFFFF',
     position: 'absolute',
