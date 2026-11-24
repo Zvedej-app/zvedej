@@ -70,17 +70,17 @@ export function platesPerSide(total: number, bar: number, collars: number, plate
 
 /** Barvy kotoučů dle IWF */
 export const PLATE_COLORS: Record<string, string> = {
-  '25': '#C0000C',
+  '25': '#D4060D',
   '20': '#1E5BD8',
   '15': '#F2C230',
   '10': '#2EA44F',
   '5': '#F4F4F4',
-  '2.5': '#C0000C',
+  '2.5': '#D4060D',
   '2': '#1E5BD8',
   '1.5': '#F2C230',
   '1': '#2EA44F',
   '0.5': '#F4F4F4',
-  '55': '#C0000C',
+  '55': '#D4060D',
   '45': '#1E5BD8',
   '35': '#F2C230',
 };

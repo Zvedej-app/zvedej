@@ -21,7 +21,7 @@ export type RestActivityProps = {
 };
 
 const BLUE = '#000080';
-const RED = '#C0000C';
+const RED = '#D4060D';
 
 const RestActivity = (props: RestActivityProps, env: LiveActivityEnvironment) => {
   'widget';

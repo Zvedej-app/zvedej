@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import React from 'react';
 import Svg, { Defs, G, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-export const PLATE_RED = '#C0000C';
+export const PLATE_RED = '#D4060D';
 export const PLATE_BLUE = '#1E5AA8';
 
 /**
