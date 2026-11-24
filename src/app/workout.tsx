@@ -26,7 +26,7 @@ import {
 import { playRestSound, primeRestSound } from '../lib/restSound';
 import { radius } from '../lib/theme';
 import type { LoggedExercise, WorkoutLog } from '../lib/types';
-import { formatWeight } from '../lib/units';
+import { formatBodyweight, formatWeight } from '../lib/units';
 import { useAuth } from '../providers/AuthProvider';
 import { useSettings } from '../providers/SettingsProvider';
 import { useTraining } from '../providers/TrainingProvider';
@@ -459,7 +459,7 @@ export default function WorkoutScreen() {
                 }}
               >
                 <Ionicons name="scale-outline" size={18} color={colors.primary} />
-                <T style={{ fontSize: 18, fontWeight: '800' }}>{bw ? formatWeight(bw, settings.unit) : '—'}</T>
+                <T style={{ fontSize: 18, fontWeight: '800' }}>{bw ? formatBodyweight(bw, settings.unit) : '—'}</T>
               </View>
             </Pressable>
           </Row>
@@ -496,6 +496,7 @@ export default function WorkoutScreen() {
           title={t('tr.bodyweight')}
           kg={bw ?? 80}
           min={30}
+          decimals
           onClose={() => setBwSheet(false)}
           onSave={setBw}
           onClear={() => setBw(null)}

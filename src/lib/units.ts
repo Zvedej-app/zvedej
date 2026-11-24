@@ -45,6 +45,12 @@ export function formatWeight(kg: number | null | undefined, unit: Unit, opts?: {
   return opts?.suffix === false ? s : `${s} ${unit}`;
 }
 
+/** Tělesná hmotnost s jedním desetinným místem (např. 83,4 kg). */
+export function formatBodyweight(kg: number | null | undefined, unit: Unit) {
+  if (kg === null || kg === undefined || Number.isNaN(kg)) return '—';
+  return `${formatNumber(toDisplay(kg, unit), 1)} ${unit}`;
+}
+
 /** Parsuje číslo zadané uživatelem (akceptuje čárku). */
 export function parseNum(s: string): number | null {
   const n = parseFloat(s.replace(',', '.').replace(/\s/g, ''));

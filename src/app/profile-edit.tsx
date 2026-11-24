@@ -32,7 +32,7 @@ import {
 } from '../lib/categories';
 import { getClub, searchClubs } from '../lib/clubs';
 import type { AgeGroupId, Gender, Profile } from '../lib/types';
-import { formatNumber, formatWeight, parseNum, toDisplay, toStoredKg } from '../lib/units';
+import { formatBodyweight, formatNumber, parseNum, toDisplay, toStoredKg } from '../lib/units';
 import { useAuth } from '../providers/AuthProvider';
 import { useSettings } from '../providers/SettingsProvider';
 
@@ -173,7 +173,7 @@ export default function ProfileEdit() {
             <ListItem
               icon="scale-outline"
               title={t('pr.bodyweight')}
-              value={p.bodyweight ? formatWeight(p.bodyweight, unit) : '—'}
+              value={p.bodyweight ? formatBodyweight(p.bodyweight, unit) : '—'}
               onPress={() => setBwSheet(true)}
             />
           </Card>
@@ -309,6 +309,7 @@ export default function ProfileEdit() {
         title={t('pr.bodyweight')}
         kg={p.bodyweight ?? 80}
         min={30}
+        decimals
         onClose={() => setBwSheet(false)}
         onSave={(bodyweight) => set({ bodyweight })}
         onClear={() => set({ bodyweight: null })}

@@ -8,7 +8,7 @@ import { ageGroupLabel, formatCategory, sinclairTotal } from '../../lib/categori
 import { getClub } from '../../lib/clubs';
 import { formatMonth } from '../../lib/date';
 import type { ChallengeVideo, Profile } from '../../lib/types';
-import { formatNumber, formatWeight } from '../../lib/units';
+import { formatBodyweight, formatNumber, formatWeight } from '../../lib/units';
 import { useSettings } from '../../providers/SettingsProvider';
 import { BLUE, radius } from '../../lib/theme';
 import { ClubBadge } from '../ClubBadge';
@@ -25,9 +25,7 @@ export function ProfileView({ profile, own, onRefresh }: { profile: Profile; own
   const name = `${profile.firstName} ${profile.lastName}`.trim();
   const total = profile.prSnatch && profile.prCleanJerk ? profile.prSnatch + profile.prCleanJerk : null;
   const sinclair =
-    total && profile.gender && profile.bodyweight
-      ? sinclairTotal(profile.gender, Math.round(profile.bodyweight), Math.round(total))
-      : null;
+    total && profile.gender && profile.bodyweight ? sinclairTotal(profile.gender, profile.bodyweight, Math.round(total)) : null;
   const tile = Math.floor((width - 4) / 3);
   const incomplete = own && (!profile.clubId || !profile.weightCategory || !profile.prSnatch);
 
@@ -84,7 +82,18 @@ export function ProfileView({ profile, own, onRefresh }: { profile: Profile; own
           {club && (
             <Pressable
               onPress={() => router.push(`/club/${club.id}`)}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 7, paddingLeft: 6, paddingRight: 12, paddingVertical: 5, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 7,
+                paddingLeft: 6,
+                paddingRight: 12,
+                paddingVertical: 5,
+                borderRadius: radius.pill,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+              }}
             >
               <ClubBadge club={club} size={22} />
               <T style={{ fontWeight: '600', fontSize: 13 }}>{club.name}</T>
@@ -122,10 +131,16 @@ export function ProfileView({ profile, own, onRefresh }: { profile: Profile; own
           {sinclair !== null && (
             <Row style={{ justifyContent: 'center', gap: 22, flexWrap: 'wrap', marginTop: 4 }}>
               <T v="small" muted style={{ textAlign: 'center' }}>
-                {t('pr.sinclair')}: <T v="small" style={{ fontWeight: '800' }}>{formatNumber(sinclair, 2)}</T>
+                {t('pr.sinclair')}:{' '}
+                <T v="small" style={{ fontWeight: '800' }}>
+                  {formatNumber(sinclair, 2)}
+                </T>
               </T>
               <T v="small" muted style={{ textAlign: 'center' }}>
-                {t('pr.bodyweight')}: <T v="small" style={{ fontWeight: '800' }}>{formatWeight(profile.bodyweight, settings.unit)}</T>
+                {t('pr.bodyweight')}:{' '}
+                <T v="small" style={{ fontWeight: '800' }}>
+                  {formatBodyweight(profile.bodyweight, settings.unit)}
+                </T>
               </T>
             </Row>
           )}

@@ -478,6 +478,9 @@ const cs = {
   'tr.todaySection': 'Dnešní trénink',
   'tr.pickDay': 'Vyber den z plánu',
   'tr.otherOptions': 'Jiný trénink',
+  'pr.tenths': 'desetiny',
+  'pr.bwTypeHint': 'Napiš svou váhu, nebo ji nastav kolečky.',
+  'pr.bwRange': 'Zadej číslo od {min} do {max} {unit}.',
 };
 
 export type TKey = keyof typeof cs;
@@ -946,6 +949,9 @@ const en: Dict = {
   'tr.todaySection': 'Today\'s workout',
   'tr.pickDay': 'Pick a day from the plan',
   'tr.otherOptions': 'Other workout',
+  'pr.tenths': 'tenths',
+  'pr.bwTypeHint': 'Type your weight or set it with the wheels.',
+  'pr.bwRange': 'Enter a number from {min} to {max} {unit}.',
 };
 
 const sk: Dict = {
@@ -1411,6 +1417,9 @@ const sk: Dict = {
   'tr.todaySection': 'Dnešný tréning',
   'tr.pickDay': 'Vyber deň z plánu',
   'tr.otherOptions': 'Iný tréning',
+  'pr.tenths': 'desatiny',
+  'pr.bwTypeHint': 'Napíš svoju váhu alebo ju nastav kolieskami.',
+  'pr.bwRange': 'Zadaj číslo od {min} do {max} {unit}.',
 };
 
 export const DICTS: Record<Lang, Dict> = { cs, en, sk };

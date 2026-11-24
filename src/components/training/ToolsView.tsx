@@ -5,6 +5,7 @@ import { sinclairCoefficient, sinclairTotal } from '../../lib/categories';
 import { maxLiftIds } from '../../lib/training';
 import type { Gender } from '../../lib/types';
 import {
+  formatBodyweight,
   formatNumber,
   formatWeight,
   kgToLb,
@@ -37,6 +38,8 @@ interface WeightSheetProps {
   onClear?: () => void;
   clearLabel?: string;
   min?: number;
+  /** tělesná hmotnost: desetiny kila a políčko pro napsání čísla */
+  decimals?: boolean;
 }
 
 /** Výběr jedné váhy rolovacím kolečkem. */
@@ -48,7 +51,96 @@ export function WeightSheet(props: WeightSheetProps) {
   );
 }
 
-function WeightBody({ kg, onClose, onSave, onClear, clearLabel, min = 0 }: WeightSheetProps) {
+const TENTHS = range(0, 9, 1);
+
+function WeightBody(props: WeightSheetProps) {
+  return props.decimals ? <DecimalWeightBody {...props} /> : <WholeWeightBody {...props} />;
+}
+
+/** Tělesná hmotnost: políčko pro napsání (např. 83,4) a dvě kolečka – celá kila a desetiny. */
+function DecimalWeightBody({ kg, onClose, onSave, onClear, clearLabel, min = 0, title }: WeightSheetProps) {
+  const { t, settings, colors } = useSettings();
+  const unit = settings.unit;
+  const max = unit === 'kg' ? 300 : 660;
+  const wholes = useMemo(() => range(Math.ceil(min), max, 1), [min, max]);
+  const start = Math.round(toDisplay(kg, unit) * 10) / 10;
+  const [whole, setWhole] = useState(Math.min(max, Math.max(Math.ceil(min), Math.floor(start))));
+  const [tenth, setTenth] = useState(Math.round((start - Math.floor(start)) * 10) % 10);
+  const [text, setText] = useState(formatNumber(start, 1));
+  const [invalid, setInvalid] = useState(false);
+  const value = whole + tenth / 10;
+
+  const fromWheels = (w: number, d: number) => {
+    setWhole(w);
+    setTenth(d);
+    setText(formatNumber(w + d / 10, 1));
+    setInvalid(false);
+  };
+  const onType = (s: string) => {
+    const clean = s.replace(/[^0-9.,]/g, '').slice(0, 6);
+    setText(clean);
+    const n = parseNum(clean);
+    if (n === null || n < min || n > max) {
+      setInvalid(clean.length > 0);
+      return;
+    }
+    const r = Math.round(n * 10) / 10;
+    setInvalid(false);
+    setWhole(Math.floor(r));
+    setTenth(Math.round((r - Math.floor(r)) * 10) % 10);
+  };
+
+  return (
+    <View style={{ paddingHorizontal: 16, gap: 14, alignItems: 'center' }}>
+      <Field
+        value={text}
+        onChangeText={onType}
+        keyboardType="decimal-pad"
+        placeholder={`83,4`}
+        accessibilityLabel={title}
+        selectTextOnFocus
+        style={{ alignSelf: 'stretch' }}
+        inputStyle={{
+          textAlign: 'center',
+          fontSize: 26,
+          fontWeight: '800',
+          height: 58,
+          borderColor: invalid ? colors.danger : colors.border,
+        }}
+        hint={invalid ? t('pr.bwRange', { min, max, unit }) : t('pr.bwTypeHint')}
+      />
+      <Row style={{ justifyContent: 'center', alignItems: 'center' }} gap={4}>
+        <Wheel label={unit} values={wholes} value={whole} onChange={(w) => fromWheels(w, tenth)} width={110} />
+        <T style={{ fontSize: 28, fontWeight: '800', marginTop: 22 }}>,</T>
+        <Wheel label={t('pr.tenths')} values={TENTHS} value={tenth} onChange={(d) => fromWheels(whole, d)} width={80} />
+      </Row>
+      <Row style={{ alignSelf: 'stretch' }}>
+        {onClear && (
+          <Button
+            kind="ghost"
+            title={clearLabel ?? t('common.delete')}
+            onPress={() => {
+              onClear();
+              onClose();
+            }}
+          />
+        )}
+        <Button
+          title={t('common.done')}
+          style={{ flex: 1 }}
+          disabled={invalid}
+          onPress={() => {
+            const stored = unit === 'kg' ? Math.round(value * 10) / 10 : Math.round(lbToKg(value) * 100) / 100;
+            onSave(stored);
+            onClose();
+          }}
+        />
+      </Row>
+    </View>
+  );
+}
+
+function WholeWeightBody({ kg, onClose, onSave, onClear, clearLabel, min = 0 }: WeightSheetProps) {
   const { t, settings } = useSettings();
   const unit = settings.unit;
   const values = useMemo(() => (unit === 'kg' ? KG : LB).filter((v) => v >= min), [unit, min]);
@@ -106,7 +198,14 @@ export function ToolsView() {
           />
         ))}
       </ListGroup>
-      <Button small kind="secondary" icon="add" title={t('tr.addMaxExercise')} onPress={() => setPicker(true)} style={{ marginTop: -6, alignSelf: 'flex-start' }} />
+      <Button
+        small
+        kind="secondary"
+        icon="add"
+        title={t('tr.addMaxExercise')}
+        onPress={() => setPicker(true)}
+        style={{ marginTop: -6, alignSelf: 'flex-start' }}
+      />
 
       <PlateCalculator />
       <SinclairCalc />
@@ -138,8 +237,30 @@ export function ToolsView() {
 /** šířka a výška kotouče (px) – největší kotouč je nejtlustší, malé kotouče jsou menší */
 function plateSize(p: number, unit: 'kg' | 'lb') {
   if (unit === 'kg') {
-    const w: Record<string, number> = { '25': 22, '20': 20, '15': 18, '10': 15, '5': 12, '2.5': 10, '2': 9, '1.5': 8, '1': 7, '0.5': 6 };
-    const h: Record<string, number> = { '25': 112, '20': 112, '15': 112, '10': 112, '5': 112, '2.5': 64, '2': 56, '1.5': 50, '1': 44, '0.5': 38 };
+    const w: Record<string, number> = {
+      '25': 22,
+      '20': 20,
+      '15': 18,
+      '10': 15,
+      '5': 12,
+      '2.5': 10,
+      '2': 9,
+      '1.5': 8,
+      '1': 7,
+      '0.5': 6,
+    };
+    const h: Record<string, number> = {
+      '25': 112,
+      '20': 112,
+      '15': 112,
+      '10': 112,
+      '5': 112,
+      '2.5': 64,
+      '2': 56,
+      '1.5': 50,
+      '1': 44,
+      '0.5': 38,
+    };
     return { w: w[String(p)] ?? 8, h: h[String(p)] ?? 50 };
   }
   const w: Record<string, number> = { '55': 22, '45': 20, '35': 18, '25': 15, '10': 12, '5': 10, '2.5': 8 };
@@ -289,7 +410,7 @@ function SinclairCalc() {
   const { profile } = useAuth();
   const unit = settings.unit;
   const [gender, setGender] = useState<Gender>(profile?.gender ?? 'M');
-  const [bw, setBw] = useState(Math.round(profile?.bodyweight ?? 80));
+  const [bw, setBw] = useState(profile?.bodyweight ?? 80);
   const [total, setTotal] = useState(profile?.prSnatch && profile?.prCleanJerk ? profile.prSnatch + profile.prCleanJerk : 200);
   const [edit, setEdit] = useState<'bw' | 'total' | null>(null);
   const coef = sinclairCoefficient(gender, bw);
@@ -302,7 +423,7 @@ function SinclairCalc() {
       </Row>
       <Row style={{ justifyContent: 'space-between' }}>
         <T muted>{t('pr.bodyweight')}</T>
-        <Button small kind="secondary" title={formatWeight(bw, unit)} onPress={() => setEdit('bw')} />
+        <Button small kind="secondary" title={formatBodyweight(bw, unit)} onPress={() => setEdit('bw')} />
       </Row>
       <Row style={{ justifyContent: 'space-between' }}>
         <T muted>{t('tr.total')}</T>
@@ -321,6 +442,7 @@ function SinclairCalc() {
         title={edit === 'bw' ? t('pr.bodyweight') : t('tr.total')}
         kg={edit === 'bw' ? bw : total}
         min={edit === 'bw' ? 30 : 0}
+        decimals={edit === 'bw'}
         onClose={() => setEdit(null)}
         onSave={(kg) => (edit === 'bw' ? setBw(kg) : setTotal(kg))}
       />
@@ -366,7 +488,16 @@ function Converter() {
 const styles = StyleSheet.create({
   barWrap: { height: 124, justifyContent: 'center', overflow: 'hidden' },
   shaft: { position: 'absolute', left: 0, height: 12, borderRadius: 3, top: 56, backgroundColor: '#B8BEC8' },
-  sleeve: { position: 'absolute', left: 0, right: 0, height: 20, top: '50%', marginTop: -10, borderRadius: 4, backgroundColor: '#9AA1AD' },
+  sleeve: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 20,
+    top: '50%',
+    marginTop: -10,
+    borderRadius: 4,
+    backgroundColor: '#9AA1AD',
+  },
   collar: {
     width: 20,
     height: 50,
