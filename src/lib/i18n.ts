@@ -349,7 +349,8 @@ const cs = {
   'soc.noMessages': 'Zatím žádné zprávy. Napiš někomu z profilu vzpěrače.',
   'soc.noMessageRequests': 'Žádné nové žádosti o zprávy.',
   'soc.requestHint': 'Tento uživatel není tvůj přítel. Zpráva je v žádostech, dokud neodpovíš nebo žádost nepřijmeš.',
-  'soc.notFriendHint': 'Nejste přátelé. Zpráva se příjemci zobrazí v „Žádostech o zprávy“. Do odpovědi můžeš poslat nejvýše 3 zprávy.',
+  'soc.notFriendHint':
+    'Nejste přátelé. Zpráva se příjemci zobrazí v „Žádostech o zprávy“. Do odpovědi můžeš poslat nejvýše 3 zprávy.',
   'soc.limit': 'Dokud ti uživatel neodpoví nebo nepřijme žádost o přátelství, můžeš poslat nejvýše 3 zprávy.',
   'soc.writeMessage': 'Napiš zprávu…',
   'soc.send': 'Odeslat',
@@ -413,7 +414,8 @@ const cs = {
   'safety.reported': 'Děkujeme. Nahlášení posoudíme co nejdřív.',
   'safety.block': 'Zablokovat',
   'safety.unblock': 'Odblokovat',
-  'safety.blockConfirm': 'Zablokovat uživatele {name}? Nebude ti moci psát ani posílat žádosti o přátelství a vaše přátelství se zruší.',
+  'safety.blockConfirm':
+    'Zablokovat uživatele {name}? Nebude ti moci psát ani posílat žádosti o přátelství a vaše přátelství se zruší.',
   'safety.blocked': 'Uživatel je zablokovaný.',
   'safety.unblocked': 'Uživatel je odblokovaný.',
   'safety.blockedChat': 'S tímto uživatelem si nelze psát.',
@@ -450,7 +452,8 @@ const cs = {
   'mod.remove': 'Odstranit obsah',
   'mod.ban': 'Zablokovat účet',
   'mod.dismissHint': 'Nahlášení se uzavře bez zásahu.',
-  'mod.removeHint': 'Zpráva se smaže, video se skryje, u profilu se smaže fotka a motto. Uživatel dostane oznámení s odůvodněním.',
+  'mod.removeHint':
+    'Zpráva se smaže, video se skryje, u profilu se smaže fotka a motto. Uživatel dostane oznámení s odůvodněním.',
   'mod.banHint': 'Obsah se odstraní a účet nebude moci psát, posílat žádosti ani nahrávat videa. Jeho videa se skryjí.',
   'mod.reason': 'Odůvodnění pro uživatele',
   'mod.reasonPlaceholder': 'Např. Urážlivé zprávy – porušení čl. 3 podmínek',
@@ -817,10 +820,11 @@ const en: Dict = {
   'soc.message': 'Send message',
   'soc.messages': 'Messages',
   'soc.messageRequests': 'Message requests',
-  'soc.noMessages': 'No messages yet. Write to someone from a lifter\'s profile.',
+  'soc.noMessages': "No messages yet. Write to someone from a lifter's profile.",
   'soc.noMessageRequests': 'No new message requests.',
   'soc.requestHint': 'This user is not your friend. The message stays in requests until you reply or accept.',
-  'soc.notFriendHint': 'You are not friends. The message will appear in the recipient\'s message requests. You can send at most 3 until they reply.',
+  'soc.notFriendHint':
+    "You are not friends. The message will appear in the recipient's message requests. You can send at most 3 until they reply.",
   'soc.limit': 'Until the user replies or accepts your friend request you can send at most 3 messages.',
   'soc.writeMessage': 'Write a message…',
   'soc.send': 'Send',
@@ -831,8 +835,8 @@ const en: Dict = {
   'tr.weekGoal': 'Weekly goal',
   'tr.weekGoalDone': 'Goal reached!',
   'tr.streakWeeks': 'weeks in a row',
-  'tr.streakStart': 'Start a streak with today\'s session',
-  'tr.todayTitle': 'Today\'s session',
+  'tr.streakStart': "Start a streak with today's session",
+  'tr.todayTitle': "Today's session",
   'tr.exercisesCount': 'exercises',
   'cel.title': 'Session done!',
   'cel.sets': 'sets',
@@ -884,15 +888,16 @@ const en: Dict = {
   'safety.reported': 'Thank you. We will review the report as soon as possible.',
   'safety.block': 'Block',
   'safety.unblock': 'Unblock',
-  'safety.blockConfirm': 'Block {name}? They won\'t be able to message you or send friend requests, and your friendship will be removed.',
+  'safety.blockConfirm':
+    "Block {name}? They won't be able to message you or send friend requests, and your friendship will be removed.",
   'safety.blocked': 'User blocked.',
   'safety.unblocked': 'User unblocked.',
-  'safety.blockedChat': 'You can\'t exchange messages with this user.',
+  'safety.blockedChat': "You can't exchange messages with this user.",
   'safety.blockedUsers': 'Blocked users',
-  'safety.blockedEmpty': 'You haven\'t blocked anyone.',
+  'safety.blockedEmpty': "You haven't blocked anyone.",
   'notice.title': 'Moderator notice',
   'notice.content_removed': 'Your content was removed because it broke the app rules.',
-  'notice.banned': 'Your account has been suspended. You can\'t send messages or friend requests or upload videos.',
+  'notice.banned': "Your account has been suspended. You can't send messages or friend requests or upload videos.",
   'notice.unbanned': 'Your account suspension has been lifted.',
   'notice.reason': 'Reason',
   'notice.appeal': 'Disagree? Write to {email} and we will review the decision.',
@@ -921,8 +926,10 @@ const en: Dict = {
   'mod.remove': 'Remove content',
   'mod.ban': 'Suspend account',
   'mod.dismissHint': 'The report will be closed with no action.',
-  'mod.removeHint': 'The message is deleted, the video hidden, or the profile photo and motto removed. The user gets a notice with the reason.',
-  'mod.banHint': 'The content is removed and the account can no longer message, send requests or upload. Their videos are hidden.',
+  'mod.removeHint':
+    'The message is deleted, the video hidden, or the profile photo and motto removed. The user gets a notice with the reason.',
+  'mod.banHint':
+    'The content is removed and the account can no longer message, send requests or upload. Their videos are hidden.',
   'mod.reason': 'Statement of reasons for the user',
   'mod.reasonPlaceholder': 'E.g. Abusive messages – breach of section 3 of the terms',
   'mod.reasonOptional': 'Note (optional)',
@@ -946,7 +953,7 @@ const en: Dict = {
   'tr.fromMyMax': 'From my max',
   'tr.setN': 'Set',
   'tr.planSection': 'Your plan',
-  'tr.todaySection': 'Today\'s workout',
+  'tr.todaySection': "Today's workout",
   'tr.pickDay': 'Pick a day from the plan',
   'tr.otherOptions': 'Other workout',
   'pr.tenths': 'tenths',
@@ -1288,7 +1295,8 @@ const sk: Dict = {
   'soc.noMessages': 'Zatiaľ žiadne správy. Napíš niekomu z profilu vzpierača.',
   'soc.noMessageRequests': 'Žiadne nové žiadosti o správy.',
   'soc.requestHint': 'Tento používateľ nie je tvoj priateľ. Správa je v žiadostiach, kým neodpovieš alebo žiadosť neprijmeš.',
-  'soc.notFriendHint': 'Nie ste priatelia. Správa sa príjemcovi zobrazí v „Žiadostiach o správy“. Do odpovede môžeš poslať najviac 3 správy.',
+  'soc.notFriendHint':
+    'Nie ste priatelia. Správa sa príjemcovi zobrazí v „Žiadostiach o správy“. Do odpovede môžeš poslať najviac 3 správy.',
   'soc.limit': 'Kým ti používateľ neodpovie alebo neprijme žiadosť o priateľstvo, môžeš poslať najviac 3 správy.',
   'soc.writeMessage': 'Napíš správu…',
   'soc.send': 'Odoslať',
@@ -1352,7 +1360,8 @@ const sk: Dict = {
   'safety.reported': 'Ďakujeme. Nahlásenie posúdime čo najskôr.',
   'safety.block': 'Zablokovať',
   'safety.unblock': 'Odblokovať',
-  'safety.blockConfirm': 'Zablokovať používateľa {name}? Nebude ti môcť písať ani posielať žiadosti o priateľstvo a vaše priateľstvo sa zruší.',
+  'safety.blockConfirm':
+    'Zablokovať používateľa {name}? Nebude ti môcť písať ani posielať žiadosti o priateľstvo a vaše priateľstvo sa zruší.',
   'safety.blocked': 'Používateľ je zablokovaný.',
   'safety.unblocked': 'Používateľ je odblokovaný.',
   'safety.blockedChat': 'S týmto používateľom si nemožno písať.',
@@ -1371,7 +1380,8 @@ const sk: Dict = {
   'mod.open': 'Na vybavenie',
   'mod.all': 'Všetky',
   'mod.empty': 'Žiadne nahlásenia na vybavenie.',
-  'mod.hint': 'Posudzuj podľa podmienok používania. Pri odstránení obsahu alebo zablokovaní napíš odôvodnenie – používateľ ho uvidí.',
+  'mod.hint':
+    'Posudzuj podľa podmienok používania. Pri odstránení obsahu alebo zablokovaní napíš odôvodnenie – používateľ ho uvidí.',
   'mod.kind.user': 'Profil',
   'mod.kind.message': 'Správa',
   'mod.kind.video': 'Video',
@@ -1389,7 +1399,8 @@ const sk: Dict = {
   'mod.remove': 'Odstrániť obsah',
   'mod.ban': 'Zablokovať účet',
   'mod.dismissHint': 'Nahlásenie sa uzavrie bez zásahu.',
-  'mod.removeHint': 'Správa sa zmaže, video sa skryje, pri profile sa zmaže fotka a motto. Používateľ dostane oznámenie s odôvodnením.',
+  'mod.removeHint':
+    'Správa sa zmaže, video sa skryje, pri profile sa zmaže fotka a motto. Používateľ dostane oznámenie s odôvodnením.',
   'mod.banHint': 'Obsah sa odstráni a účet nebude môcť písať, posielať žiadosti ani nahrávať videá. Jeho videá sa skryjú.',
   'mod.reason': 'Odôvodnenie pre používateľa',
   'mod.reasonPlaceholder': 'Napr. Urážlivé správy – porušenie čl. 3 podmienok',
@@ -1439,7 +1450,7 @@ export function translate(lang: Lang, key: TKey, vars?: Record<string, string | 
 }
 
 type Forms = { one: string; few: string; many: string };
-const PLURALS: Record<'workout' | 'set' | 'week', Record<Lang, Forms>> = {
+const PLURALS: Record<'workout' | 'set' | 'week' | 'exercise' | 'trainingDay', Record<Lang, Forms>> = {
   week: {
     cs: { one: 'týden', few: 'týdny', many: 'týdnů' },
     sk: { one: 'týždeň', few: 'týždne', many: 'týždňov' },
@@ -1449,6 +1460,16 @@ const PLURALS: Record<'workout' | 'set' | 'week', Record<Lang, Forms>> = {
     cs: { one: 'trénink', few: 'tréninky', many: 'tréninků' },
     sk: { one: 'tréning', few: 'tréningy', many: 'tréningov' },
     en: { one: 'workout', few: 'workouts', many: 'workouts' },
+  },
+  trainingDay: {
+    cs: { one: 'tréninkový den', few: 'tréninkové dny', many: 'tréninkových dnů' },
+    sk: { one: 'tréningový deň', few: 'tréningové dni', many: 'tréningových dní' },
+    en: { one: 'training day', few: 'training days', many: 'training days' },
+  },
+  exercise: {
+    cs: { one: 'cvik', few: 'cviky', many: 'cviků' },
+    sk: { one: 'cvik', few: 'cviky', many: 'cvikov' },
+    en: { one: 'exercise', few: 'exercises', many: 'exercises' },
   },
   set: {
     cs: { one: 'nástup', few: 'nástupy', many: 'nástupů' },

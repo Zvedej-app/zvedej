@@ -4,6 +4,7 @@ import React from 'react';
 import { ScrollView, View } from 'react-native';
 import { TEMPLATES } from '../../data/templates';
 import { formatDate, todayISO, weeksBetween } from '../../lib/date';
+import { plural } from '../../lib/i18n';
 import type { TrainingPlan } from '../../lib/types';
 import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
@@ -43,7 +44,7 @@ export function PlansView() {
           {p.endDate ? ` · ${t('tr.ranWeeks', { n: weeksBetween(p.startDate, p.endDate) })}` : ''}
         </T>
         <T v="small" muted>
-          {p.days.length} × {t('tr.days').toLowerCase()} · {exCount} {t('tr.exercises')}
+          {plural(settings.lang, 'trainingDay', p.days.length)} · {plural(settings.lang, 'exercise', exCount)}
         </T>
       </Card>
     );

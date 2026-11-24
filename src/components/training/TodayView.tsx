@@ -6,7 +6,7 @@ import { exerciseName } from '../../data/exercises';
 import { TEMPLATES } from '../../data/templates';
 import { formatDate, todayISO, weekdayMon0 } from '../../lib/date';
 import { toast } from '../../lib/dialog';
-import type { TKey } from '../../lib/i18n';
+import { plural, type TKey } from '../../lib/i18n';
 import { activePlan, dayForDate, dayLabel, planWeek, upcomingPlan, workoutFromDay } from '../../lib/training';
 import type { PlanDay, TrainingPlan } from '../../lib/types';
 import { formatNumber, ROUND_KG } from '../../lib/units';
@@ -147,8 +147,8 @@ export function TodayView() {
           {day && (
             <Card style={{ borderRadius: 22, padding: 18, gap: 10, borderWidth: 1.5, borderColor: colors.accent }}>
               <T v="label" color={colors.accent}>
-                {todayDay && day.id === todayDay.id ? t('tr.todayTitle') : t('tr.todaysWorkout')} · {day.exercises.length}{' '}
-                {t('tr.exercisesCount')}
+                {todayDay && day.id === todayDay.id ? t('tr.todayTitle') : t('tr.todaysWorkout')} ·{' '}
+                {plural(settings.lang, 'exercise', day.exercises.length)}
               </T>
               <Row style={{ justifyContent: 'space-between' }}>
                 <T v="h1" style={{ flex: 1, fontSize: 26 }}>
