@@ -63,7 +63,18 @@ export interface CelebrationData {
 }
 
 /** Oslava po dokončení tréninku: konfety a shrnutí. */
-export function Celebration({ data, onClose }: { data: CelebrationData | null; onClose: () => void }) {
+export function Celebration({
+  data,
+  onClose,
+  guest,
+  onSaveAccount,
+}: {
+  data: CelebrationData | null;
+  onClose: () => void;
+  /** host bez účtu – nabídne uložení tréninků do účtu */
+  guest?: boolean;
+  onSaveAccount?: () => void;
+}) {
   const bottomInset = useBottomInset();
   const { t, settings } = useSettings();
   const { width, height } = useWindowDimensions();
@@ -106,6 +117,24 @@ export function Celebration({ data, onClose }: { data: CelebrationData | null; o
         )}
 
         <View style={{ flex: 1 }} />
+        {guest && onSaveAccount ? (
+          <View style={styles.guest}>
+            <Ionicons name="cloud-upload-outline" size={26} color="#FFF" />
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={styles.guestTitle}>{t('guest.saveTitle')}</Text>
+              <Text style={styles.guestText}>{t('guest.saveText')}</Text>
+            </View>
+          </View>
+        ) : null}
+        {guest && onSaveAccount ? (
+          <Button
+            title={t('guest.createAccount')}
+            icon="person-add-outline"
+            kind="secondary"
+            onPress={onSaveAccount}
+            style={{ alignSelf: 'stretch', minHeight: 56, borderRadius: 16, backgroundColor: '#FFFFFF' }}
+          />
+        ) : null}
         <Button
           title={t('cel.continue')}
           onPress={onClose}
@@ -153,4 +182,15 @@ const styles = StyleSheet.create({
   statLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '500' },
   streak: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   streakText: { color: '#FFF', fontSize: 18, fontFamily: FONTS.bold },
+  guest: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    alignSelf: 'stretch',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 16,
+    padding: 14,
+  },
+  guestTitle: { color: '#FFF', fontSize: 16, fontFamily: FONTS.bold },
+  guestText: { color: 'rgba(255,255,255,0.85)', fontSize: 13 },
 });

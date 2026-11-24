@@ -20,14 +20,16 @@ import { LANG_LABELS, type Lang } from '../../lib/i18n';
 import { useAuth } from '../../providers/AuthProvider';
 import { useSettings, type ThemeMode } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
+import { useRequireAccount } from '../../hooks/useRequireAccount';
 
 const REST = [0, ...range(30, 600, 15)];
 const mmss = (s: number) => (s === 0 ? '—' : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`);
 
 export default function SettingsScreen() {
-  const { t, settings, update } = useSettings();
+  const { t, settings, update, colors } = useSettings();
   const { session, profile, saveProfile } = useAuth();
   const { data } = useTraining();
+  const needAccount = useRequireAccount();
   const [restSheet, setRestSheet] = useState(false);
   const [rest, setRest] = useState(settings.restSec);
 
@@ -54,6 +56,33 @@ export default function SettingsScreen() {
       <Header title={t('tab.settings')} />
       <View style={{ flex: 1 }}>
         <Screen scroll edges={[]}>
+          {session?.isAnonymous && (
+            <View style={{ backgroundColor: colors.primary, borderRadius: 18, padding: 16, gap: 10 }}>
+              <T v="h3" color="#FFF">
+                {t('guest.youAreGuest')}
+              </T>
+              <T v="small" color="rgba(255,255,255,0.85)">
+                {t('guest.youAreGuestHint')}
+              </T>
+              <Button
+                icon="person-add-outline"
+                title={t('guest.createAccount')}
+                onPress={() => router.push('/account')}
+                style={{ backgroundColor: colors.accent }}
+              />
+            </View>
+          )}
+          {session?.needsPassword && (
+            <ListGroup>
+              <ListItem
+                icon="lock-closed-outline"
+                title={t('guest.setPassword')}
+                subtitle={t('guest.setPasswordHint')}
+                onPress={() => router.push('/set-password')}
+              />
+            </ListGroup>
+          )}
+
           <ListGroup title={t('st.appearance')}>
             <View style={{ padding: 12, gap: 8 }}>
               <T v="small" muted>
@@ -190,7 +219,7 @@ export default function SettingsScreen() {
               title={t('coach.iAmCoach')}
               subtitle={t('coach.iAmCoachHint')}
               toggle={profile?.isCoach ?? false}
-              onToggle={(isCoach) => saveProfile({ isCoach }).catch(() => {})}
+              onToggle={async (isCoach) => (await needAccount()) && saveProfile({ isCoach }).catch(() => {})}
             />
           </ListGroup>
 
@@ -219,7 +248,9 @@ export default function SettingsScreen() {
               icon="log-out-outline"
               title={t('st.logout')}
               onPress={async () => {
-                if (await confirm(`${t('st.logout')}?`, { ok: t('st.logout'), cancel: t('common.cancel') })) api.signOut();
+                const q = session?.isAnonymous ? t('guest.logoutWarning') : `${t('st.logout')}?`;
+                if (await confirm(q, { ok: t('st.logout'), cancel: t('common.cancel'), destructive: !!session?.isAnonymous }))
+                  api.signOut();
               }}
             />
             <ListItem

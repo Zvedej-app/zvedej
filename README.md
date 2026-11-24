@@ -242,3 +242,14 @@ update public.profiles set is_admin = true
 - **Zpětná vazba:** komentáře u každého tréninku a soukromá videa nástupů (bucket `training-videos`, vidí je jen svěřenec a jeho trenéři).
 - **Skupiny a žebříček:** tonáž a počet tréninků za měsíc, Sinclair z osobních rekordů.
 - Databáze: migrace `supabase/migrations/20261126000000_coach.sql`.
+
+## Bez registrace (verze 1.5)
+
+- Na úvodní obrazovce „Začít hned bez registrace“ – anonymní přihlášení Supabase. Host si zapisuje tréninky, plány i maxima
+  (synchronizují se na server pod anonymním účtem).
+- Po prvním tréninku (oslava), na obrazovce Dnes a v Nastavení se nabízí „Vytvořit účet“: jméno, datum narození (15+),
+  e-mail a souhlas. Po potvrzení e-mailu si uživatel nastaví heslo. Id uživatele i všechna data zůstanou.
+- Zprávy, videa, lajky, přátelé, trenér a nahlášení jsou jen pro účty (hlídá i databáze – ochrana výzvy před falešnými hlasy).
+- Hosté neaktivní 90 dní se automaticky mažou.
+- Nastavení Supabase: Authentication → Sign In / Providers → zapnout **Allow anonymous sign-ins** a **Allow manual linking**;
+  doporučeno zapnout CAPTCHA (Cloudflare Turnstile). Migrace `20261127000000_guest.sql`.

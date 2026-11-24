@@ -24,6 +24,18 @@ import type {
 export interface Session {
   userId: string;
   email: string | null;
+  /** host bez registrace (anonymní přihlášení) */
+  isAnonymous?: boolean;
+  /** host potvrdil e-mail, ale ještě si nenastavil heslo */
+  needsPassword?: boolean;
+}
+
+export interface UpgradeInput {
+  email: string;
+  firstName: string;
+  lastName: string;
+  /** YYYY-MM-DD */
+  birthDate: string;
 }
 
 export type VideoSort = 'top' | 'new' | 'random';
@@ -62,6 +74,12 @@ export interface Backend {
   signIn(email: string, password: string): Promise<void>;
   signUp(input: SignUpInput): Promise<{ needsConfirmation: boolean }>;
   signInDemo?(): Promise<void>;
+  /** vyzkoušet bez registrace */
+  signInGuest(): Promise<void>;
+  /** převod hosta na účet: uloží údaje a pošle potvrzovací e-mail; data zůstanou */
+  upgradeGuest(input: UpgradeInput): Promise<{ needsConfirmation: boolean }>;
+  /** nastaví heslo (po potvrzení e-mailu u převedeného hosta) */
+  setPassword(password: string): Promise<void>;
   resetPassword(email: string): Promise<void>;
   signOut(): Promise<void>;
   deleteAccount(): Promise<void>;

@@ -81,6 +81,8 @@ function App() {
             <Stack.Screen name="moderation" />
             <Stack.Screen name="coaches" />
             <Stack.Screen name="progress" />
+            <Stack.Screen name="account" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="set-password" options={{ presentation: 'modal' }} />
             <Stack.Screen name="join/[id]" />
             <Stack.Screen name="team/index" />
             <Stack.Screen name="team/invite" />

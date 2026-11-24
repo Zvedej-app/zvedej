@@ -12,8 +12,16 @@ import { useBottomInset } from '../../lib/insets';
 import { radius } from '../../lib/theme';
 import type { FriendStatus, Message, Profile } from '../../lib/types';
 import { useSettings } from '../../providers/SettingsProvider';
+import { GuestGate } from '../../components/GuestGate';
+import { useAuth } from '../../providers/AuthProvider';
 
 export default function ChatScreen() {
+  const { session: guestSession } = useAuth();
+  if (guestSession?.isAnonymous) return <GuestGate />;
+  return <ChatScreenInner />;
+}
+
+function ChatScreenInner() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t, colors, locale } = useSettings();
   const me = useSession();

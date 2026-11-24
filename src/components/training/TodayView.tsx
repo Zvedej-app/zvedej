@@ -33,7 +33,7 @@ export function TodayView() {
   const [picked, setPicked] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const day = plan?.days.find((d) => d.id === picked) ?? todayDay;
-  const { profile } = useAuth();
+  const { profile, session } = useAuth();
   const [invites, setInvites] = useState<MyCoach[]>([]);
   const [newPlans, setNewPlans] = useState<AssignedPlan[]>([]);
   const sync = training.syncCoachPlans;
@@ -98,6 +98,33 @@ export function TodayView() {
         </T>
       </View>
 
+      {session?.needsPassword && (
+        <Card onPress={() => router.push('/set-password')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <Ionicons name="lock-closed" size={22} color={colors.primary} />
+          <View style={{ flex: 1 }}>
+            <T style={{ fontWeight: '800' }}>{t('guest.finishAccount')}</T>
+            <T v="caption" muted>
+              {t('guest.setPasswordHint')}
+            </T>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </Card>
+      )}
+      {session?.isAnonymous && data.logs.length > 0 && (
+        <Card
+          onPress={() => router.push('/account')}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: colors.primary, borderWidth: 1.5 }}
+        >
+          <Ionicons name="cloud-upload-outline" size={24} color={colors.primary} />
+          <View style={{ flex: 1 }}>
+            <T style={{ fontWeight: '800' }}>{t('guest.saveTitle')}</T>
+            <T v="caption" muted>
+              {t('guest.saveShort')}
+            </T>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </Card>
+      )}
       {invites.map((c) => (
         <Card
           key={c.profile.id}

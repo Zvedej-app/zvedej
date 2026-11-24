@@ -542,6 +542,36 @@ export function createDemoBackend(): Backend {
       await set(K.session, s);
       emit(s);
     },
+    async signInGuest() {
+      const s = { userId: 'local-guest', email: null, isAnonymous: true };
+      const us = await users();
+      if (!us.find((u) => u.id === s.userId)) await set(K.users, [...us, demoProfile({ id: s.userId, isPublic: false })]);
+      await set(K.session, s);
+      emit(s);
+    },
+    async upgradeGuest({ email, firstName, lastName, birthDate }) {
+      const s = await session();
+      if (!s) throw new Error('not signed in');
+      const us = await users();
+      await set(
+        K.users,
+        us.map((u) =>
+          u.id === s.userId ? { ...u, firstName, lastName, birthYear: Number(birthDate.slice(0, 4)), isPublic: true } : u,
+        ),
+      );
+      // v ukázce se e-mail nepotvrzuje – účet je hned plnohodnotný
+      const next = { ...s, email, isAnonymous: false, needsPassword: true };
+      await set(K.session, next);
+      emit(next);
+      return { needsConfirmation: false };
+    },
+    async setPassword() {
+      const s = await session();
+      if (!s) return;
+      const next = { ...s, needsPassword: false };
+      await set(K.session, next);
+      emit(next);
+    },
     async resetPassword() {},
     async signOut() {
       await AsyncStorage.removeItem(K.session);

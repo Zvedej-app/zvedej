@@ -10,6 +10,7 @@ import { api } from '../lib/api';
 import { LANG_LABELS, type Lang } from '../lib/i18n';
 import { BLUE } from '../lib/theme';
 import { useIsDesktop } from '../lib/layout';
+import { ageOn, MIN_AGE, parseBirthDate } from '../lib/age';
 import { useSettings } from '../providers/SettingsProvider';
 
 export default function AuthScreen() {
@@ -24,6 +25,7 @@ export default function AuthScreen() {
   const [bMonth, setBMonth] = useState('');
   const [bYear, setBYear] = useState('');
   const [consent, setConsent] = useState(false);
+  const [guestBusy, setGuestBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -95,6 +97,36 @@ export default function AuthScreen() {
           contentContainerStyle={[{ padding: 20, gap: 12 }, desktop && { padding: 48, flexGrow: 1, justifyContent: 'center' }]}
           keyboardShouldPersistTaps="handled"
         >
+          {mode === 'login' && (
+            <View style={{ gap: 8, marginBottom: 6 }}>
+              <Button
+                icon="flash"
+                title={t('guest.start')}
+                loading={guestBusy}
+                onPress={async () => {
+                  setGuestBusy(true);
+                  try {
+                    await api.signInGuest();
+                  } catch (e: any) {
+                    notify(e?.message ?? t('common.error'));
+                  } finally {
+                    setGuestBusy(false);
+                  }
+                }}
+                style={{ minHeight: 54, borderRadius: 16, backgroundColor: colors.accent }}
+              />
+              <T v="caption" muted style={{ textAlign: 'center' }}>
+                {t('guest.startHint')}
+              </T>
+              <Row gap={10} style={{ marginTop: 10 }}>
+                <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+                <T v="caption" muted>
+                  {t('guest.orLogin')}
+                </T>
+                <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+              </Row>
+            </View>
+          )}
           <T v="h2">{mode === 'login' ? t('auth.login') : t('auth.register')}</T>
           {mode === 'register' && (
             <Row gap={10}>
@@ -218,27 +250,6 @@ export default function AuthScreen() {
       </KeyboardAvoidingView>
     </View>
   );
-}
-
-const MIN_AGE = 15;
-
-/** Den/měsíc/rok → YYYY-MM-DD, nebo null pro neplatné datum */
-function parseBirthDate(d: string, m: string, y: string): string | null {
-  const day = Number(d);
-  const month = Number(m);
-  const year = Number(y);
-  if (!day || !month || y.length !== 4 || year < 1920) return null;
-  const date = new Date(year, month - 1, day);
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
-  if (date > new Date()) return null;
-  return `${y}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-}
-
-function ageOn(iso: string, now: Date) {
-  const [y, m, d] = iso.split('-').map(Number);
-  let age = now.getFullYear() - y;
-  if (now.getMonth() + 1 < m || (now.getMonth() + 1 === m && now.getDate() < d)) age--;
-  return age;
 }
 
 const styles = StyleSheet.create({

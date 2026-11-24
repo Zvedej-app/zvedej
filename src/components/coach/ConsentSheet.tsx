@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { api } from '../../lib/api';
+import { useRequireAccount } from '../../hooks/useRequireAccount';
 import { notify } from '../../lib/dialog';
 import type { Profile } from '../../lib/types';
 import { useSettings } from '../../providers/SettingsProvider';
@@ -14,8 +15,10 @@ export function ConsentSheet({ coach, onClose, onDone }: { coach: Profile | null
   const [busy, setBusy] = useState(false);
   const name = coach ? `${coach.firstName} ${coach.lastName}`.trim() : '';
 
+  const needAccount = useRequireAccount();
   const accept = async () => {
     if (!coach) return;
+    if (!(await needAccount())) return onClose();
     setBusy(true);
     try {
       await api.acceptCoach(coach.id, shareBw);

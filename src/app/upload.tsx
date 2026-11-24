@@ -10,6 +10,7 @@ import { currentMonthKey, formatMonth } from '../lib/date';
 import type { ChallengeTheme } from '../lib/types';
 import { useAuth } from '../providers/AuthProvider';
 import { useSettings } from '../providers/SettingsProvider';
+import { GuestGate } from '../components/GuestGate';
 
 interface Picked {
   uri: string;
@@ -30,6 +31,12 @@ async function makeThumbnail(uri: string) {
 }
 
 export default function UploadScreen() {
+  const { session: guestSession } = useAuth();
+  if (guestSession?.isAnonymous) return <GuestGate />;
+  return <UploadScreenInner />;
+}
+
+function UploadScreenInner() {
   const { t, settings, locale } = useSettings();
   const { session } = useAuth();
   const month = currentMonthKey();

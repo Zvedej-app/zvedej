@@ -8,9 +8,11 @@ import { IconButton, Loading } from '../components/ui';
 import { api } from '../lib/api';
 import type { ChallengeVideo } from '../lib/types';
 import { useAuth } from '../providers/AuthProvider';
+import { useRequireAccount } from '../hooks/useRequireAccount';
 
 /** Videa jednoho uživatele ve formátu reels (otevřené z profilu). */
 export default function VideosScreen() {
+  const needAccount = useRequireAccount();
   const { user, index } = useLocalSearchParams<{ user: string; index?: string }>();
   const { session } = useAuth();
   const bottomInset = useBottomInset();
@@ -39,6 +41,7 @@ export default function VideosScreen() {
             initialIndex={Number(index ?? 0)}
             bottomInset={bottomInset}
             onLike={async (v, liked) => {
+              if (!(await needAccount())) return;
               setVideos((l) =>
                 (l ?? []).map((x) =>
                   x.id === v.id ? { ...x, likedByMe: liked, likesCount: x.likesCount + (liked ? 1 : -1) } : x,

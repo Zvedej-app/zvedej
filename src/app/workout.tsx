@@ -142,6 +142,7 @@ export default function WorkoutScreen() {
   const clock = useNow(1000, true);
   const [finishing, setFinishing] = useState(false);
   const [celebrate, setCelebrate] = useState<CelebrationData | null>(null);
+  const { session: guestSession } = useAuth();
   const [notes, setNotes] = useState('');
   const [feeling, setFeeling] = useState<WorkoutLog['feeling']>(null);
   const [rpe, setRpe] = useState(7);
@@ -275,9 +276,14 @@ export default function WorkoutScreen() {
       <Screen>
         <Celebration
           data={celebrate}
+          guest={!!guestSession?.isAnonymous}
           onClose={() => {
             setCelebrate(null);
             router.back();
+          }}
+          onSaveAccount={() => {
+            setCelebrate(null);
+            router.replace('/account');
           }}
         />
       </Screen>

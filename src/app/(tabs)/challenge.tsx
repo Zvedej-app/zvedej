@@ -16,6 +16,7 @@ import { SIDEBAR_WIDTH, useIsDesktop } from '../../lib/layout';
 import type { ChallengeTheme, ChallengeVideo, MonthlyWinner } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { useSettings } from '../../providers/SettingsProvider';
+import { useRequireAccount } from '../../hooks/useRequireAccount';
 
 type View_ = 'reels' | 'ranking' | 'winners';
 
@@ -68,8 +69,10 @@ export default function ChallengeScreen() {
     [videos],
   );
   const left = timeLeftInMonth();
+  const needAccount = useRequireAccount();
 
   const onLike = async (v: ChallengeVideo, liked: boolean) => {
+    if (!(await needAccount())) return;
     setVideos((list) =>
       (list ?? []).map((x) => (x.id === v.id ? { ...x, likedByMe: liked, likesCount: x.likesCount + (liked ? 1 : -1) } : x)),
     );

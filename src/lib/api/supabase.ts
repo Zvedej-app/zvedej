@@ -187,8 +187,17 @@ export function createSupabaseBackend(): Backend {
     },
   });
 
-  const toSession = (s: { user: { id: string; email?: string | null } } | null): Session | null =>
-    s ? { userId: s.user.id, email: s.user.email ?? null } : null;
+  const toSession = (
+    s: { user: { id: string; email?: string | null; is_anonymous?: boolean; user_metadata?: Record<string, unknown> } } | null,
+  ): Session | null =>
+    s
+      ? {
+          userId: s.user.id,
+          email: s.user.email ?? null,
+          isAnonymous: !!s.user.is_anonymous,
+          needsPassword: !s.user.is_anonymous && s.user.user_metadata?.needs_password === true,
+        }
+      : null;
 
   async function myId() {
     const { data } = await sb.auth.getSession();
@@ -232,6 +241,33 @@ export function createSupabaseBackend(): Backend {
       });
       if (error) throw error;
       return { needsConfirmation: !data.session };
+    },
+    async signInGuest() {
+      const { error } = await sb.auth.signInAnonymously();
+      if (error) throw error;
+    },
+    async upgradeGuest({ email, firstName, lastName, birthDate }) {
+      const { error: e1 } = await sb.rpc('complete_registration', {
+        p_first: firstName.trim(),
+        p_last: lastName.trim(),
+        p_birth: birthDate,
+      });
+      if (e1) throw e1;
+      const redirect =
+        Platform.OS === 'web' && typeof window !== 'undefined'
+          ? window.location.origin + (window.location.pathname.startsWith('/zvedej') ? '/zvedej/' : '/')
+          : undefined;
+      const { error } = await sb.auth.updateUser(
+        { email: email.trim(), data: { first_name: firstName.trim(), last_name: lastName.trim(), needs_password: true } },
+        redirect ? { emailRedirectTo: redirect } : undefined,
+      );
+      if (error) throw error;
+      return { needsConfirmation: true };
+    },
+    async setPassword(password) {
+      const { error } = await sb.auth.updateUser({ password, data: { needs_password: false } });
+      if (error) throw error;
+      await sb.auth.refreshSession();
     },
     async resetPassword(email) {
       const { error } = await sb.auth.resetPasswordForEmail(email.trim());

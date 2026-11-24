@@ -75,6 +75,7 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
       h: '6. Jak dlouho údaje uchováváme',
       p: [
         'Po dobu existence účtu. Po smazání účtu se údaje smažou do 30 dnů, zálohy do 90 dnů.',
+        'Pokud aplikaci používáte bez registrace (jako host), zpracováváme jen tréninková data vázaná na anonymní přihlášení v zařízení. Host, který 90 dní nic nezapíše, se automaticky smaže.',
         'Nahlášení a záznamy o moderaci uchováváme nejvýše 1 rok od vyřízení, pokud je nepotřebujeme k řešení sporu nebo pro úřady.',
       ],
     },
@@ -137,6 +138,7 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
       h: '6. Ako dlho údaje uchovávame',
       p: [
         'Počas existencie účtu. Po zmazaní účtu sa údaje zmažú do 30 dní, zálohy do 90 dní.',
+        'Ak aplikáciu používate bez registrácie (ako hosť), spracúvame len tréningové dáta viazané na anonymné prihlásenie v zariadení. Hosť, ktorý 90 dní nič nezapíše, sa automaticky zmaže.',
         'Nahlásenia a záznamy o moderovaní uchovávame najviac 1 rok od vybavenia.',
       ],
     },
@@ -196,6 +198,7 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
       h: '6. How long we keep data',
       p: [
         'For as long as your account exists. After deletion, data is erased within 30 days and from backups within 90 days.',
+        'If you use the app without signing up (as a guest), we only process training data tied to an anonymous sign-in on your device. Guests inactive for 90 days are deleted automatically.',
         'Reports and moderation records are kept for at most 1 year after they are resolved.',
       ],
     },
