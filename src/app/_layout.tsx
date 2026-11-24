@@ -80,6 +80,7 @@ function App() {
             <Stack.Screen name="blocked" />
             <Stack.Screen name="moderation" />
             <Stack.Screen name="coaches" />
+            <Stack.Screen name="progress" />
             <Stack.Screen name="join/[id]" />
             <Stack.Screen name="team/index" />
             <Stack.Screen name="team/invite" />

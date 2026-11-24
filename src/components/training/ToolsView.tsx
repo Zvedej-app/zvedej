@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { exerciseName, MAX_LIFTS } from '../../data/exercises';
@@ -198,14 +199,16 @@ export function ToolsView() {
           />
         ))}
       </ListGroup>
-      <Button
-        small
-        kind="secondary"
-        icon="add"
-        title={t('tr.addMaxExercise')}
-        onPress={() => setPicker(true)}
-        style={{ marginTop: -6, alignSelf: 'flex-start' }}
-      />
+      <Row gap={8} style={{ marginTop: -6, flexWrap: 'wrap' }}>
+        <Button small kind="secondary" icon="add" title={t('tr.addMaxExercise')} onPress={() => setPicker(true)} />
+        <Button
+          small
+          kind="secondary"
+          icon="trending-up"
+          title={t('prog.maxChartBtn')}
+          onPress={() => router.push('/progress')}
+        />
+      </Row>
 
       <PlateCalculator />
       <SinclairCalc />

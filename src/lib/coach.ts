@@ -2,7 +2,7 @@ import * as Linking from 'expo-linking';
 import { Platform } from 'react-native';
 import { addDays, parseISODate, startOfWeek, toISODate, todayISO } from './date';
 import { logSetCount, logTonnage } from './training';
-import type { TeamMember, WorkoutLog } from './types';
+import type { TeamMember, TrainingData, WorkoutLog } from './types';
 
 /** Odkaz, kterým se svěřenec připojí k trenérovi (otevře obrazovku s potvrzením). */
 export function joinLink(coachId: string) {
@@ -80,4 +80,27 @@ export function topExercises(logs: WorkoutLog[], n = 6) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, n)
     .map(([id]) => id);
+}
+
+/** Vývoj zapsaného maxima cviku (z historie; bez historie aspoň dnešní hodnota). */
+export function maxSeries(data: TrainingData, exerciseId: string) {
+  const hist = (data.maxHistory ?? [])
+    .filter((h) => h.exerciseId === exerciseId)
+    .map((h) => ({ date: h.date, kg: h.kg }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const cur = data.maxes[exerciseId];
+  if (!hist.length && cur) return [{ date: todayISO(), kg: cur }];
+  return hist;
+}
+
+/** Tonáž po měsících (posledních `months` měsíců, nejstarší první). */
+export function monthlyTonnage(logs: WorkoutLog[], months = 6) {
+  const now = new Date();
+  return Array.from({ length: months }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (months - 1 - i), 1);
+    const from = toISODate(d);
+    const to = toISODate(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+    const list = logs.filter((l) => l.date >= from && l.date <= to);
+    return { month: from, tonnage: list.reduce((a, l) => a + logTonnage(l), 0), count: list.length };
+  });
 }

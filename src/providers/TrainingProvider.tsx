@@ -189,7 +189,20 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
           const maxes = { ...d.maxes };
           if (kg && kg > 0) maxes[exerciseId] = kg;
           else delete maxes[exerciseId];
-          return { ...d, maxes };
+          if (!kg || kg <= 0) return { ...d, maxes };
+          // historie pro graf vývoje maxim (jeden záznam za den a cvik)
+          const date = todayISO();
+          const prev = d.maxHistory ?? [];
+          // první zápis: pokud už maximum existovalo, zachovej ho jako výchozí bod
+          const seeded =
+            prev.some((h) => h.exerciseId === exerciseId) || !d.maxes[exerciseId] || d.maxes[exerciseId] === kg
+              ? prev
+              : [...prev, { exerciseId, kg: d.maxes[exerciseId], date: toISODate(addDays(new Date(), -1)) }];
+          const maxHistory = [
+            ...seeded.filter((h) => !(h.exerciseId === exerciseId && h.date === date)),
+            { exerciseId, kg, date },
+          ];
+          return { ...d, maxes, maxHistory };
         }),
       addMaxLift: (exerciseId) => mutate((d) => ({ ...d, maxLifts: Array.from(new Set([...(d.maxLifts ?? []), exerciseId])) })),
       removeMaxLift: (exerciseId) =>

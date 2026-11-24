@@ -2,15 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { BarChart, LiftChart } from '../../components/coach/Charts';
-import { formatTonnage } from '../../components/training/format';
+import { ProgressCharts } from '../../components/coach/ProgressCharts';
 import { LogList } from '../../components/training/LogView';
 import {
   Avatar,
   Banner,
   Button,
   Card,
-  Chip,
   Empty,
   Header,
   IconButton,
@@ -22,7 +20,6 @@ import {
 } from '../../components/ui';
 import { exerciseName, MAX_LIFTS } from '../../data/exercises';
 import { api } from '../../lib/api';
-import { bestLiftSeries, topExercises, weeklyTonnage } from '../../lib/coach';
 import { formatDate } from '../../lib/date';
 import { confirm } from '../../lib/dialog';
 import { activePlan } from '../../lib/training';
@@ -156,38 +153,9 @@ export default function AthleteScreen() {
 }
 
 function ChartsTab({ data }: { data: TrainingData }) {
-  const { t, settings, locale } = useSettings();
-  const lifts = topExercises(data.logs);
-  const [lift, setLift] = useState<string>(lifts.includes('snatch') ? 'snatch' : (lifts[0] ?? 'snatch'));
-  const series = bestLiftSeries(data.logs, lift);
-  const weeks = weeklyTonnage(data.logs, 8);
-  if (!data.logs.length) return <Empty icon="stats-chart-outline" text={t('tr.noLogs')} />;
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 48 }}>
-      <Card style={{ gap: 10 }}>
-        <T v="h3">{t('coach.chartLift')}</T>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-          {lifts.map((l) => (
-            <Chip
-              key={l}
-              label={exerciseName(l, settings.lang, data.customExercises)}
-              on={lift === l}
-              onPress={() => setLift(l)}
-            />
-          ))}
-        </ScrollView>
-        {series.length ? <LiftChart points={series} unitLabel="kg" /> : <T muted>{t('coach.noData')}</T>}
-      </Card>
-      <Card style={{ gap: 10 }}>
-        <T v="h3">{t('coach.chartTonnage')}</T>
-        <BarChart
-          bars={weeks.map((w) => ({ label: formatDate(w.week, locale, { day: 'numeric', month: 'numeric' }), value: w.tonnage }))}
-          format={(v) => formatTonnage(v, settings.unit)}
-        />
-        <T v="caption" muted>
-          {t('coach.chartTonnageHint')}
-        </T>
-      </Card>
+    <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
+      <ProgressCharts data={data} />
     </ScrollView>
   );
 }

@@ -248,6 +248,8 @@ export interface TrainingData {
   customExercises: { id: string; name: string }[];
   /** cviky přidané uživatelem do sekce „Moje maxima“ (i bez zadané hodnoty) */
   maxLifts?: string[];
+  /** historie zapsaných maxim (pro graf vývoje) */
+  maxHistory?: { exerciseId: string; kg: number; date: string }[];
   updatedAt: string;
 }
 

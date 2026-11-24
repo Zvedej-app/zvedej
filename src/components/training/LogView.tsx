@@ -52,7 +52,50 @@ export function LogView() {
       customExercises={data.customExercises}
       onOpen={(l) => router.push(`/log/${l.id}`)}
       unread={(l) => unread[`${me}:${l.id}`] ?? 0}
+      header={<ProgressLink />}
     />
+  );
+}
+
+/** Odkaz na grafy pokroku nad deníkem */
+function ProgressLink() {
+  const { t, colors } = useSettings();
+  return (
+    <PressScale
+      onPress={() => router.push('/progress')}
+      scaleTo={0.98}
+      style={{
+        marginTop: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        padding: 14,
+        borderRadius: 18,
+        backgroundColor: colors.primarySoft,
+      }}
+    >
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          backgroundColor: colors.primary,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Ionicons name="trending-up" size={22} color="#FFF" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <T v="h3" color={colors.primary}>
+          {t('prog.title')}
+        </T>
+        <T v="caption" muted>
+          {t('prog.linkSub')}
+        </T>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+    </PressScale>
   );
 }
 
