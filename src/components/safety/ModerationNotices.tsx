@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { api } from '../../lib/api';
-import { notify } from '../../lib/dialog';
+import { router } from 'expo-router';
+import { confirm, notify } from '../../lib/dialog';
 import type { TKey } from '../../lib/i18n';
 import { OPERATOR } from '../../data/legal';
 import { useAuth } from '../../providers/AuthProvider';
@@ -24,8 +25,16 @@ export function ModerationNotices() {
       for (const n of list) {
         const parts = [t(`notice.${n.kind}` as TKey)];
         if (n.reason) parts.push(`${t('notice.reason')}: ${n.reason}`);
-        if (n.kind !== 'unbanned') parts.push(t('notice.appeal', { email: OPERATOR.email }));
-        await notify(parts.join('\n\n'), t('notice.title'));
+        // proti odstranění obsahu nebo zablokování se lze odvolat přímo v aplikaci (DSA čl. 20)
+        if (n.kind === 'content_removed' || n.kind === 'banned') {
+          parts.push(t('notice.appealInApp', { email: OPERATOR.email }));
+          const appeal = await confirm(parts.join('\n\n'), {
+            ok: t('appeal.cta'),
+            cancel: t('appeal.understood'),
+            title: t('notice.title'),
+          });
+          if (appeal) router.push({ pathname: '/appeal', params: { notice: n.id, reason: n.reason ?? '' } });
+        } else await notify(parts.join('\n\n'), t('notice.title'));
       }
       await api.markNoticesSeen().catch(() => {});
       refreshProfile();

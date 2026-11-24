@@ -279,6 +279,7 @@ export default function SettingsScreen() {
           <ListGroup title={t('st.about')}>
             <ListItem icon="document-lock-outline" title={t('legal.privacy')} onPress={() => router.push('/legal/privacy')} />
             <ListItem icon="reader-outline" title={t('legal.terms')} onPress={() => router.push('/legal/terms')} />
+            <ListItem icon="business-outline" title={t('legal.contact')} onPress={() => router.push('/legal/contact')} />
             <ListItem icon="globe-outline" title={t('st.csvWeb')} onPress={() => WebBrowser.openBrowserAsync(CSV_BASE)} />
             {FEEDBACK_EMAIL ? (
               <ListItem

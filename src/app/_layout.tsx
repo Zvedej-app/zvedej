@@ -12,6 +12,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AnimatedSplash } from '../components/AnimatedSplash';
 import { DialogHost } from '../components/DialogHost';
 import { ModerationNotices } from '../components/safety/ModerationNotices';
+import { TermsGate } from '../components/safety/TermsGate';
 import { RestNotificationBridge } from '../components/RestNotificationBridge';
 import { AuthProvider, useAuth } from '../providers/AuthProvider';
 import { SettingsProvider, useSettings } from '../providers/SettingsProvider';
@@ -82,6 +83,8 @@ function App() {
             <Stack.Screen name="coaches" />
             <Stack.Screen name="progress" />
             <Stack.Screen name="account" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="parent-request" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="appeal" options={{ presentation: 'modal' }} />
             <Stack.Screen name="set-password" options={{ presentation: 'modal' }} />
             <Stack.Screen name="join/[id]" />
             <Stack.Screen name="team/index" />
@@ -96,10 +99,13 @@ function App() {
           </Stack.Protected>
           {/* právní texty jsou dostupné i bez přihlášení (odkaz z registrace) */}
           <Stack.Screen name="legal/[doc]" />
+          {/* stránka pro rodiče s odkazem ze žádosti o souhlas (rodič nemusí mít účet) */}
+          <Stack.Screen name="parent/[token]" />
         </Stack>
       )}
       <DialogHost />
       {allReady && splashDone && <ModerationNotices />}
+      {allReady && splashDone && <TermsGate />}
       <RestNotificationBridge />
       {!splashDone && <AnimatedSplash ready={allReady} onDone={done} />}
     </>

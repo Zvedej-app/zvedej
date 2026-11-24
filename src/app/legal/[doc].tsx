@@ -9,7 +9,8 @@ import { useSettings } from '../../providers/SettingsProvider';
 export default function LegalScreen() {
   const { doc } = useLocalSearchParams<{ doc: string }>();
   const { t, settings, locale } = useSettings();
-  const kind: LegalDoc = doc === 'terms' ? 'terms' : 'privacy';
+  const kind: LegalDoc = doc === 'terms' ? 'terms' : doc === 'contact' ? 'contact' : 'privacy';
+  const title = kind === 'terms' ? t('legal.terms') : kind === 'contact' ? t('legal.contact') : t('legal.privacy');
   const sections = legalDoc(kind, settings.lang);
   const draft = OPERATOR.name.startsWith('[');
   const updated = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(
@@ -26,10 +27,10 @@ export default function LegalScreen() {
             onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
           />
         }
-        title={kind === 'terms' ? t('legal.terms') : t('legal.privacy')}
+        title={title}
       />
       <ScrollView contentContainerStyle={{ padding: 20, gap: 18, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
-        <T v="h2">{kind === 'terms' ? t('legal.terms') : t('legal.privacy')}</T>
+        <T v="h2">{title}</T>
         <T v="small" muted>
           {t('legal.updated')} {updated}
         </T>

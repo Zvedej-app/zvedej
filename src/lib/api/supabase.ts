@@ -2,7 +2,8 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../config';
+import { SUPABASE_ANON_KEY, SUPABASE_URL, WEB_URL } from '../config';
+import { ageOn } from '../age';
 import { currentMonthKey } from '../date';
 import { fallbackTheme } from '../../data/themes';
 import type {
@@ -226,7 +227,7 @@ export function createSupabaseBackend(): Backend {
       const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw error;
     },
-    async signUp({ email, password, firstName, lastName, birthDate, termsAcceptedAt }) {
+    async signUp({ email, password, firstName, lastName, birthDate, termsAcceptedAt, country, termsVersion }) {
       const { data, error } = await sb.auth.signUp({
         email: email.trim(),
         password,
@@ -236,6 +237,8 @@ export function createSupabaseBackend(): Backend {
             last_name: lastName.trim(),
             birth_date: birthDate,
             terms_accepted_at: termsAcceptedAt,
+            country,
+            terms_version: termsVersion,
           },
         },
       });
@@ -246,11 +249,13 @@ export function createSupabaseBackend(): Backend {
       const { error } = await sb.auth.signInAnonymously();
       if (error) throw error;
     },
-    async upgradeGuest({ email, firstName, lastName, birthDate }) {
+    async upgradeGuest({ email, firstName, lastName, birthDate, country, termsVersion }) {
       const { error: e1 } = await sb.rpc('complete_registration', {
         p_first: firstName.trim(),
         p_last: lastName.trim(),
         p_birth: birthDate,
+        p_country: country,
+        p_terms_version: termsVersion,
       });
       if (e1) throw e1;
       const redirect =
@@ -294,10 +299,18 @@ export function createSupabaseBackend(): Backend {
       if (error) throw error;
       if (!data) return null;
       const p = mapProfile(data);
-      // vlastní hmotnost je v soukromé tabulce (veřejná kopie jen se souhlasem)
+      // vlastní hmotnost a soukromé údaje (věk, souhlas rodiče, verze podmínek) jsou v soukromé tabulce
       if (id === (await myId())) {
-        const { data: priv } = await sb.from('profile_private').select('bodyweight').eq('user_id', id).maybeSingle();
+        const { data: priv } = await sb.from('profile_private').select('*').eq('user_id', id).maybeSingle();
         p.bodyweight = priv?.bodyweight === null || priv?.bodyweight === undefined ? null : Number(priv.bodyweight);
+        if (priv) {
+          const bd = priv.birth_date as string | null;
+          const age = bd ? ageOn(bd, new Date()) : p.birthYear ? new Date().getFullYear() - p.birthYear : null;
+          p.isMinor = age !== null && age < 18;
+          p.needsParentConsent = !!priv.parent_consent_required && !priv.parent_consent_at;
+          p.parentEmail = priv.parent_email ?? null;
+          p.termsVersion = priv.terms_version ?? null;
+        }
       }
       return p;
     },
@@ -897,6 +910,66 @@ export function createSupabaseBackend(): Backend {
       const { error } = await sb.from('training_videos').delete().eq('id', video.id);
       if (error) throw error;
       if (data?.storage_path) await sb.storage.from('training-videos').remove([data.storage_path]);
+    },
+
+    async requestParentConsent(parentEmail) {
+      const { data, error } = await sb.rpc('request_parent_consent', { p_parent_email: parentEmail.trim() });
+      if (error) throw error;
+      const token = data as string;
+      const link = `${WEB_URL.replace(/\/?$/, '/')}parent/${token}`;
+      let emailed = false;
+      try {
+        const { data: r } = await sb.functions.invoke('parent-consent-mail', { body: { token } });
+        emailed = !!r?.sent;
+      } catch {}
+      return { link, emailed };
+    },
+    async parentConsentInfo(token) {
+      const { data, error } = await sb.rpc('parent_consent_info', { p_token: token });
+      if (error || !data?.[0]) return null;
+      const r = data[0];
+      return {
+        childFirstName: r.child_first_name ?? '',
+        birthYear: r.child_birth_year ?? null,
+        confirmed: !!r.already_confirmed,
+      };
+    },
+    async confirmParentConsent(token, parentName, parentEmail) {
+      const { data, error } = await sb.rpc('confirm_parent_consent', {
+        p_token: token,
+        p_parent_name: parentName,
+        p_parent_email: parentEmail,
+      });
+      if (error) throw error;
+      return !!data;
+    },
+    async acceptTerms(version) {
+      const { error } = await sb.rpc('accept_terms', { p_version: version });
+      if (error) throw error;
+    },
+    async fileAppeal(noticeId, body) {
+      const { error } = await sb.rpc('file_appeal', { p_notice: noticeId, p_body: body });
+      if (error) throw error;
+    },
+    async listAppeals(status) {
+      const { data, error } = await sb.rpc('admin_list_appeals', { p_status: status === 'open' ? 'open' : null });
+      if (error) throw error;
+      return (data ?? []).map((r: Row) => ({
+        id: r.id,
+        userId: r.user_id,
+        userName: r.user_name ?? '',
+        noticeKind: r.notice_kind,
+        noticeReason: r.notice_reason,
+        body: r.body,
+        status: r.status,
+        decision: r.decision,
+        createdAt: r.created_at,
+        userBanned: !!r.user_banned,
+      }));
+    },
+    async resolveAppeal(id, grant, decision) {
+      const { error } = await sb.rpc('admin_resolve_appeal', { p_appeal: id, p_grant: grant, p_decision: decision || null });
+      if (error) throw error;
     },
 
     async loadTraining(userId) {

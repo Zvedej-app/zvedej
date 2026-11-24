@@ -2,7 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
-import { Banner, Button, Field, Header, IconButton, Row, Screen, T } from '../components/ui';
+import { Banner, Button, Field, Header, IconButton, Row, Screen, Segmented, T } from '../components/ui';
+import { ParentNote } from '../components/ParentNote';
+import { LEGAL_UPDATED } from '../data/legal';
+import type { Country } from '../lib/types';
 import { api } from '../lib/api';
 import { ageOn, MIN_AGE, parseBirthDate } from '../lib/age';
 import { notify } from '../lib/dialog';
@@ -11,7 +14,7 @@ import { useSettings } from '../providers/SettingsProvider';
 
 /** Host si vytvoří účet – tréninky, plány i maxima zůstanou. */
 export default function AccountScreen() {
-  const { t, colors } = useSettings();
+  const { t, colors, settings } = useSettings();
   const { refreshProfile } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -22,6 +25,7 @@ export default function AccountScreen() {
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  const [country, setCountry] = useState<Country>(settings.lang === 'sk' ? 'SK' : 'CZ');
 
   const submit = async () => {
     const birthDate = parseBirthDate(bDay, bMonth, bYear);
@@ -32,7 +36,7 @@ export default function AccountScreen() {
     if (!consent) return notify(t('auth.consentRequired'));
     setBusy(true);
     try {
-      const r = await api.upgradeGuest({ email, firstName, lastName, birthDate });
+      const r = await api.upgradeGuest({ email, firstName, lastName, birthDate, country, termsVersion: LEGAL_UPDATED });
       await refreshProfile();
       if (r.needsConfirmation) setSent(true);
       else router.replace('/set-password');
@@ -108,6 +112,21 @@ export default function AccountScreen() {
                 {num(bMonth, setBMonth, t('auth.mm'), 2, 1)}
                 {num(bYear, setBYear, t('auth.yyyy'), 4, 1.6)}
               </Row>
+              <ParentNote day={bDay} month={bMonth} year={bYear} country={country} />
+            </View>
+            <View style={{ gap: 6 }}>
+              <T v="label" muted>
+                {t('auth.country')}
+              </T>
+              <Segmented<Country>
+                value={country}
+                onChange={setCountry}
+                options={[
+                  { key: 'CZ', label: t('auth.countryCZ') },
+                  { key: 'SK', label: t('auth.countrySK') },
+                  { key: 'OTHER', label: t('auth.countryOther') },
+                ]}
+              />
             </View>
             <Field
               label={t('auth.email')}

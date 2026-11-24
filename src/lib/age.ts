@@ -1,5 +1,11 @@
 /** Datum narození a minimální věk pro registraci. */
-export const MIN_AGE = 15;
+/** nejnižší věk pro registraci (mladší i se souhlasem rodiče ne) */
+export const MIN_AGE = 13;
+
+/** věk pro samostatný souhlas se zpracováním údajů (GDPR čl. 8): Česko 15, Slovensko a jinde 16 */
+export function consentAge(country: 'CZ' | 'SK' | 'OTHER') {
+  return country === 'CZ' ? 15 : 16;
+}
 
 /** Den/měsíc/rok → YYYY-MM-DD, nebo null pro neplatné datum */
 export function parseBirthDate(d: string, m: string, y: string): string | null {

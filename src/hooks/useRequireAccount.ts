@@ -9,10 +9,16 @@ import { useSettings } from '../providers/SettingsProvider';
  * Vrátí funkci: u hosta nabídne vytvoření účtu a vrátí false, jinak true.
  */
 export function useRequireAccount() {
-  const { session } = useAuth();
+  const { session, profile } = useAuth();
   const { t } = useSettings();
   const guest = !!session?.isAnonymous;
+  const waitingParent = !!profile?.needsParentConsent;
   return useCallback(async () => {
+    if (waitingParent) {
+      if (await confirm(t('parent.neededForThis'), { ok: t('parent.ask'), cancel: t('common.cancel'), title: t('parent.title') }))
+        router.push('/parent-request');
+      return false;
+    }
     if (!guest) return true;
     if (
       await confirm(t('guest.needAccount'), {
@@ -23,5 +29,5 @@ export function useRequireAccount() {
     )
       router.push('/account');
     return false;
-  }, [guest, t]);
+  }, [guest, waitingParent, t]);
 }

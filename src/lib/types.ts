@@ -55,6 +55,14 @@ export interface Profile {
   /** Hmotnost (a Sinclair) vidí i ostatní – výchozí ne */
   showBodyweight: boolean;
   isPublic: boolean;
+  /** jen vlastní profil: nezletilý (do 18 let) */
+  isMinor?: boolean;
+  /** jen vlastní profil: čeká se na souhlas zákonného zástupce */
+  needsParentConsent?: boolean;
+  /** jen vlastní profil: e-mail rodiče, kterému šla žádost */
+  parentEmail?: string | null;
+  /** jen vlastní profil: odsouhlasená verze podmínek */
+  termsVersion?: string | null;
   /** Trenér: má záložku Tým */
   isCoach?: boolean;
   /** Správce: vidí přehled nahlášení */
@@ -93,7 +101,7 @@ export interface ContentReport {
 
 export interface ModerationNotice {
   id: string;
-  kind: 'content_removed' | 'banned' | 'unbanned';
+  kind: 'content_removed' | 'banned' | 'unbanned' | 'appeal_upheld' | 'appeal_granted';
   reason: string | null;
   createdAt: string;
 }
@@ -343,4 +351,19 @@ export interface TrainingVideo {
   url: string;
   caption: string | null;
   createdAt: string;
+}
+
+export type Country = 'CZ' | 'SK' | 'OTHER';
+
+export interface ModerationAppeal {
+  id: string;
+  userId: string;
+  userName: string;
+  noticeKind: string | null;
+  noticeReason: string | null;
+  body: string;
+  status: 'open' | 'upheld' | 'granted';
+  decision: string | null;
+  createdAt: string;
+  userBanned: boolean;
 }

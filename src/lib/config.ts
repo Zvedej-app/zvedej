@@ -22,4 +22,7 @@ export type FeedKind = keyof typeof CSV_FEEDS;
 export const VIDEO_MAX_SECONDS = 60;
 export const VIDEO_MAX_MB = 80;
 
+/** veřejná adresa webové aplikace (odkazy pro rodiče, pozvánky) */
+export const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? 'https://zvedej-app.github.io/zvedej/';
+
 export const FEEDBACK_EMAIL = process.env.EXPO_PUBLIC_FEEDBACK_EMAIL ?? '';

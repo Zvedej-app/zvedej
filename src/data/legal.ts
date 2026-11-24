@@ -6,7 +6,7 @@
  */
 import type { Lang } from '../lib/i18n';
 
-export const LEGAL_UPDATED = '2026-11-24';
+export const LEGAL_UPDATED = '2026-11-28';
 
 /** Údaje o provozovateli – doplnit před spuštěním. */
 export const OPERATOR = {
@@ -16,7 +16,7 @@ export const OPERATOR = {
   email: '[kontaktní e-mail]',
 };
 
-export type LegalDoc = 'privacy' | 'terms';
+export type LegalDoc = 'privacy' | 'terms' | 'contact';
 export interface LegalSection {
   h: string;
   p: string[];
@@ -57,9 +57,12 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
       ],
     },
     {
-      h: '4. Věk',
+      h: '4. Děti a souhlas rodičů',
       p: [
-        'Aplikaci mohou používat osoby od 15 let. Mladší osoby se registrovat nemohou. Pokud zjistíme, že účet patří osobě mladší 15 let, smažeme ho.',
+        'Aplikaci mohou používat osoby od 13 let. Samostatně mohou souhlas se zpracováním údajů dát osoby od 15 let v Česku (zákon č. 110/2019 Sb., § 7) a od 16 let na Slovensku a v ostatních zemích (čl. 8 GDPR).',
+        'Mladší uživatelé (13 až 14, resp. 15 let) mohou do potvrzení souhlasu zákonného zástupce používat jen tréninkový deník. Rodiči pošleme odkaz, kde si přečte, co aplikace dělá, a souhlas potvrdí svým jménem, e-mailem a prohlášením, že je zákonným zástupcem. Tyto údaje a čas souhlasu uchováváme jako doklad. Souhlas lze kdykoli odvolat e-mailem.',
+        'Nezletilí (do 18 let) mají profil ve výchozím stavu skrytý ve vyhledávání a psát jim mohou jen přátelé a vlastní trenér. Trenér z jiného klubu se k nezletilému nepřipojí. Nezletilým nezobrazujeme reklamu ani je neprofilujeme.',
+        'Pokud zjistíme, že účet patří osobě mladší 13 let nebo že souhlas rodiče chybí, účet omezíme nebo smažeme.',
       ],
     },
     {
@@ -94,7 +97,23 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
         'Oznámení v telefonu (konec pauzy) zobrazujeme jen s vaším povolením a můžete je vypnout v nastavení.',
       ],
     },
-    { h: '9. Změny', p: ['O podstatných změnách těchto zásad vás informujeme v aplikaci.'] },
+    {
+      h: '9. Cookies a úložiště v zařízení',
+      p: [
+        'Nepoužíváme reklamní, analytické ani sledovací cookies. V zařízení (v prohlížeči nebo v aplikaci) ukládáme jen to, co je nutné pro fungování: přihlášení, nastavení (jazyk, vzhled, jednotky), rozpracovaný trénink a data pro práci bez signálu, a ve webové verzi soubory aplikace pro spuštění offline.',
+        'Toto úložiště je technicky nezbytné (§ 89 odst. 3 zákona o elektronických komunikacích), proto nevyžaduje souhlas. Smažete ho odhlášením nebo vymazáním dat prohlížeče či aplikace.',
+      ],
+    },
+    {
+      h: '10. Předávání mimo EU',
+      p: [
+        'Data ukládáme na serverech v EU. Pokud by některý zpracovatel přistupoval k údajům ze zemí mimo EU (např. USA), děje se tak na základě rozhodnutí o odpovídající ochraně (EU–US Data Privacy Framework) nebo standardních smluvních doložek.',
+      ],
+    },
+    {
+      h: '11. Změny',
+      p: ['O podstatných změnách těchto zásad vás informujeme v aplikaci a požádáme o nový souhlas s podmínkami.'],
+    },
   ],
   sk: [
     {
@@ -124,7 +143,14 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
         'Telesnú hmotnosť a tréningové dáta používame len na výpočty v aplikácii. Hmotnosť ostatným nezobrazujeme, pokiaľ to sami nepovolíte.',
       ],
     },
-    { h: '4. Vek', p: ['Aplikáciu môžu používať osoby od 15 rokov. Účet osoby mladšej ako 15 rokov zmažeme.'] },
+    {
+      h: '4. Deti a súhlas rodičov',
+      p: [
+        'Aplikáciu môžu používať osoby od 13 rokov. Samostatne môžu súhlas so spracúvaním údajov dať osoby od 16 rokov na Slovensku a v ostatných krajinách (čl. 8 GDPR) a od 15 rokov v Česku.',
+        'Mladší používatelia môžu do potvrdenia súhlasu zákonného zástupcu používať len tréningový denník. Rodičovi pošleme odkaz, kde súhlas potvrdí svojím menom, e-mailom a vyhlásením, že je zákonným zástupcom. Tieto údaje a čas súhlasu uchovávame ako doklad. Súhlas možno kedykoľvek odvolať e-mailom.',
+        'Neplnoletí (do 18 rokov) majú profil predvolene skrytý vo vyhľadávaní a písať im môžu len priatelia a vlastný tréner. Neplnoletým nezobrazujeme reklamu ani ich neprofilujeme.',
+      ],
+    },
     {
       h: '5. Kto má k údajom prístup',
       p: [
@@ -154,7 +180,19 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
       h: '8. E-maily a oznámenia',
       p: ['Posielame len e-maily nutné pre účet. Obchodné oznámenia len s vaším výslovným súhlasom a s možnosťou odhlásenia.'],
     },
-    { h: '9. Zmeny', p: ['O podstatných zmenách vás budeme informovať v aplikácii.'] },
+    {
+      h: '9. Cookies a úložisko v zariadení',
+      p: [
+        'Nepoužívame reklamné, analytické ani sledovacie cookies. V zariadení ukladáme len to, čo je nevyhnutné na fungovanie (prihlásenie, nastavenia, rozpracovaný tréning, dáta na prácu bez signálu, súbory aplikácie na spustenie offline). Takéto úložisko nevyžaduje súhlas.',
+      ],
+    },
+    {
+      h: '10. Prenos mimo EÚ',
+      p: [
+        'Dáta ukladáme na serveroch v EÚ. Prípadný prístup sprostredkovateľa z tretích krajín prebieha na základe rozhodnutia o primeranosti (EU–US Data Privacy Framework) alebo štandardných zmluvných doložiek.',
+      ],
+    },
+    { h: '11. Zmeny', p: ['O podstatných zmenách vás budeme informovať v aplikácii a požiadame o nový súhlas s podmienkami.'] },
   ],
   en: [
     {
@@ -184,7 +222,14 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
         'Bodyweight and training data are used only for calculations in the app. Your bodyweight is not shown to others unless you allow it.',
       ],
     },
-    { h: '4. Age', p: ['The app is for people aged 15 and over. Accounts of people under 15 will be deleted.'] },
+    {
+      h: '4. Children and parental consent',
+      p: [
+        'The app is for people aged 13 and over. People can give consent on their own from 15 in Czechia (Act No. 110/2019, s. 7) and from 16 in Slovakia and other countries (Art. 8 GDPR).',
+        'Younger users can only use the training log until a parent or legal guardian confirms consent via a link, with their name, e-mail and a declaration that they are the legal guardian. We keep these details and the time of consent as proof. Consent can be withdrawn at any time by e-mail.',
+        'Minors (under 18) have their profile hidden from search by default and can only be messaged by friends and their own coach. We show no advertising to minors and do not profile them.',
+      ],
+    },
     {
       h: '5. Who can access the data',
       p: [
@@ -216,7 +261,19 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
         'We send only e-mails required for your account. Marketing messages are sent only with your explicit consent and can be unsubscribed at any time.',
       ],
     },
-    { h: '9. Changes', p: ['We will inform you in the app about material changes.'] },
+    {
+      h: '9. Cookies and device storage',
+      p: [
+        'We use no advertising, analytics or tracking cookies. We only store what is strictly necessary on your device (sign-in, settings, the workout in progress, offline data and app files for offline start). Such storage does not require consent.',
+      ],
+    },
+    {
+      h: '10. Transfers outside the EU',
+      p: [
+        'Data is stored on servers in the EU. Any access by a processor from third countries relies on an adequacy decision (EU–US Data Privacy Framework) or standard contractual clauses.',
+      ],
+    },
+    { h: '11. Changes', p: ['We will inform you in the app about material changes and ask you to accept the updated terms.'] },
   ],
 };
 
@@ -225,7 +282,7 @@ const TERMS: Record<Lang, LegalSection[]> = {
     {
       h: '1. Úvod',
       p: [
-        `Aplikaci Zvedej provozuje ${op('cs')}. Registrací souhlasíte s těmito podmínkami a potvrzujete, že je vám alespoň 15 let.`,
+        `Aplikaci Zvedej provozuje ${op('cs')}. Registrací souhlasíte s těmito podmínkami. Aplikaci mohou používat osoby od 13 let; mladší 15 let (v Česku), resp. 16 let (na Slovensku a jinde) jen se souhlasem zákonného zástupce.`,
         'Aplikace je určena vzpěračům a jejich trenérům. Není oficiální aplikací Českého svazu vzpírání; informace o závodech a novinky přebírá z veřejných kanálů webu vzpirani.cz s odkazem na zdroj.',
       ],
     },
@@ -249,7 +306,8 @@ const TERMS: Record<Lang, LegalSection[]> = {
       p: [
         'Nevhodný obsah, zprávu nebo uživatele můžete nahlásit přímo v aplikaci. Nežádoucího uživatele můžete zablokovat – nebude vám moci psát ani posílat žádosti o přátelství.',
         'Nahlášení posuzujeme bez zbytečného odkladu. Obsah porušující tato pravidla nebo zákon můžeme skrýt či odstranit a v závažných nebo opakovaných případech zablokovat účet. Video s pěti nahlášeními se automaticky skryje do posouzení.',
-        'O odstranění obsahu nebo blokaci účtu vás informujeme v aplikaci i s odůvodněním. Pokud nesouhlasíte, napište nám na kontaktní e-mail – rozhodnutí znovu přezkoumáme.',
+        'O odstranění obsahu nebo blokaci účtu vás informujeme v aplikaci i s odůvodněním. Do 6 měsíců můžete přímo v aplikaci požádat o přezkum (odvolání); posoudí ho člověk a výsledek vám oznámíme. Zachována zůstává možnost obrátit se na soud nebo orgán mimosoudního řešení sporů.',
+        'Kdokoli (i bez účtu) může nahlásit nezákonný obsah na kontaktní e-mail. Uveďte prosím, o jaký obsah jde, kde se nachází a proč je podle vás nezákonný.',
         `Kontaktní místo pro uživatele i orgány podle nařízení o digitálních službách (DSA): ${OPERATOR.email}.`,
       ],
     },
@@ -281,7 +339,7 @@ const TERMS: Record<Lang, LegalSection[]> = {
     {
       h: '1. Úvod',
       p: [
-        `Aplikáciu Zvedej prevádzkuje ${op('sk')}. Registráciou súhlasíte s týmito podmienkami a potvrdzujete, že máte aspoň 15 rokov.`,
+        `Aplikáciu Zvedej prevádzkuje ${op('sk')}. Registráciou súhlasíte s týmito podmienkami. Aplikáciu môžu používať osoby od 13 rokov; mladšie ako 16 rokov (na Slovensku a inde), resp. 15 rokov (v Česku) len so súhlasom zákonného zástupcu.`,
         'Aplikácia nie je oficiálnou aplikáciou Českého svazu vzpírání; informácie o pretekoch preberá z verejných kanálov webu vzpirani.cz s odkazom na zdroj.',
       ],
     },
@@ -298,7 +356,8 @@ const TERMS: Record<Lang, LegalSection[]> = {
       h: '4. Nahlásenie a moderovanie',
       p: [
         'Nevhodný obsah, správu alebo používateľa môžete nahlásiť v aplikácii a nežiaduceho používateľa zablokovať.',
-        'Obsah porušujúci pravidlá môžeme skryť alebo odstrániť a v závažných prípadoch zablokovať účet. O odstránení vás informujeme v aplikácii aj s odôvodnením; proti rozhodnutiu sa môžete ohradiť na kontaktnom e-maile.',
+        'Obsah porušujúci pravidlá môžeme skryť alebo odstrániť a v závažných prípadoch zablokovať účet. O odstránení vás informujeme v aplikácii aj s odôvodnením. Do 6 mesiacov môžete priamo v aplikácii požiadať o preskúmanie (odvolanie).',
+        'Ktokoľvek (aj bez účtu) môže nahlásiť nezákonný obsah na kontaktný e-mail.',
         `Kontaktné miesto podľa nariadenia o digitálnych službách (DSA): ${OPERATOR.email}.`,
       ],
     },
@@ -317,7 +376,7 @@ const TERMS: Record<Lang, LegalSection[]> = {
     {
       h: '1. Introduction',
       p: [
-        `Zvedej is operated by ${op('en')}. By registering you accept these terms and confirm you are at least 15 years old.`,
+        `Zvedej is operated by ${op('en')}. By registering you accept these terms. The app is for people aged 13 and over; under 15 (Czechia) or 16 (Slovakia and elsewhere) only with a parent's or guardian's consent.`,
         'The app is not an official app of the Czech Weightlifting Federation; competition information is taken from public feeds of vzpirani.cz with a link to the source.',
       ],
     },
@@ -337,7 +396,8 @@ const TERMS: Record<Lang, LegalSection[]> = {
       h: '4. Reporting and moderation',
       p: [
         'You can report content, messages or users in the app and block unwanted users.',
-        'We may hide or remove content that breaks these rules or the law and, in serious cases, suspend accounts. We notify you in the app with a statement of reasons; you can contest the decision via the contact e-mail.',
+        'We may hide or remove content that breaks these rules or the law and, in serious cases, suspend accounts. We notify you in the app with a statement of reasons. Within 6 months you can request a review (appeal) right in the app; a person will review it.',
+        'Anyone (even without an account) can report illegal content to the contact e-mail.',
         `Point of contact under the Digital Services Act (DSA): ${OPERATOR.email}.`,
       ],
     },
@@ -354,6 +414,75 @@ const TERMS: Record<Lang, LegalSection[]> = {
   ],
 };
 
+const CONTACT: Record<Lang, LegalSection[]> = {
+  cs: [
+    { h: 'Provozovatel', p: [`${OPERATOR.name}`, `${OPERATOR.address}`, `IČO: ${OPERATOR.id}`, `E-mail: ${OPERATOR.email}`] },
+    {
+      h: 'Kontaktní místo (DSA)',
+      p: [
+        `Jednotné kontaktní místo pro uživatele i pro orgány členských států, Evropskou komisi a Evropský sbor pro digitální služby (čl. 11 a 12 nařízení 2022/2065): ${OPERATOR.email}. Komunikujeme česky, slovensky a anglicky.`,
+        'Nahlášení nezákonného obsahu je možné přímo v aplikaci nebo e-mailem i bez účtu.',
+      ],
+    },
+    {
+      h: 'Ochrana osobních údajů a stížnosti',
+      p: [
+        'Dotazy a žádosti k osobním údajům (přístup, oprava, výmaz, export, odvolání souhlasu rodiče) vyřizujeme na kontaktním e-mailu do 30 dnů.',
+        'Dozorový úřad: Úřad pro ochranu osobních údajů, www.uoou.cz (Česko); Úrad na ochranu osobných údajov SR, dataprotection.gov.sk (Slovensko).',
+        'Mimosoudní řešení spotřebitelských sporů: Česká obchodní inspekce, www.coi.cz.',
+      ],
+    },
+    {
+      h: 'Upozornění',
+      p: ['Aplikace Zvedej není oficiální aplikací Českého svazu vzpírání. Loga klubů a svazu patří jejich vlastníkům.'],
+    },
+  ],
+  sk: [
+    { h: 'Prevádzkovateľ', p: [`${OPERATOR.name}`, `${OPERATOR.address}`, `IČO: ${OPERATOR.id}`, `E-mail: ${OPERATOR.email}`] },
+    {
+      h: 'Kontaktné miesto (DSA)',
+      p: [
+        `Jednotné kontaktné miesto pre používateľov aj orgány (čl. 11 a 12 nariadenia 2022/2065): ${OPERATOR.email}. Komunikujeme po česky, slovensky a anglicky.`,
+      ],
+    },
+    {
+      h: 'Ochrana osobných údajov a sťažnosti',
+      p: [
+        'Žiadosti k osobným údajom vybavujeme na kontaktnom e-maile do 30 dní.',
+        'Dozorný úrad: Úrad na ochranu osobných údajov SR, dataprotection.gov.sk; v Česku Úřad pro ochranu osobních údajů, www.uoou.cz.',
+        'Alternatívne riešenie spotrebiteľských sporov: Slovenská obchodná inšpekcia, www.soi.sk; v Česku Česká obchodní inspekce, www.coi.cz.',
+      ],
+    },
+    {
+      h: 'Upozornenie',
+      p: ['Aplikácia Zvedej nie je oficiálnou aplikáciou Českého svazu vzpírání. Logá klubov a zväzu patria ich vlastníkom.'],
+    },
+  ],
+  en: [
+    { h: 'Operator', p: [`${OPERATOR.name}`, `${OPERATOR.address}`, `ID: ${OPERATOR.id}`, `E-mail: ${OPERATOR.email}`] },
+    {
+      h: 'Point of contact (DSA)',
+      p: [
+        `Single point of contact for users and authorities (Art. 11 and 12 of Regulation 2022/2065): ${OPERATOR.email}. Languages: Czech, Slovak, English.`,
+      ],
+    },
+    {
+      h: 'Data protection and complaints',
+      p: [
+        'We handle data protection requests at the contact e-mail within 30 days.',
+        'Supervisory authority: Úřad pro ochranu osobních údajů (www.uoou.cz) or your local authority.',
+      ],
+    },
+    {
+      h: 'Notice',
+      p: [
+        'Zvedej is not an official app of the Czech Weightlifting Federation. Club and federation logos belong to their owners.',
+      ],
+    },
+  ],
+};
+
 export function legalDoc(doc: LegalDoc, lang: Lang): LegalSection[] {
-  return (doc === 'privacy' ? PRIVACY : TERMS)[lang] ?? (doc === 'privacy' ? PRIVACY : TERMS).cs;
+  const src = doc === 'privacy' ? PRIVACY : doc === 'terms' ? TERMS : CONTACT;
+  return src[lang] ?? src.cs;
 }

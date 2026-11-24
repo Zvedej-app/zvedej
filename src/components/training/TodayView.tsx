@@ -98,6 +98,21 @@ export function TodayView() {
         </T>
       </View>
 
+      {profile?.needsParentConsent && (
+        <Card
+          onPress={() => router.push('/parent-request')}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: colors.primary, borderWidth: 1.5 }}
+        >
+          <Ionicons name="people" size={22} color={colors.primary} />
+          <View style={{ flex: 1 }}>
+            <T style={{ fontWeight: '800' }}>{t('parent.banner')}</T>
+            <T v="caption" muted>
+              {t('parent.bannerSub')}
+            </T>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </Card>
+      )}
       {session?.needsPassword && (
         <Card onPress={() => router.push('/set-password')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Ionicons name="lock-closed" size={22} color={colors.primary} />

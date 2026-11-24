@@ -272,3 +272,14 @@ update public.profiles set is_admin = true
 - **Wear OS:** Android oznámení (trvalé během pauzy i na jejím konci) se zrcadlí na hodinky i s tlačítky.
 - Akce z hodinek zpracuje `RestNotificationBridge` (odškrtnutí) a obrazovka tréninku (prodloužení pauzy).
 - Samostatná aplikace přímo v hodinkách (watchOS/Wear OS) zatím není – vyžadovala by nativní cíl a sestavení v Xcode/Android Studiu.
+
+## Ochrana dětí a právní soulad (verze 1.6)
+
+- Registrace od 13 let s výběrem země. Do 15 let (Česko) / 16 let (Slovensko a jinde) je potřeba **souhlas zákonného zástupce**:
+  dítě zadá e-mail rodiče, rodič na stránce `/parent/<token>` potvrdí souhlas (jméno, e-mail, prohlášení). Do té doby jen tréninkový deník.
+  E-mail posílá Edge Function `parent-consent-mail` (Resend; bez klíče aplikace nabídne odkaz ke sdílení).
+- Nezletilí: profil ve výchozím stavu skrytý, zprávy jen od přátel a vlastního trenéra (hlídá databáze).
+- Odvolání proti rozhodnutí moderátora (DSA čl. 20) přímo v aplikaci; správce je vyřizuje v Nastavení → Správa.
+- Při změně podmínek (`LEGAL_UPDATED`) aplikace požádá o nový souhlas.
+- Zásady doplněny o děti, cookies/úložiště a předávání mimo EU; nová stránka Provozovatel a kontakt.
+- Kontrolní seznam pro provozovatele: [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md). Migrace `20261128000000_minors.sql`.

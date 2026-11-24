@@ -2,7 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { currentMonthKey, prevMonthKey } from '../date';
 import { uuid } from '../id';
 import { fallbackTheme } from '../../data/themes';
+import { ageOn, consentAge } from '../age';
 import type {
+  ModerationAppeal,
   AssignedPlan,
   CoachGroup,
   TrainingVideo,
@@ -44,6 +46,8 @@ const K = {
   assigned: 'zvedej:demo:assigned',
   comments: 'zvedej:demo:comments',
   tvideos: 'zvedej:demo:trainingVideos',
+  parentTokens: 'zvedej:demo:parentTokens',
+  appeals: 'zvedej:demo:appeals',
 };
 
 interface DemoCoachLink {
@@ -507,10 +511,23 @@ export function createDemoBackend(): Backend {
       await set(K.session, s);
       emit(s);
     },
-    async signUp({ email, firstName, lastName, birthDate }) {
+    async signUp({ email, firstName, lastName, birthDate, country, termsVersion }) {
       const s = { userId: `local-${normalize(email).replace(/[^a-z0-9]/g, '')}`, email };
       const us = (await users()).filter((u) => u.id !== s.userId);
-      await set(K.users, [...us, demoProfile({ id: s.userId, firstName, lastName, birthYear: Number(birthDate.slice(0, 4)) })]);
+      const age = ageOn(birthDate, new Date());
+      await set(K.users, [
+        ...us,
+        demoProfile({
+          id: s.userId,
+          firstName,
+          lastName,
+          birthYear: Number(birthDate.slice(0, 4)),
+          isMinor: age < 18,
+          isPublic: age >= 18,
+          needsParentConsent: age < consentAge(country),
+          termsVersion,
+        }),
+      ]);
       await set(K.session, s);
       emit(s);
       return { needsConfirmation: false };
@@ -549,14 +566,26 @@ export function createDemoBackend(): Backend {
       await set(K.session, s);
       emit(s);
     },
-    async upgradeGuest({ email, firstName, lastName, birthDate }) {
+    async upgradeGuest({ email, firstName, lastName, birthDate, country, termsVersion }) {
+      const age = ageOn(birthDate, new Date());
       const s = await session();
       if (!s) throw new Error('not signed in');
       const us = await users();
       await set(
         K.users,
         us.map((u) =>
-          u.id === s.userId ? { ...u, firstName, lastName, birthYear: Number(birthDate.slice(0, 4)), isPublic: true } : u,
+          u.id === s.userId
+            ? {
+                ...u,
+                firstName,
+                lastName,
+                birthYear: Number(birthDate.slice(0, 4)),
+                isPublic: age >= 18,
+                isMinor: age < 18,
+                needsParentConsent: age < consentAge(country),
+                termsVersion,
+              }
+            : u,
         ),
       );
       // v ukázce se e-mail nepotvrzuje – účet je hned plnohodnotný
@@ -1175,6 +1204,78 @@ export function createDemoBackend(): Backend {
       await set(
         K.tvideos,
         (await get<TrainingVideo[]>(K.tvideos, [])).filter((v) => v.id !== video.id),
+      );
+    },
+
+    async requestParentConsent(parentEmail) {
+      const s = await session();
+      if (!s) throw new Error('not signed in');
+      const token = uuid();
+      const map = await get<Record<string, string>>(K.parentTokens, {});
+      await set(K.parentTokens, { ...map, [token]: s.userId });
+      await set(
+        K.users,
+        (await users()).map((u) => (u.id === s.userId ? { ...u, parentEmail } : u)),
+      );
+      const base =
+        typeof window !== 'undefined' && window.location
+          ? window.location.origin + (window.location.pathname.startsWith('/zvedej') ? '/zvedej/' : '/')
+          : 'https://zvedej-app.github.io/zvedej/';
+      return { link: `${base}parent/${token}`, emailed: false };
+    },
+    async parentConsentInfo(token) {
+      const uid = (await get<Record<string, string>>(K.parentTokens, {}))[token];
+      const u = (await users()).find((x) => x.id === uid);
+      return u ? { childFirstName: u.firstName, birthYear: u.birthYear, confirmed: !u.needsParentConsent } : null;
+    },
+    async confirmParentConsent(token) {
+      const uid = (await get<Record<string, string>>(K.parentTokens, {}))[token];
+      if (!uid) return false;
+      await set(
+        K.users,
+        (await users()).map((u) => (u.id === uid ? { ...u, needsParentConsent: false } : u)),
+      );
+      return true;
+    },
+    async acceptTerms(version) {
+      const s = await session();
+      if (!s) return;
+      await set(
+        K.users,
+        (await users()).map((u) => (u.id === s.userId ? { ...u, termsVersion: version } : u)),
+      );
+    },
+    async fileAppeal(noticeId, body) {
+      const s = await session();
+      if (!s) throw new Error('not signed in');
+      const us = await users();
+      const list = await get<ModerationAppeal[]>(K.appeals, []);
+      await set(K.appeals, [
+        ...list,
+        {
+          id: uuid(),
+          userId: s.userId,
+          userName: userName(us, s.userId),
+          noticeKind: null,
+          noticeReason: noticeId,
+          body,
+          status: 'open',
+          decision: null,
+          createdAt: new Date().toISOString(),
+          userBanned: false,
+        },
+      ]);
+    },
+    async listAppeals(status) {
+      const all = await get<ModerationAppeal[]>(K.appeals, []);
+      return status === 'open' ? all.filter((a) => a.status === 'open') : all;
+    },
+    async resolveAppeal(id, grant, decision) {
+      await set(
+        K.appeals,
+        (await get<ModerationAppeal[]>(K.appeals, [])).map((a) =>
+          a.id === id ? { ...a, status: grant ? 'granted' : 'upheld', decision } : a,
+        ),
       );
     },
 

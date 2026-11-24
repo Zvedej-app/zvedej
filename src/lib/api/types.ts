@@ -1,4 +1,6 @@
 import type {
+  Country,
+  ModerationAppeal,
   AssignedPlan,
   CoachGroup,
   MyCoach,
@@ -36,6 +38,8 @@ export interface UpgradeInput {
   lastName: string;
   /** YYYY-MM-DD */
   birthDate: string;
+  country: Country;
+  termsVersion: string;
 }
 
 export type VideoSort = 'top' | 'new' | 'random';
@@ -63,6 +67,8 @@ export interface SignUpInput {
   birthDate: string;
   /** ISO čas souhlasu s podmínkami a zásadami */
   termsAcceptedAt: string;
+  country: Country;
+  termsVersion: string;
 }
 
 export interface Backend {
@@ -172,6 +178,16 @@ export interface Backend {
   listTrainingVideos(athleteId: string, logId: string): Promise<TrainingVideo[]>;
   uploadTrainingVideo(athleteId: string, logId: string, uri: string, mimeType: string): Promise<TrainingVideo>;
   deleteTrainingVideo(video: TrainingVideo): Promise<void>;
+
+  // souhlas rodičů, podmínky, odvolání
+  /** dítě požádá rodiče o souhlas: vrátí odkaz pro rodiče a zda šel e-mail */
+  requestParentConsent(parentEmail: string): Promise<{ link: string; emailed: boolean }>;
+  parentConsentInfo(token: string): Promise<{ childFirstName: string; birthYear: number | null; confirmed: boolean } | null>;
+  confirmParentConsent(token: string, parentName: string, parentEmail: string): Promise<boolean>;
+  acceptTerms(version: string): Promise<void>;
+  fileAppeal(noticeId: string, body: string): Promise<void>;
+  listAppeals(status: 'open' | 'all'): Promise<ModerationAppeal[]>;
+  resolveAppeal(id: string, grant: boolean, decision: string): Promise<void>;
 
   // ČSV
   fetchFeed(kind: 'calendar' | 'news'): Promise<FeedItem[]>;

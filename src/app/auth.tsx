@@ -5,12 +5,15 @@ import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarbellLogo } from '../components/Logo';
-import { Banner, Button, Field, Row, T } from '../components/ui';
+import { Banner, Button, Field, Row, Segmented, T } from '../components/ui';
 import { api } from '../lib/api';
 import { LANG_LABELS, type Lang } from '../lib/i18n';
 import { BLUE } from '../lib/theme';
 import { useIsDesktop } from '../lib/layout';
-import { ageOn, MIN_AGE, parseBirthDate } from '../lib/age';
+import { ageOn, consentAge, MIN_AGE, parseBirthDate } from '../lib/age';
+import { LEGAL_UPDATED } from '../data/legal';
+import type { Country } from '../lib/types';
+import { ParentNote } from '../components/ParentNote';
 import { useSettings } from '../providers/SettingsProvider';
 
 export default function AuthScreen() {
@@ -26,6 +29,7 @@ export default function AuthScreen() {
   const [bYear, setBYear] = useState('');
   const [consent, setConsent] = useState(false);
   const [guestBusy, setGuestBusy] = useState(false);
+  const [country, setCountry] = useState<Country>(settings.lang === 'sk' ? 'SK' : 'CZ');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -41,7 +45,8 @@ export default function AuthScreen() {
         const birthDate = parseBirthDate(bDay, bMonth, bYear);
         if (!firstName.trim() || !lastName.trim()) return notify(t('auth.nameRequired'));
         if (!birthDate) return notify(t('auth.birthInvalid'));
-        if (ageOn(birthDate, new Date()) < MIN_AGE) return notify(t('auth.underAge'));
+        const age = ageOn(birthDate, new Date());
+        if (age < MIN_AGE) return notify(t('auth.underAge'));
         if (!consent) return notify(t('auth.consentRequired'));
         const r = await api.signUp({
           email,
@@ -50,8 +55,11 @@ export default function AuthScreen() {
           lastName,
           birthDate,
           termsAcceptedAt: new Date().toISOString(),
+          country,
+          termsVersion: LEGAL_UPDATED,
         });
-        if (r.needsConfirmation) notify(t('auth.checkEmail'));
+        if (r.needsConfirmation)
+          notify(age < consentAge(country) ? `${t('auth.checkEmail')}\n\n${t('parent.afterSignup')}` : t('auth.checkEmail'));
       }
     } catch (e: any) {
       const m = String(e?.message ?? '');
@@ -156,6 +164,23 @@ export default function AuthScreen() {
                 {numField(bMonth, setBMonth, '', t('auth.mm'), 2, 1)}
                 {numField(bYear, setBYear, '', t('auth.yyyy'), 4, 1.6)}
               </Row>
+              <ParentNote day={bDay} month={bMonth} year={bYear} country={country} />
+            </View>
+          )}
+          {mode === 'register' && (
+            <View style={{ gap: 6 }}>
+              <T v="label" muted>
+                {t('auth.country')}
+              </T>
+              <Segmented<Country>
+                value={country}
+                onChange={setCountry}
+                options={[
+                  { key: 'CZ', label: t('auth.countryCZ') },
+                  { key: 'SK', label: t('auth.countrySK') },
+                  { key: 'OTHER', label: t('auth.countryOther') },
+                ]}
+              />
             </View>
           )}
           <Field

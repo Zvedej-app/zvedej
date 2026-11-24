@@ -89,9 +89,11 @@ function ChatScreenInner() {
           ? t('soc.limit')
           : msg.includes('BLOCKED')
             ? t('safety.blockedChat')
-            : msg.includes('BANNED')
-              ? t('notice.banned')
-              : t('common.error'),
+            : msg.includes('MINOR_PROTECTED')
+              ? t('safety.minorProtected')
+              : msg.includes('BANNED')
+                ? t('notice.banned')
+                : t('common.error'),
       );
     } finally {
       setSending(false);
