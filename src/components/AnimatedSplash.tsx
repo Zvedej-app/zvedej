@@ -14,9 +14,9 @@ import { BarbellHalf } from './Logo';
 /** jak dlouho činka leží na zemi, než obrazovka zmizí (ms) */
 const REST_MS = 500;
 /** výšky odrazů jako podíl výchozí výšky (každý odraz ztratí většinu energie) */
-const BOUNCES = [0.3, 0.09, 0.025];
+const BOUNCES = [0.32, 0.1, 0.03, 0.008];
 /** doba pádu z výchozí výšky (ms); ostatní časy podle fyziky t ~ √h */
-const FALL_MS = 520;
+const FALL_MS = 720;
 
 export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () => void }) {
   const bottomInset = useBottomInset();
@@ -39,7 +39,7 @@ export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () =
   }, [ready, onDone]);
 
   // výchozí výška pádu nad zemí (px) podle velikosti činky
-  const drop = Math.round(half * 0.42);
+  const drop = Math.round(half * 1.15);
 
   useEffect(() => {
     let alive = true;
