@@ -166,6 +166,7 @@ export default function SettingsScreen() {
               <ListItem
                 icon="notifications-outline"
                 title={t('st.notifyRest')}
+                subtitle={t('st.watchHint')}
                 toggle={settings.restNotify}
                 onToggle={(restNotify) => update({ restNotify })}
               />

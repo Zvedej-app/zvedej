@@ -263,3 +263,12 @@ update public.profiles set is_admin = true
 - Bez signálu ukazuje aplikace v Trénincích a při tréninku informaci, že se vše ukládá do telefonu.
 - Web (PWA): service worker `public/sw.js` uloží celou aplikaci, takže se otevře i bez připojení.
   Seznam souborů a verzi mezipaměti vytváří `scripts/sw-manifest.mjs` při `npm run build:web`.
+
+## Hodinky (verze 1.5)
+
+- **Apple Watch:** oznámení o konci pauzy se na hodinkách zobrazí samo (když je iPhone zamčený) s tlačítky
+  „Odškrtnout nástup“ a „+30 s pauza“. Live Activity s odpočtem má malé rozložení `bannerSmall`, které watchOS 11+
+  ukazuje ve Smart Stacku.
+- **Wear OS:** Android oznámení (trvalé během pauzy i na jejím konci) se zrcadlí na hodinky i s tlačítky.
+- Akce z hodinek zpracuje `RestNotificationBridge` (odškrtnutí) a obrazovka tréninku (prodloužení pauzy).
+- Samostatná aplikace přímo v hodinkách (watchOS/Wear OS) zatím není – vyžadovala by nativní cíl a sestavení v Xcode/Android Studiu.

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
-import { ACTION_DONE, Notifications, type RestNotificationData } from '../lib/restNotifications';
+import { emitRestEvent } from '../lib/restEvents';
+import { ACTION_DONE, ACTION_EXTEND, Notifications, type RestNotificationData } from '../lib/restNotifications';
 import { useTraining } from '../providers/TrainingProvider';
 
 /**
@@ -12,6 +13,7 @@ export function RestNotificationBridge() {
   useEffect(() => {
     if (Platform.OS === 'web') return;
     const sub = Notifications.addNotificationResponseReceivedListener((r) => {
+      if (r.actionIdentifier === ACTION_EXTEND) return emitRestEvent({ type: 'extend', seconds: 30 });
       if (r.actionIdentifier !== ACTION_DONE) return;
       const d = r.notification.request.content.data as unknown as RestNotificationData | undefined;
       if (!d) return;

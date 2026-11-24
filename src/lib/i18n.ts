@@ -640,6 +640,8 @@ const cs = {
   'guest.logoutWarning': 'Jsi přihlášený jako host. Po odhlášení o všechny tréninky přijdeš. Opravdu se odhlásit?',
   'off.saved': 'Bez signálu – trénink se ukládá do telefonu, nic se neztratí.',
   'off.pending': 'Bez signálu – tréninky se ukládají do telefonu a odešlou se samy po připojení.',
+  'tr.extend30': '+30 s pauza',
+  'st.watchHint': 'Pauza se ukáže i na hodinkách: Apple Watch (oznámení a Smart Stack) i Wear OS. Z hodinek odškrtneš další nástup nebo přidáš 30 s.',
 };
 
 export type TKey = keyof typeof cs;
@@ -1271,6 +1273,8 @@ const en: Dict = {
   'guest.logoutWarning': 'You\'re signed in as a guest. Signing out will lose all your workouts. Sign out anyway?',
   'off.saved': 'Offline – your workout is saved on the phone, nothing gets lost.',
   'off.pending': 'Offline – workouts are saved on the phone and will sync automatically when you\'re back online.',
+  'tr.extend30': '+30 s rest',
+  'st.watchHint': 'The rest timer also shows on your watch: Apple Watch (notifications and Smart Stack) and Wear OS. From the watch you can tick the next set or add 30 s.',
 };
 
 const sk: Dict = {
@@ -1899,6 +1903,8 @@ const sk: Dict = {
   'guest.logoutWarning': 'Si prihlásený ako hosť. Po odhlásení o všetky tréningy prídeš. Naozaj sa odhlásiť?',
   'off.saved': 'Bez signálu – tréning sa ukladá do telefónu, nič sa nestratí.',
   'off.pending': 'Bez signálu – tréningy sa ukladajú do telefónu a odošlú sa samy po pripojení.',
+  'tr.extend30': '+30 s pauza',
+  'st.watchHint': 'Pauza sa ukáže aj na hodinkách: Apple Watch (oznámenia a Smart Stack) aj Wear OS. Z hodiniek odškrtneš ďalší nástup alebo pridáš 30 s.',
 };
 
 export const DICTS: Record<Lang, Dict> = { cs, en, sk };

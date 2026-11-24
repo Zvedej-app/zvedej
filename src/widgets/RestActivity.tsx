@@ -1,9 +1,22 @@
 import { Button, HStack, ProgressView, Spacer, Text, VStack } from '@expo/ui/swift-ui';
-import { activityBackgroundTint, background, clipShape, font, foregroundStyle, lineLimit, minimumScaleFactor, monospacedDigit, padding, scaleEffect, tint } from '@expo/ui/swift-ui/modifiers';
+import {
+  activityBackgroundTint,
+  background,
+  clipShape,
+  font,
+  foregroundStyle,
+  lineLimit,
+  minimumScaleFactor,
+  monospacedDigit,
+  padding,
+  scaleEffect,
+  tint,
+} from '@expo/ui/swift-ui/modifiers';
 import { createLiveActivity, type LiveActivityEnvironment } from 'expo-widgets';
 
 /**
- * iOS Live Activity: pauza mezi sériemi na zamčené obrazovce a v Dynamic Islandu.
+ * iOS Live Activity: pauza mezi nástupy na zamčené obrazovce, v Dynamic Islandu
+ * a na Apple Watch (Smart Stack, watchOS 11+ – rozložení bannerSmall).
  * Odpočet i pruh běží samy (SwiftUI timerInterval), aplikace nemusí běžet.
  */
 export type RestActivityProps = {
@@ -43,7 +56,9 @@ const RestActivity = (props: RestActivityProps, env: LiveActivityEnvironment) =>
     <HStack modifiers={[padding({ all: 16 }), activityBackgroundTint(BLUE)]}>
       <VStack alignment="leading">
         <Text modifiers={[font({ size: 13 }), foregroundStyle('#FFFFFF')]}>{props.nextLabel}</Text>
-        <Text modifiers={[font({ size: 34, weight: 'black' }), foregroundStyle('#FFFFFF'), lineLimit(1), minimumScaleFactor(0.5)]}>
+        <Text
+          modifiers={[font({ size: 34, weight: 'black' }), foregroundStyle('#FFFFFF'), lineLimit(1), minimumScaleFactor(0.5)]}
+        >
           {props.exercise}
         </Text>
         <Text modifiers={[font({ size: 18, weight: 'bold' }), foregroundStyle('#FFFFFF')]}>{props.load}</Text>
@@ -83,8 +98,42 @@ const RestActivity = (props: RestActivityProps, env: LiveActivityEnvironment) =>
     </VStack>
   );
 
+  // Apple Watch (a CarPlay): malé rozložení – velký odpočet, cvik a váha, po pauze odškrtnutí
+  const bannerSmall = props.over ? (
+    <HStack modifiers={[padding({ all: 8 }), activityBackgroundTint(BLUE)]}>
+      <VStack alignment="leading" spacing={0}>
+        <Text modifiers={[font({ size: 12 }), foregroundStyle('#FFFFFF')]}>{props.nextLabel}</Text>
+        <Text
+          modifiers={[font({ size: 18, weight: 'black' }), foregroundStyle('#FFFFFF'), lineLimit(1), minimumScaleFactor(0.6)]}
+        >
+          {props.exercise}
+        </Text>
+        <Text modifiers={[font({ size: 14, weight: 'bold' }), foregroundStyle('#FFFFFF')]}>{props.load}</Text>
+      </VStack>
+      <Spacer />
+      {check}
+    </HStack>
+  ) : (
+    <VStack alignment="leading" spacing={2} modifiers={[padding({ all: 8 }), activityBackgroundTint(BLUE)]}>
+      <HStack>
+        <Text modifiers={[font({ size: 12 }), foregroundStyle('#FFFFFF')]}>{props.restLabel}</Text>
+        <Spacer />
+        <Text
+          timerInterval={{ lower, upper }}
+          countsDown
+          modifiers={[font({ size: 26, weight: 'black' }), monospacedDigit(), foregroundStyle('#FFFFFF')]}
+        />
+      </HStack>
+      <Text modifiers={[font({ size: 13, weight: 'bold' }), foregroundStyle('#FFFFFF'), lineLimit(1), minimumScaleFactor(0.7)]}>
+        {props.exercise} · {props.load}
+      </Text>
+      <ProgressView timerInterval={{ lower, upper }} countsDown modifiers={[tint(RED)]} />
+    </VStack>
+  );
+
   return {
     banner,
+    bannerSmall,
     compactLeading: <Text modifiers={[foregroundStyle(RED)]}>{props.exercise.slice(0, 1)}</Text>,
     compactTrailing: props.over ? (
       <Text modifiers={[foregroundStyle(RED)]}>✓</Text>
@@ -92,19 +141,13 @@ const RestActivity = (props: RestActivityProps, env: LiveActivityEnvironment) =>
       <Text timerInterval={{ lower, upper }} countsDown modifiers={[monospacedDigit(), foregroundStyle('#FFFFFF')]} />
     ),
     minimal: <Text modifiers={[foregroundStyle(RED)]}>●</Text>,
-    expandedLeading: (
-      <Text modifiers={[font({ size: 15, weight: 'bold' }), lineLimit(1)]}>{props.exercise}</Text>
-    ),
+    expandedLeading: <Text modifiers={[font({ size: 15, weight: 'bold' }), lineLimit(1)]}>{props.exercise}</Text>,
     expandedTrailing: props.over ? (
       <Text>{props.load}</Text>
     ) : (
       <Text timerInterval={{ lower, upper }} countsDown modifiers={[font({ size: 22, weight: 'black' }), monospacedDigit()]} />
     ),
-    expandedBottom: props.over ? (
-      check
-    ) : (
-      <ProgressView timerInterval={{ lower, upper }} countsDown modifiers={[tint(RED)]} />
-    ),
+    expandedBottom: props.over ? check : <ProgressView timerInterval={{ lower, upper }} countsDown modifiers={[tint(RED)]} />,
   };
 };
 

@@ -5,16 +5,20 @@ import type { RestSound } from './restSound';
 
 /**
  * Oznámení o konci pauzy (zobrazí se i na zamčené obrazovce).
- * Má tlačítko „Odškrtnout nástup“ – akci zpracuje <RestNotificationBridge />.
+ * Má tlačítka „Odškrtnout nástup“ a „+30 s“ – akce zpracuje <RestNotificationBridge />.
+ * Oznámení se samo zrcadlí na Apple Watch i Wear OS (i s tlačítky), takže pauzu
+ * jde ovládat z hodinek bez otevření telefonu.
  * Na webu (PWA) se nepoužívá.
  */
 export const REST_CATEGORY = 'REST';
 export const ACTION_DONE = 'DONE';
+/** prodloužení pauzy o 30 s (např. z hodinek) */
+export const ACTION_EXTEND = 'EXTEND30';
 
 const supported = Platform.OS === 'ios' || Platform.OS === 'android';
 let ready = false;
 
-export async function setupRestNotifications(actionTitle: string) {
+export async function setupRestNotifications(actionTitle: string, extendTitle = '+30 s') {
   if (!supported || ready) return ready;
   try {
     Notifications.setNotificationHandler({
@@ -38,6 +42,7 @@ export async function setupRestNotifications(actionTitle: string) {
     }
     await Notifications.setNotificationCategoryAsync(REST_CATEGORY, [
       { identifier: ACTION_DONE, buttonTitle: actionTitle, options: { opensAppToForeground: false } },
+      { identifier: ACTION_EXTEND, buttonTitle: extendTitle, options: { opensAppToForeground: false } },
     ]);
     ready = true;
   } catch {

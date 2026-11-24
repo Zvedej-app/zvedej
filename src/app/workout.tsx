@@ -31,6 +31,7 @@ import { useAuth } from '../providers/AuthProvider';
 import { useSettings } from '../providers/SettingsProvider';
 import { useTraining } from '../providers/TrainingProvider';
 import { OfflineBadge } from '../components/OfflineBadge';
+import { onRestEvent } from '../lib/restEvents';
 
 const RPE = range(1, 10, 0.5);
 
@@ -172,7 +173,7 @@ export default function WorkoutScreen() {
       const until = Date.now() + ms;
       let notifId: string | null = null;
       if (settings.restNotify && next) {
-        await setupRestNotifications(t('tr.markDone'));
+        await setupRestNotifications(t('tr.markDone'), t('tr.extend30'));
         if (await ensureNotificationPermission()) {
           notifId = await scheduleRestEnd({
             seconds: ms / 1000,
@@ -270,6 +271,25 @@ export default function WorkoutScreen() {
     const left = Math.max(1000, r.until - Date.now() + ms);
     startRest(left, r.next).then(() => setRest((x) => (x ? { ...x, total: Math.max(x.total + ms, left) } : x)));
   };
+
+  // „+30 s“ z oznámení / hodinek: prodlouží běžící pauzu, po jejím konci dá ještě 30 s
+  const shiftRef = useRef(shift);
+  const startRestRef = useRef(startRest);
+  useEffect(() => {
+    shiftRef.current = shift;
+    startRestRef.current = startRest;
+  });
+  useEffect(
+    () =>
+      onRestEvent((e) => {
+        if (e.type !== 'extend') return;
+        const r = restRef.current;
+        if (!r?.next) return;
+        if (r.over) startRestRef.current(e.seconds * 1000, r.next);
+        else shiftRef.current(e.seconds * 1000);
+      }),
+    [],
+  );
 
   // po dokončení tréninku: oslava (aktivní trénink už neexistuje)
   if (celebrate) {
