@@ -14,7 +14,7 @@ import { BarbellHalf } from './Logo';
 /** jak dlouho činka leží na zemi, než obrazovka zmizí (ms) */
 const REST_MS = 500;
 /** výšky odrazů jako podíl výchozí výšky (každý odraz ztratí většinu energie) */
-const BOUNCES = [0.32, 0.1, 0.03, 0.008];
+const BOUNCES = [0.4, 0.1, 0.03, 0.008];
 /** doba pádu z výchozí výšky (ms); ostatní časy podle fyziky t ~ √h */
 const FALL_MS = 720;
 
