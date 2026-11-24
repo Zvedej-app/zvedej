@@ -5,8 +5,7 @@ import { logSetCount, logTonnage } from './training';
 import type { TrainingData } from './types';
 import { formatNumber, formatWeight, type Unit } from './units';
 
-const esc = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /** Sestaví tištěnou podobu tréninků (HTML → PDF). */
 export function trainingDoc(data: TrainingData, lang: Lang, unit: Unit, owner: string) {
@@ -16,7 +15,10 @@ export function trainingDoc(data: TrainingData, lang: Lang, unit: Unit, owner: s
   const maxes = Object.entries(data.maxes);
 
   const maxRows = maxes
-    .map(([id, kg]) => `<tr><td>${esc(exerciseName(id, lang, data.customExercises))}</td><td class="r">${esc(formatWeight(kg, unit))}</td></tr>`)
+    .map(
+      ([id, kg]) =>
+        `<tr><td>${esc(exerciseName(id, lang, data.customExercises))}</td><td class="r">${esc(formatWeight(kg, unit))}</td></tr>`,
+    )
     .join('');
 
   const logHtml = logs
@@ -28,7 +30,7 @@ export function trainingDoc(data: TrainingData, lang: Lang, unit: Unit, owner: s
         })
         .join('');
       return `<section><h3>${esc(l.title)} <span>${esc(formatDate(l.date, locale))}</span></h3>
-        <p class="meta">${logSetCount(l)} ${esc(t('tr.set').toLowerCase())} · ${esc(formatWeight(logTonnage(l), unit))}${l.rpe ? ` · RPE ${l.rpe}` : ''}${l.durationMin ? ` · ${l.durationMin} min` : ''}</p>
+        <p class="meta">${esc(t('tr.log.sets'))}: ${logSetCount(l)} · ${esc(t('tr.tonnage'))}: ${esc(formatWeight(logTonnage(l), unit))}${l.rpe ? ` · RPE ${l.rpe}` : ''}${l.durationMin ? ` · ${l.durationMin} min` : ''}</p>
         <table>${exs}</table>${l.notes ? `<p class="note">${esc(l.notes)}</p>` : ''}</section>`;
     })
     .join('');
@@ -55,5 +57,3 @@ export function trainingHtml(data: TrainingData, lang: Lang, unit: Unit, owner: 
 }
 
 export const pdfFileName = () => `zvedej-treninky-${new Date().toISOString().slice(0, 10)}.pdf`;
-
-

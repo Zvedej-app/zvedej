@@ -4,7 +4,7 @@ import { SectionList, View } from 'react-native';
 import { exerciseName } from '../../data/exercises';
 import { formatDate, parseISODate, startOfWeek, toISODate, addDays } from '../../lib/date';
 import { logSetCount, logTonnage } from '../../lib/training';
-import { plural, type TKey } from '../../lib/i18n';
+import { type TKey, plural } from '../../lib/i18n';
 import type { WorkoutLog } from '../../lib/types';
 import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
@@ -43,7 +43,8 @@ export function LogView() {
             {formatDate(toISODate(addDays(parseISODate(section.week), 6)), locale, { day: 'numeric', month: 'numeric' })}
           </T>
           <T v="small" color={colors.primary} style={{ fontWeight: '700' }}>
-            {plural(settings.lang, 'workout', section.data.length)} · {formatTonnage(section.tonnage, settings.unit)}
+            {plural(settings.lang, 'workout', section.data.length)} · {t('tr.log.weekTonnage')}{' '}
+            {formatTonnage(section.tonnage, settings.unit)}
           </T>
         </Row>
       )}
@@ -57,32 +58,37 @@ export function LogView() {
               {formatDate(item.date, locale, { weekday: 'short', day: 'numeric', month: 'numeric' })}
             </T>
           </Row>
-          <T v="small" muted numberOfLines={2}>
-            {item.exercises.map((e) => exerciseName(e.exerciseId, settings.lang, data.customExercises, e.customName)).join(' · ')}
-          </T>
-          <Row gap={14}>
-            <T v="caption" muted>
-              {plural(settings.lang, 'set', logSetCount(item))}
-            </T>
-            <T v="caption" muted>
-              {formatTonnage(logTonnage(item), settings.unit)}
-            </T>
-            {item.durationMin ? (
-              <T v="caption" muted>
-                {item.durationMin} min
-              </T>
-            ) : null}
-            {item.rpe ? (
-              <T v="caption" muted>
-                RPE {item.rpe}
-              </T>
-            ) : null}
-            {item.feeling ? (
-              <T v="caption" muted>
-                {t(`tr.feeling.${item.feeling}` as TKey)}
-              </T>
-            ) : null}
-          </Row>
+          {/* všechny cviky celé, zalomené do štítků */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+            {item.exercises.map((e, i) => (
+              <View
+                key={i}
+                style={{ backgroundColor: colors.primarySoft, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}
+              >
+                <T v="caption" color={colors.primary} style={{ fontWeight: '600' }}>
+                  {exerciseName(e.exerciseId, settings.lang, data.customExercises, e.customName)}
+                </T>
+              </View>
+            ))}
+          </View>
+          {/* ukazatele s popisky */}
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              marginTop: 12,
+              rowGap: 10,
+              borderTopWidth: 1,
+              borderTopColor: colors.border,
+              paddingTop: 10,
+            }}
+          >
+            <LogStat label={t('tr.log.sets')} value={String(logSetCount(item))} />
+            <LogStat label={t('tr.log.tonnage')} value={formatTonnage(logTonnage(item), settings.unit)} />
+            {item.durationMin ? <LogStat label={t('tr.log.duration')} value={`${item.durationMin} min`} /> : null}
+            {item.rpe ? <LogStat label={t('tr.log.rpe')} value={String(item.rpe)} /> : null}
+            {item.feeling ? <LogStat label={t('tr.log.feeling')} value={t(`tr.feeling.${item.feeling}` as TKey)} /> : null}
+          </View>
           {item.notes ? (
             <View>
               <T v="small" style={{ fontStyle: 'italic' }} numberOfLines={2}>
@@ -93,5 +99,17 @@ export function LogView() {
         </Card>
       )}
     />
+  );
+}
+
+/** Jeden ukazatel tréninku: popisek nahoře, hodnota pod ním (tři vedle sebe) */
+function LogStat({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={{ width: '33.33%', paddingRight: 8, gap: 1 }}>
+      <T v="caption" muted numberOfLines={1}>
+        {label}
+      </T>
+      <T style={{ fontWeight: '800' }}>{value}</T>
+    </View>
   );
 }
