@@ -55,6 +55,8 @@ export interface Profile {
   /** Hmotnost (a Sinclair) vidí i ostatní – výchozí ne */
   showBodyweight: boolean;
   isPublic: boolean;
+  /** Trenér: má záložku Tým */
+  isCoach?: boolean;
   /** Správce: vidí přehled nahlášení */
   isAdmin?: boolean;
   /** Účet zablokovaný moderátorem (nemůže psát ani nahrávat) */
@@ -199,6 +201,8 @@ export interface TrainingPlan {
   weeks?: number | null;
   /** Automatická progrese procent za týden (např. 2.5) */
   weeklyIncrementPct?: number;
+  /** Plán poslal trenér – svěřenec ho nemůže upravovat */
+  fromCoach?: { coachId: string; coachName: string; assignmentId: string };
   createdAt: string;
   updatedAt: string;
 }
@@ -274,4 +278,65 @@ export interface Conversation {
   unread: number;
   /** zpráva od někoho, kdo není přítel, a ještě jsem neodpověděl */
   isRequest: boolean;
+}
+
+/* ------------------------------ Trenér ------------------------------ */
+
+export type CoachLinkStatus = 'pending' | 'accepted';
+
+/** Svěřenec v týmu trenéra */
+export interface TeamMember {
+  profile: Profile;
+  status: CoachLinkStatus;
+  shareBodyweight: boolean;
+  createdAt: string;
+  maxes: Record<string, number>;
+  /** tréninky za posledních ~60 dní */
+  recentLogs: WorkoutLog[];
+}
+
+/** Trenér z pohledu svěřence */
+export interface MyCoach {
+  profile: Profile;
+  status: CoachLinkStatus;
+  shareBodyweight: boolean;
+  createdAt: string;
+}
+
+export interface CoachGroup {
+  id: string;
+  name: string;
+  memberIds: string[];
+}
+
+export interface AssignedPlan {
+  id: string;
+  coachId: string;
+  coachName: string;
+  athleteId: string;
+  sourcePlanId: string;
+  plan: TrainingPlan;
+  updatedAt: string;
+  seenAt: string | null;
+}
+
+export interface WorkoutComment {
+  id: string;
+  athleteId: string;
+  logId: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string | null;
+  body: string;
+  createdAt: string;
+  readAt: string | null;
+}
+
+export interface TrainingVideo {
+  id: string;
+  athleteId: string;
+  logId: string;
+  url: string;
+  caption: string | null;
+  createdAt: string;
 }

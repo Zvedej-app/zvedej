@@ -1,8 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { formatTonnage } from '../../components/training/format';
 import { WorkoutEditor } from '../../components/training/WorkoutEditor';
+import { LogFeedback } from '../../components/coach/LogFeedback';
+import { api } from '../../lib/api';
+import { useAuth } from '../../providers/AuthProvider';
 import { Button, Card, Empty, Field, Header, IconButton, Row, Screen, Stat, T } from '../../components/ui';
 import { todayISO, formatDate } from '../../lib/date';
 import { confirm } from '../../lib/dialog';
@@ -18,6 +21,15 @@ export default function LogDetail() {
   const training = useTraining();
   const orig = training.data.logs.find((l) => l.id === id);
   const [log, setLog] = useState<WorkoutLog | null>(orig ?? null);
+  const { session } = useAuth();
+  // komentáře a videa ukážeme, když má svěřenec trenéra
+  const [hasCoach, setHasCoach] = useState(false);
+  useEffect(() => {
+    api
+      .myCoaches()
+      .then((l) => setHasCoach(l.some((c) => c.status === 'accepted')))
+      .catch(() => {});
+  }, []);
 
   if (!log) {
     return (
@@ -44,7 +56,7 @@ export default function LogDetail() {
           />
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
         <Field value={log.title} onChangeText={(title) => setLog({ ...log, title })} />
         <Card style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
           <Stat value={logSetCount(log)} label={t('tr.set')} />
@@ -59,6 +71,7 @@ export default function LogDetail() {
           onChangeText={(notes) => setLog({ ...log, notes })}
           multiline
         />
+        {hasCoach && session ? <LogFeedback athleteId={session.userId} logId={log.id} /> : null}
         <Row>
           <Button
             kind="secondary"

@@ -3,6 +3,11 @@ import { currentMonthKey, prevMonthKey } from '../date';
 import { uuid } from '../id';
 import { fallbackTheme } from '../../data/themes';
 import type {
+  AssignedPlan,
+  CoachGroup,
+  TrainingVideo,
+  WorkoutComment,
+  WorkoutLog,
   ChallengeVideo,
   ContentReport,
   Conversation,
@@ -34,7 +39,86 @@ const K = {
   blocks: (id: string) => `zvedej:demo:blocks:${id}`,
   reports: 'zvedej:demo:reports',
   notices: (id: string) => `zvedej:demo:notices:${id}`,
+  coachLinks: 'zvedej:demo:coachLinks:v1',
+  groups: (id: string) => `zvedej:demo:groups:${id}`,
+  assigned: 'zvedej:demo:assigned',
+  comments: 'zvedej:demo:comments',
+  tvideos: 'zvedej:demo:trainingVideos',
 };
+
+interface DemoCoachLink {
+  coachId: string;
+  athleteId: string;
+  status: 'pending' | 'accepted';
+  shareBodyweight: boolean;
+  createdAt: string;
+}
+
+/** ukázkový trenér, který demo uživatele zve do svého týmu */
+const DEMO_COACH = 'demo-5';
+
+/** Vygeneruje ukázkový deník svěřence (posledních 8 týdnů, 3 tréninky týdně). */
+function fakeTraining(p: Profile): TrainingData {
+  const sn = p.prSnatch ?? 60;
+  const cj = p.prCleanJerk ?? 80;
+  const logs: WorkoutLog[] = [];
+  let seed = p.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const rnd = () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+  const today = new Date();
+  const skipRecent = p.id === 'demo-3' ? 9 : 0; // jeden svěřenec delší dobu netrénoval
+  for (let d = 56; d >= skipRecent; d--) {
+    const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() - d);
+    const wd = (day.getDay() + 6) % 7;
+    if (![0, 2, 4].includes(wd) || rnd() < 0.12) continue;
+    const prog = 0.72 + ((56 - d) / 56) * 0.14 + rnd() * 0.04;
+    const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+    const kg = (x: number) => Math.round(x * prog);
+    const sets = (n: number, reps: number, w: number) => Array.from({ length: n }, () => ({ reps, kg: w, done: true }));
+    const exercises =
+      wd === 0
+        ? [
+            { id: uuid(), exerciseId: 'snatch', sets: sets(5, 2, kg(sn)) },
+            { id: uuid(), exerciseId: 'back_squat', sets: sets(4, 4, kg(sn * 1.55)) },
+          ]
+        : wd === 2
+          ? [
+              { id: uuid(), exerciseId: 'clean_jerk', sets: sets(5, 1, kg(cj)) },
+              { id: uuid(), exerciseId: 'clean_pull', sets: sets(3, 3, kg(cj * 1.05)) },
+            ]
+          : [
+              { id: uuid(), exerciseId: 'snatch', sets: sets(4, 1, kg(sn * 1.03)) },
+              { id: uuid(), exerciseId: 'clean_jerk', sets: sets(3, 1, kg(cj * 1.02)) },
+              { id: uuid(), exerciseId: 'front_squat', sets: sets(3, 3, kg(cj * 1.1)) },
+            ];
+    const rpe = Math.round((6 + rnd() * 3.5) * 2) / 2;
+    const feelings = ['easy', 'ok', 'ok', 'hard', 'bad'] as const;
+    logs.push({
+      id: `${p.id}-${iso}`,
+      date: iso,
+      planId: null,
+      dayId: null,
+      title: wd === 0 ? 'Trh + dřep' : wd === 2 ? 'Nadhoz + tahy' : 'Technika',
+      exercises,
+      rpe,
+      feeling: feelings[Math.floor(rnd() * feelings.length)],
+      durationMin: 55 + Math.round(rnd() * 35),
+      bodyweight: p.bodyweight,
+      notes: d < 4 && rnd() < 0.6 ? 'Trochu mě bolí levé zápěstí, poslední série jsem ubral.' : undefined,
+      createdAt: day.toISOString(),
+    });
+  }
+  return {
+    version: 1,
+    plans: [],
+    logs,
+    maxes: { snatch: sn, clean_jerk: cj, back_squat: Math.round(sn * 1.8) },
+    customExercises: [],
+    updatedAt: new Date().toISOString(),
+  };
+}
 
 interface DemoVideo {
   id: string;
@@ -379,6 +463,32 @@ export function createDemoBackend(): Backend {
     };
     await set(K.reports, [...(await get<ContentReport[]>(K.reports, [])), r]);
   }
+
+  async function coachLinks(): Promise<DemoCoachLink[]> {
+    const raw = await AsyncStorage.getItem(K.coachLinks);
+    if (raw) return JSON.parse(raw);
+    const me = (await session())?.userId ?? 'local-demo';
+    const now = new Date().toISOString();
+    const seed: DemoCoachLink[] = [
+      { coachId: me, athleteId: 'demo-1', status: 'accepted', shareBodyweight: true, createdAt: now },
+      { coachId: me, athleteId: 'demo-2', status: 'accepted', shareBodyweight: false, createdAt: now },
+      { coachId: me, athleteId: 'demo-3', status: 'accepted', shareBodyweight: false, createdAt: now },
+      { coachId: me, athleteId: 'demo-6', status: 'pending', shareBodyweight: false, createdAt: now },
+      { coachId: DEMO_COACH, athleteId: me, status: 'pending', shareBodyweight: false, createdAt: now },
+    ];
+    await set(K.coachLinks, seed);
+    return seed;
+  }
+  async function athleteData(id: string): Promise<TrainingData | null> {
+    const own = await get<TrainingData | null>(K.training(id), null);
+    if (own) return own;
+    const p = (await users()).find((u) => u.id === id);
+    return p ? fakeTraining(p) : null;
+  }
+  const userName = (us: Profile[], id: string) => {
+    const u = us.find((x) => x.id === id);
+    return u ? `${u.firstName} ${u.lastName}`.trim() : '';
+  };
 
   const backend: Backend = {
     mode: 'demo',
@@ -753,6 +863,289 @@ export function createDemoBackend(): Backend {
         messages: await messageRows(s.userId),
         blocked_users: await blockedIds(s.userId),
       };
+    },
+
+    async coachTeam() {
+      const me = (await session())?.userId;
+      if (!me) return [];
+      const us = await users();
+      const links = (await coachLinks()).filter((l) => l.coachId === me);
+      const out = [];
+      for (const l of links) {
+        const p = us.find((u) => u.id === l.athleteId);
+        if (!p) continue;
+        const d = l.status === 'accepted' ? await athleteData(p.id) : null;
+        const from = new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10);
+        out.push({
+          profile: l.shareBodyweight ? p : { ...p, bodyweight: null },
+          status: l.status,
+          shareBodyweight: l.shareBodyweight,
+          createdAt: l.createdAt,
+          maxes: d?.maxes ?? {},
+          recentLogs: (d?.logs ?? [])
+            .filter((x) => x.date >= from)
+            .map((x) => (l.shareBodyweight ? x : { ...x, bodyweight: null })),
+        });
+      }
+      return out.sort((a, b) => a.status.localeCompare(b.status) || a.profile.lastName.localeCompare(b.profile.lastName, 'cs'));
+    },
+    async inviteAthlete(athleteId) {
+      const me = (await session())?.userId;
+      if (!me) throw new Error('not signed in');
+      const links = await coachLinks();
+      if (links.some((l) => l.coachId === me && l.athleteId === athleteId)) return;
+      await set(K.coachLinks, [
+        ...links,
+        { coachId: me, athleteId, status: 'pending', shareBodyweight: false, createdAt: new Date().toISOString() },
+      ]);
+    },
+    async removeCoachLink(coachId, athleteId) {
+      await set(
+        K.coachLinks,
+        (await coachLinks()).filter((l) => !(l.coachId === coachId && l.athleteId === athleteId)),
+      );
+      await set(
+        K.assigned,
+        (await get<AssignedPlan[]>(K.assigned, [])).filter((a) => !(a.coachId === coachId && a.athleteId === athleteId)),
+      );
+    },
+    async athleteTraining(athleteId) {
+      const me = (await session())?.userId;
+      const l = (await coachLinks()).find((x) => x.coachId === me && x.athleteId === athleteId && x.status === 'accepted');
+      if (!l) throw new Error('FORBIDDEN');
+      const d = await athleteData(athleteId);
+      return d && !l.shareBodyweight ? { ...d, logs: d.logs.map((x) => ({ ...x, bodyweight: null })) } : d;
+    },
+    async listGroups() {
+      const me = (await session())?.userId;
+      return me ? get<CoachGroup[]>(K.groups(me), []) : [];
+    },
+    async saveGroup(group) {
+      const me = (await session())?.userId;
+      if (!me) throw new Error('not signed in');
+      const g = { ...group, id: group.id.startsWith('new') ? uuid() : group.id, name: group.name.trim() };
+      const list = await get<CoachGroup[]>(K.groups(me), []);
+      await set(
+        K.groups(me),
+        [...list.filter((x) => x.id !== g.id), g].sort((a, b) => a.name.localeCompare(b.name, 'cs')),
+      );
+      return g;
+    },
+    async deleteGroup(id) {
+      const me = (await session())?.userId;
+      if (!me) return;
+      await set(
+        K.groups(me),
+        (await get<CoachGroup[]>(K.groups(me), [])).filter((g) => g.id !== id),
+      );
+    },
+    async assignPlan(plan, athleteIds) {
+      const me = (await session())?.userId;
+      if (!me) return;
+      const us = await users();
+      const list = await get<AssignedPlan[]>(K.assigned, []);
+      const now = new Date().toISOString();
+      const next = list.filter((a) => !(a.coachId === me && a.sourcePlanId === plan.id && athleteIds.includes(a.athleteId)));
+      for (const a of athleteIds) {
+        const old = list.find((x) => x.coachId === me && x.sourcePlanId === plan.id && x.athleteId === a);
+        next.push({
+          id: old?.id ?? uuid(),
+          coachId: me,
+          coachName: userName(us, me),
+          athleteId: a,
+          sourcePlanId: plan.id,
+          plan,
+          updatedAt: now,
+          seenAt: null,
+        });
+      }
+      await set(K.assigned, next);
+    },
+    async planAssignees(sourcePlanId) {
+      const me = (await session())?.userId;
+      return (await get<AssignedPlan[]>(K.assigned, []))
+        .filter((a) => a.coachId === me && a.sourcePlanId === sourcePlanId)
+        .map((a) => a.athleteId);
+    },
+    async unassignPlan(sourcePlanId, athleteId) {
+      const me = (await session())?.userId;
+      await set(
+        K.assigned,
+        (await get<AssignedPlan[]>(K.assigned, [])).filter(
+          (a) => !(a.coachId === me && a.sourcePlanId === sourcePlanId && a.athleteId === athleteId),
+        ),
+      );
+    },
+    async updateAssignedPlan(plan) {
+      const me = (await session())?.userId;
+      const now = new Date().toISOString();
+      await set(
+        K.assigned,
+        (await get<AssignedPlan[]>(K.assigned, [])).map((a) =>
+          a.coachId === me && a.sourcePlanId === plan.id ? { ...a, plan, updatedAt: now, seenAt: null } : a,
+        ),
+      );
+    },
+    async myCoaches() {
+      const me = (await session())?.userId;
+      if (!me) return [];
+      const us = await users();
+      return (await coachLinks())
+        .filter((l) => l.athleteId === me)
+        .map((l) => ({
+          profile: { ...(us.find((u) => u.id === l.coachId) ?? demoProfile({ id: l.coachId })), isCoach: true },
+          status: l.status,
+          shareBodyweight: l.shareBodyweight,
+          createdAt: l.createdAt,
+        }));
+    },
+    async acceptCoach(coachId, shareBodyweight) {
+      const me = (await session())?.userId;
+      if (!me) throw new Error('not signed in');
+      const links = (await coachLinks()).filter((l) => !(l.coachId === coachId && l.athleteId === me));
+      await set(K.coachLinks, [
+        ...links,
+        { coachId, athleteId: me, status: 'accepted', shareBodyweight, createdAt: new Date().toISOString() },
+      ]);
+      // ukázka: trenér hned pošle plán
+      if (coachId === DEMO_COACH) {
+        const us = await users();
+        const list = await get<AssignedPlan[]>(K.assigned, []);
+        if (!list.some((a) => a.coachId === DEMO_COACH && a.athleteId === me)) {
+          const { newPlan } = await import('../../data/templates');
+          const base = newPlan({ name: 'Blok před MČR' });
+          const day = (name: string, wd: number, ex: [string, number, number, LoadKind][]) => ({
+            id: uuid(),
+            name,
+            weekdays: [wd],
+            nameAuto: true,
+            exercises: ex.map(([exerciseId, s1, reps, load]) => ({
+              id: uuid(),
+              exerciseId,
+              schemes: [{ id: uuid(), sets: s1, reps, load }],
+            })),
+          });
+          type LoadKind = TrainingData['plans'][number]['days'][number]['exercises'][number]['schemes'][number]['load'];
+          const plan = {
+            ...base,
+            status: 'active' as const,
+            weeks: 4,
+            days: [
+              day('Pondělí', 0, [
+                ['snatch', 5, 2, { type: 'percent', value: 75, of: 'snatch' }],
+                ['back_squat', 4, 5, { type: 'kg', value: 120 }],
+              ]),
+              day('Středa', 2, [
+                ['clean_jerk', 5, 1, { type: 'percent', value: 80, of: 'clean_jerk' }],
+                ['clean_pull', 3, 3, { type: 'rpe', value: 8 }],
+              ]),
+              day('Pátek', 4, [
+                ['snatch_balance', 3, 3, { type: 'none' }],
+                ['front_squat', 3, 3, { type: 'percent', value: 70, of: 'back_squat' }],
+              ]),
+            ],
+          };
+          await set(K.assigned, [
+            ...list,
+            {
+              id: uuid(),
+              coachId: DEMO_COACH,
+              coachName: userName(us, DEMO_COACH),
+              athleteId: me,
+              sourcePlanId: base.id,
+              plan,
+              updatedAt: new Date().toISOString(),
+              seenAt: null,
+            },
+          ]);
+        }
+      }
+    },
+    async setCoachShare(coachId, shareBodyweight) {
+      const me = (await session())?.userId;
+      await set(
+        K.coachLinks,
+        (await coachLinks()).map((l) => (l.coachId === coachId && l.athleteId === me ? { ...l, shareBodyweight } : l)),
+      );
+    },
+    async getCoach(coachId) {
+      const p = (await users()).find((u) => u.id === coachId);
+      return p && (p.isCoach || coachId === DEMO_COACH) ? { ...p, isCoach: true } : null;
+    },
+    async myAssignedPlans() {
+      const me = (await session())?.userId;
+      return (await get<AssignedPlan[]>(K.assigned, [])).filter((a) => a.athleteId === me);
+    },
+    async markAssignedPlansSeen() {
+      const me = (await session())?.userId;
+      const now = new Date().toISOString();
+      await set(
+        K.assigned,
+        (await get<AssignedPlan[]>(K.assigned, [])).map((a) => (a.athleteId === me && !a.seenAt ? { ...a, seenAt: now } : a)),
+      );
+    },
+    async listComments(athleteId, logId) {
+      return (await get<WorkoutComment[]>(K.comments, []))
+        .filter((c) => c.athleteId === athleteId && c.logId === logId)
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    },
+    async addComment(athleteId, logId, body) {
+      const me = (await session())?.userId;
+      if (!me) throw new Error('not signed in');
+      const us = await users();
+      const c: WorkoutComment = {
+        id: uuid(),
+        athleteId,
+        logId,
+        authorId: me,
+        authorName: userName(us, me),
+        authorAvatar: us.find((u) => u.id === me)?.avatarUrl ?? null,
+        body: body.trim(),
+        createdAt: new Date().toISOString(),
+        readAt: null,
+      };
+      await set(K.comments, [...(await get<WorkoutComment[]>(K.comments, [])), c]);
+      return c;
+    },
+    async deleteComment(id) {
+      await set(
+        K.comments,
+        (await get<WorkoutComment[]>(K.comments, [])).filter((c) => c.id !== id),
+      );
+    },
+    async markCommentsRead(athleteId, logId) {
+      const me = (await session())?.userId;
+      const now = new Date().toISOString();
+      await set(
+        K.comments,
+        (await get<WorkoutComment[]>(K.comments, [])).map((c) =>
+          c.athleteId === athleteId && c.logId === logId && c.authorId !== me && !c.readAt ? { ...c, readAt: now } : c,
+        ),
+      );
+    },
+    async unreadComments() {
+      const me = (await session())?.userId;
+      const out: Record<string, number> = {};
+      for (const c of await get<WorkoutComment[]>(K.comments, [])) {
+        if (c.authorId === me || c.readAt) continue;
+        const k = `${c.athleteId}:${c.logId}`;
+        out[k] = (out[k] ?? 0) + 1;
+      }
+      return out;
+    },
+    async listTrainingVideos(athleteId, logId) {
+      return (await get<TrainingVideo[]>(K.tvideos, [])).filter((v) => v.athleteId === athleteId && v.logId === logId);
+    },
+    async uploadTrainingVideo(athleteId, logId, uri) {
+      const v: TrainingVideo = { id: uuid(), athleteId, logId, url: uri, caption: null, createdAt: new Date().toISOString() };
+      await set(K.tvideos, [...(await get<TrainingVideo[]>(K.tvideos, [])), v]);
+      return v;
+    },
+    async deleteTrainingVideo(video) {
+      await set(
+        K.tvideos,
+        (await get<TrainingVideo[]>(K.tvideos, [])).filter((v) => v.id !== video.id),
+      );
     },
 
     async loadTraining(userId) {

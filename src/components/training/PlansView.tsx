@@ -38,6 +38,14 @@ export function PlansView() {
             </Row>
           )}
         </Row>
+        {p.fromCoach ? (
+          <Row gap={5}>
+            <Ionicons name="person-circle-outline" size={15} color={colors.primary} />
+            <T v="small" color={colors.primary} style={{ fontWeight: '700' }}>
+              {t('coach.planFrom', { name: p.fromCoach.coachName })}
+            </T>
+          </Row>
+        ) : null}
         <T v="small" muted>
           {formatDate(p.startDate, locale)}
           {p.endDate ? ` – ${formatDate(p.endDate, locale)}` : ''}

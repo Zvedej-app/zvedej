@@ -9,6 +9,7 @@ import { Header, IconButton, Screen, Segmented, T } from '../../components/ui';
 import { activePlan } from '../../lib/training';
 import { radius } from '../../lib/theme';
 import { useTabEnter } from '../../lib/tabReset';
+import { useAuth } from '../../providers/AuthProvider';
 import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
 
@@ -18,6 +19,8 @@ export default function TrainingScreen() {
   const { t, colors } = useSettings();
   const { data } = useTraining();
   const plan = activePlan(data);
+  const { profile } = useAuth();
+  const coach = !!profile?.isCoach;
   const [tab, setTab] = useState<Tab>('today');
   useTabEnter('training', () => setTab('today'));
   return (
@@ -28,37 +31,27 @@ export default function TrainingScreen() {
           <IconButton name="add-circle-outline" size={26} label={t('tr.createPlan')} onPress={() => router.push('/plan/new')} />
         }
       />
-      {/* Plány jako samostatné tlačítko mezi nadpisem a přepínačem Dnes / Deník / Nástroje */}
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => router.push('/plans')}
-        style={({ pressed }) => [
-          {
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 12,
-            marginHorizontal: 16,
-            marginTop: 10,
-            padding: 12,
-            borderRadius: radius.lg,
-            backgroundColor: colors.primary,
-            opacity: pressed ? 0.85 : 1,
-          },
-        ]}
-      >
-        <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' }}>
-          <Ionicons name="calendar" size={20} color="#FFF" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <T v="h3" color="#FFF">
-            {t('tr.sheetPlans')}
-          </T>
-          <T v="caption" color="rgba(255,255,255,0.8)" numberOfLines={1}>
-            {plan ? plan.name : t('tr.noActivePlan')}
-          </T>
-        </View>
-        <Ionicons name="chevron-forward" size={20} color="#FFF" />
-      </Pressable>
+      {/* Plány (a u trenéra Tým) jako samostatná tlačítka mezi nadpisem a přepínačem */}
+      <View style={{ flexDirection: 'row', gap: 10, marginHorizontal: 16, marginTop: 10 }}>
+        <BigLink
+          icon="calendar"
+          title={t('tr.sheetPlans')}
+          sub={plan ? plan.name : t('tr.noActivePlan')}
+          color={colors.primary}
+          onPress={() => router.push('/plans')}
+          compact={coach}
+        />
+        {coach && (
+          <BigLink
+            icon="people"
+            title={t('coach.team')}
+            sub={t('coach.teamSub')}
+            color={colors.accent}
+            onPress={() => router.push('/team')}
+            compact
+          />
+        )}
+      </View>
       <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
         <Segmented
           value={tab}
@@ -76,5 +69,62 @@ export default function TrainingScreen() {
         {tab === 'tools' && <ToolsView />}
       </View>
     </Screen>
+  );
+}
+
+function BigLink({
+  icon,
+  title,
+  sub,
+  color,
+  onPress,
+  compact,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  sub: string;
+  color: string;
+  onPress: () => void;
+  compact?: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        {
+          flex: 1,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: compact ? 10 : 12,
+          padding: 12,
+          borderRadius: radius.lg,
+          backgroundColor: color,
+          opacity: pressed ? 0.85 : 1,
+        },
+      ]}
+    >
+      <View
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: 'rgba(255,255,255,0.18)',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Ionicons name={icon} size={20} color="#FFF" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <T v="h3" color="#FFF" numberOfLines={1}>
+          {title}
+        </T>
+        <T v="caption" color="rgba(255,255,255,0.8)" numberOfLines={1}>
+          {sub}
+        </T>
+      </View>
+      {!compact && <Ionicons name="chevron-forward" size={20} color="#FFF" />}
+    </Pressable>
   );
 }

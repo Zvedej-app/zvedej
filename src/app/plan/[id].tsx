@@ -3,18 +3,22 @@ import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { CalendarPicker } from '../../components/CalendarPicker';
 import { DayExercises } from '../../components/training/DayExercises';
-import { Button, Card, Chip, Field, Header, IconButton, ListItem, Row, Screen, Sheet, T } from '../../components/ui';
+import { Banner, Button, Card, Chip, Field, Header, IconButton, ListItem, Row, Screen, Sheet, T } from '../../components/ui';
 import { range, Wheel } from '../../components/WheelPicker';
 import { newPlan } from '../../data/templates';
 import { addDays, formatDate, nextMonday, parseISODate, startOfWeek, toISODate, todayISO } from '../../lib/date';
 import { confirm } from '../../lib/dialog';
 import type { TKey } from '../../lib/i18n';
 import { uid } from '../../lib/id';
-import { dayLabel } from '../../lib/training';
+import { dayLabel, planWeek } from '../../lib/training';
 import type { PlanDay, TrainingPlan } from '../../lib/types';
-import { formatNumber } from '../../lib/units';
+import { formatNumber, ROUND_KG } from '../../lib/units';
 import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
+import { useAuth } from '../../providers/AuthProvider';
+import { api } from '../../lib/api';
+import { exerciseName } from '../../data/exercises';
+import { schemeLabel } from '../../components/training/format';
 
 const WEEKS: number[] = [0, ...range(1, 24)];
 const INCREMENTS = [0, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5];
@@ -25,6 +29,8 @@ export default function PlanEditor() {
   const { t, colors } = useSettings();
   const training = useTraining();
   const existing = training.data.plans.find((p) => p.id === id) ?? null;
+  const { profile } = useAuth();
+  const isCoach = !!profile?.isCoach;
   const [plan, setPlan] = useState<TrainingPlan>(() => existing ?? newPlan({ name: '' }));
   // nový plán se tvoří průvodcem po krocích, existující se upravuje na jedné stránce
   const wizard = !existing;
@@ -39,10 +45,14 @@ export default function PlanEditor() {
   const wdName = (w: number) => t(`tr.weekdayFull.${w}` as TKey);
 
   const save = () => {
-    const final = { ...plan, name: plan.name.trim() || t('tr.newPlan') };
+    const final = { ...plan, name: plan.name.trim() || t('tr.newPlan'), updatedAt: new Date().toISOString() };
     training.savePlan(final);
+    // už poslaný plán se svěřencům aktualizuje
+    if (isCoach && !final.fromCoach) api.updateAssignedPlan(final).catch(() => {});
     return final;
   };
+
+  if (existing?.fromCoach) return <CoachPlanView plan={existing} />;
 
   /* ---------------------------- průvodce ---------------------------- */
   if (wizard) {
@@ -73,13 +83,22 @@ export default function PlanEditor() {
     return (
       <Screen>
         <Header
-          left={<IconButton name={step === 1 ? 'close' : 'chevron-back'} onPress={() => (step === 1 ? router.back() : setStep(step - 1))} label={t('common.back')} />}
+          left={
+            <IconButton
+              name={step === 1 ? 'close' : 'chevron-back'}
+              onPress={() => (step === 1 ? router.back() : setStep(step - 1))}
+              label={t('common.back')}
+            />
+          }
           title={t('tr.newPlan')}
         />
         <View style={{ paddingHorizontal: 16, paddingTop: 12, gap: 8 }}>
           <Row gap={6}>
             {[1, 2, 3].map((n) => (
-              <View key={n} style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: n <= step ? colors.accent : colors.border }} />
+              <View
+                key={n}
+                style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: n <= step ? colors.accent : colors.border }}
+              />
             ))}
           </Row>
           <Row style={{ justifyContent: 'space-between' }}>
@@ -102,7 +121,13 @@ export default function PlanEditor() {
                   {WD.map((w) => {
                     const on = plan.days.some((d) => d.weekdays.includes(w));
                     return (
-                      <Chip key={w} label={wdName(w)} on={on} icon={on ? 'checkmark-circle' : 'ellipse-outline'} onPress={() => toggleWeekday(w)} />
+                      <Chip
+                        key={w}
+                        label={wdName(w)}
+                        on={on}
+                        icon={on ? 'checkmark-circle' : 'ellipse-outline'}
+                        onPress={() => toggleWeekday(w)}
+                      />
                     );
                   })}
                 </View>
@@ -123,10 +148,26 @@ export default function PlanEditor() {
         </KeyboardAvoidingView>
         <View style={{ padding: 16, gap: 10, borderTopWidth: 1, borderTopColor: colors.border }}>
           {step < 3 ? (
-            <Button title={t('tr.next')} icon="arrow-forward" disabled={step === 2 && plan.days.length === 0} onPress={() => setStep(step + 1)} />
+            <Button
+              title={t('tr.next')}
+              icon="arrow-forward"
+              disabled={step === 2 && plan.days.length === 0}
+              onPress={() => setStep(step + 1)}
+            />
           ) : (
             <>
               <Button icon="play" title={t('tr.saveActivate')} onPress={() => finish(true)} />
+              {isCoach && (
+                <Button
+                  kind="secondary"
+                  icon="paper-plane-outline"
+                  title={t('coach.saveAndSend')}
+                  onPress={() => {
+                    const p = save();
+                    router.replace(`/team/assign/${p.id}`);
+                  }}
+                />
+              )}
               <Button kind="ghost" title={t('tr.saveDraft')} onPress={() => finish(false)} />
             </>
           )}
@@ -158,6 +199,16 @@ export default function PlanEditor() {
           <DaysSection plan={plan} setPlan={setPlan} patchDay={patchDay} wdName={wdName} />
 
           <View style={{ gap: 10, marginTop: 10 }}>
+            {isCoach && (
+              <Button
+                icon="paper-plane-outline"
+                title={t('coach.sendToAthletes')}
+                onPress={() => {
+                  const p = save();
+                  router.push(`/team/assign/${p.id}`);
+                }}
+              />
+            )}
             {!isRunning && (
               <Button
                 icon="play-outline"
@@ -214,7 +265,10 @@ export default function PlanEditor() {
               icon="trash-outline"
               title={t('common.delete')}
               onPress={async () => {
-                if (!(await confirm(t('tr.deletePlanQ'), { ok: t('common.delete'), cancel: t('common.cancel'), destructive: true }))) return;
+                if (
+                  !(await confirm(t('tr.deletePlanQ'), { ok: t('common.delete'), cancel: t('common.cancel'), destructive: true }))
+                )
+                  return;
                 training.deletePlan(plan.id);
                 router.back();
               }}
@@ -239,17 +293,28 @@ function BasicsSection({ plan, patch }: { plan: TrainingPlan; patch: (p: Partial
 
   return (
     <View style={{ gap: 14 }}>
-      <Field label={t('tr.planName')} placeholder={t('tr.planNamePh')} value={plan.name} onChangeText={(name) => patch({ name })} />
+      <Field
+        label={t('tr.planName')}
+        placeholder={t('tr.planNamePh')}
+        value={plan.name}
+        onChangeText={(name) => patch({ name })}
+      />
       <Card>
         <T v="label" muted>
           {t('tr.startDate')}
         </T>
         <Row style={{ justifyContent: 'space-between' }}>
-          <IconButton name="chevron-back-circle-outline" onPress={() => patch({ startDate: toISODate(addDays(parseISODate(plan.startDate), -1)) })} />
+          <IconButton
+            name="chevron-back-circle-outline"
+            onPress={() => patch({ startDate: toISODate(addDays(parseISODate(plan.startDate), -1)) })}
+          />
           <T v="h3" style={{ textAlign: 'center', flex: 1 }}>
             {formatDate(plan.startDate, locale, { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}
           </T>
-          <IconButton name="chevron-forward-circle-outline" onPress={() => patch({ startDate: toISODate(addDays(parseISODate(plan.startDate), 1)) })} />
+          <IconButton
+            name="chevron-forward-circle-outline"
+            onPress={() => patch({ startDate: toISODate(addDays(parseISODate(plan.startDate), 1)) })}
+          />
         </Row>
         <Row style={{ flexWrap: 'wrap' }} gap={6}>
           <Chip label={t('common.today')} on={plan.startDate === today} onPress={() => patch({ startDate: today })} />
@@ -278,7 +343,11 @@ function BasicsSection({ plan, patch }: { plan: TrainingPlan; patch: (p: Partial
         />
       </Card>
 
-      <Sheet visible={sheet !== null} onClose={() => setSheet(null)} title={sheet === 'weeks' ? t('tr.blockLength') : t('tr.progression')}>
+      <Sheet
+        visible={sheet !== null}
+        onClose={() => setSheet(null)}
+        title={sheet === 'weeks' ? t('tr.blockLength') : t('tr.progression')}
+      >
         <View style={{ alignItems: 'center', gap: 12, paddingHorizontal: 16 }}>
           {sheet === 'weeks' ? (
             <Wheel
@@ -348,7 +417,14 @@ function DaysSection({
                 color={colors.danger}
                 label={t('common.delete')}
                 onPress={async () => {
-                  if (d.exercises.length && !(await confirm(t('common.confirmDelete'), { ok: t('common.delete'), cancel: t('common.cancel'), destructive: true })))
+                  if (
+                    d.exercises.length &&
+                    !(await confirm(t('common.confirmDelete'), {
+                      ok: t('common.delete'),
+                      cancel: t('common.cancel'),
+                      destructive: true,
+                    }))
+                  )
                     return;
                   setPlan((x) => ({ ...x, days: x.days.filter((y) => y.id !== d.id) }));
                 }}
@@ -363,7 +439,10 @@ function DaysSection({
                     label={t(`tr.weekday.${w}` as TKey)}
                     on={on}
                     onPress={() =>
-                      patchDay(d.id, (x) => ({ ...x, weekdays: on ? x.weekdays.filter((y) => y !== w) : [...x.weekdays, w].sort() }))
+                      patchDay(d.id, (x) => ({
+                        ...x,
+                        weekdays: on ? x.weekdays.filter((y) => y !== w) : [...x.weekdays, w].sort(),
+                      }))
                     }
                   />
                 );
@@ -384,10 +463,81 @@ function DaysSection({
         <View style={{ paddingHorizontal: 16, gap: 8 }}>
           {WD.map((w) => {
             const used = plan.days.some((d) => d.weekdays.includes(w));
-            return <ListItem key={w} title={wdName(w)} subtitle={used ? t('tr.sharedDayHint') : undefined} onPress={() => addDay(w)} />;
+            return (
+              <ListItem key={w} title={wdName(w)} subtitle={used ? t('tr.sharedDayHint') : undefined} onPress={() => addDay(w)} />
+            );
           })}
         </View>
       </Sheet>
     </View>
+  );
+}
+
+/** Plán od trenéra – svěřenec ho jen prohlíží (upravit ho může trenér). */
+function CoachPlanView({ plan }: { plan: TrainingPlan }) {
+  const { t, settings, colors, locale } = useSettings();
+  const training = useTraining();
+  const today = todayISO();
+  const running = plan.status === 'active' && plan.startDate <= today && (!plan.endDate || plan.endDate >= today);
+  const week = planWeek(plan);
+  const wdName = (w: number) => t(`tr.weekdayFull.${w}` as TKey);
+  return (
+    <Screen>
+      <Header
+        left={<IconButton name="chevron-back" onPress={() => router.back()} label={t('common.back')} />}
+        title={plan.name}
+      />
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 48 }}>
+        <Banner icon="person-circle-outline" text={t('coach.readOnlyPlan', { name: plan.fromCoach?.coachName ?? '' })} />
+        <T v="small" muted>
+          {t('tr.since', { date: formatDate(plan.startDate, locale) })}
+          {plan.weeks ? ` · ${t('tr.weekOfTotal', { n: week, total: plan.weeks })}` : ''}
+        </T>
+        {plan.days.map((d) => (
+          <Card key={d.id} style={{ gap: 8 }}>
+            <T style={{ fontSize: 20, fontWeight: '800' }}>{dayLabel(d, wdName)}</T>
+            {d.exercises.length === 0 && <T muted>{t('tr.noExercises')}</T>}
+            {d.exercises.map((e, i) => (
+              <View
+                key={e.id}
+                style={{ paddingTop: i ? 8 : 0, borderTopWidth: i ? 1 : 0, borderTopColor: colors.border, gap: 2 }}
+              >
+                <T v="h3">{exerciseName(e.exerciseId, settings.lang, training.data.customExercises, e.customName)}</T>
+                {e.schemes.map((s) => (
+                  <T key={s.id} muted>
+                    {schemeLabel(s, training.data, plan, week, settings.unit, ROUND_KG)}
+                  </T>
+                ))}
+                {e.note ? (
+                  <T v="small" muted style={{ fontStyle: 'italic' }}>
+                    {e.note}
+                  </T>
+                ) : null}
+              </View>
+            ))}
+          </Card>
+        ))}
+        {running ? (
+          <Button
+            kind="ghost"
+            icon="archive-outline"
+            title={t('tr.archive')}
+            onPress={() => {
+              training.archivePlan(plan.id);
+              router.back();
+            }}
+          />
+        ) : (
+          <Button
+            icon="play-outline"
+            title={t('tr.activate')}
+            onPress={() => {
+              training.activatePlan(plan.id);
+              router.back();
+            }}
+          />
+        )}
+      </ScrollView>
+    </Screen>
   );
 }

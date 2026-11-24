@@ -79,6 +79,14 @@ function App() {
             <Stack.Screen name="videos" options={{ animation: 'fade' }} />
             <Stack.Screen name="blocked" />
             <Stack.Screen name="moderation" />
+            <Stack.Screen name="coaches" />
+            <Stack.Screen name="join/[id]" />
+            <Stack.Screen name="team/index" />
+            <Stack.Screen name="team/invite" />
+            <Stack.Screen name="team/[id]" />
+            <Stack.Screen name="team/log" />
+            <Stack.Screen name="team/group/[id]" />
+            <Stack.Screen name="team/assign/[planId]" options={{ presentation: 'modal' }} />
           </Stack.Protected>
           <Stack.Protected guard={!signedIn}>
             <Stack.Screen name="auth" />

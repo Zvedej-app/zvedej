@@ -6,6 +6,10 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from '../config';
 import { currentMonthKey } from '../date';
 import { fallbackTheme } from '../../data/themes';
 import type {
+  AssignedPlan,
+  TrainingPlan,
+  TrainingVideo,
+  WorkoutComment,
   ChallengeTheme,
   ChallengeVideo,
   ContentReport,
@@ -42,6 +46,7 @@ function mapProfile(r: Row): Profile {
     showBodyweight: !!r.show_bodyweight,
     isPublic: r.is_public ?? true,
     isAdmin: !!r.is_admin,
+    isCoach: !!r.is_coach,
     bannedAt: r.banned_at ?? null,
     banReason: r.ban_reason ?? null,
     createdAt: r.created_at,
@@ -62,6 +67,7 @@ function profileToRow(p: Partial<Profile>): Row {
     ['prSnatch', 'pr_snatch'],
     ['prCleanJerk', 'pr_clean_jerk'],
     ['showBodyweight', 'show_bodyweight'],
+    ['isCoach', 'is_coach'],
     ['isPublic', 'is_public'],
   ];
   const out: Row = {};
@@ -89,6 +95,33 @@ function mapReport(r: Row): ContentReport {
     videoUrl: r.video_url,
     videoHidden: r.video_hidden,
     sameTargetReports: Number(r.same_target_reports ?? 0),
+  };
+}
+
+function mapAssigned(r: Row): AssignedPlan {
+  return {
+    id: r.id,
+    coachId: r.coach_id,
+    coachName: r.coach ? `${r.coach.first_name ?? ''} ${r.coach.last_name ?? ''}`.trim() : '',
+    athleteId: r.athlete_id,
+    sourcePlanId: r.source_plan_id,
+    plan: r.plan as TrainingPlan,
+    updatedAt: r.updated_at,
+    seenAt: r.seen_at,
+  };
+}
+
+function mapComment(r: Row): WorkoutComment {
+  return {
+    id: r.id,
+    athleteId: r.athlete_id,
+    logId: r.log_id,
+    authorId: r.author_id,
+    authorName: r.author ? `${r.author.first_name ?? ''} ${r.author.last_name ?? ''}`.trim() : '',
+    authorAvatar: r.author?.avatar_url ?? null,
+    body: r.body,
+    createdAt: r.created_at,
+    readAt: r.read_at,
   };
 }
 
@@ -610,6 +643,224 @@ export function createSupabaseBackend(): Backend {
       const { data, error } = await sb.rpc('export_my_data');
       if (error) throw error;
       return data;
+    },
+
+    async coachTeam() {
+      const { data, error } = await sb.rpc('coach_team');
+      if (error) throw error;
+      return (data ?? []).map((r: Row) => ({
+        profile: mapProfile(r.profile),
+        status: r.status,
+        shareBodyweight: !!r.share_bodyweight,
+        createdAt: r.created_at,
+        maxes: r.maxes ?? {},
+        recentLogs: r.recent_logs ?? [],
+      }));
+    },
+    async inviteAthlete(athleteId) {
+      const me = await myId();
+      if (!me) throw new Error('not signed in');
+      const { error } = await sb.from('coach_links').insert({ coach_id: me, athlete_id: athleteId });
+      if (error && error.code !== '23505') throw error;
+    },
+    async removeCoachLink(coachId, athleteId) {
+      const { error } = await sb.from('coach_links').delete().eq('coach_id', coachId).eq('athlete_id', athleteId);
+      if (error) throw error;
+    },
+    async athleteTraining(athleteId) {
+      const { data, error } = await sb.rpc('coach_athlete_training', { p_athlete: athleteId });
+      if (error) throw error;
+      return (data as TrainingData) ?? null;
+    },
+    async listGroups() {
+      const { data, error } = await sb
+        .from('coach_groups')
+        .select('id, name, members:coach_group_members(athlete_id)')
+        .order('name');
+      if (error) throw error;
+      return (data ?? []).map((g: Row) => ({
+        id: g.id,
+        name: g.name,
+        memberIds: (g.members ?? []).map((m: Row) => m.athlete_id),
+      }));
+    },
+    async saveGroup(group) {
+      const me = await myId();
+      if (!me) throw new Error('not signed in');
+      let id = group.id;
+      if (id.startsWith('new')) {
+        const { data, error } = await sb
+          .from('coach_groups')
+          .insert({ coach_id: me, name: group.name.trim() })
+          .select('id')
+          .single();
+        if (error) throw error;
+        id = data.id;
+      } else {
+        const { error } = await sb.from('coach_groups').update({ name: group.name.trim() }).eq('id', id);
+        if (error) throw error;
+        await sb.from('coach_group_members').delete().eq('group_id', id);
+      }
+      if (group.memberIds.length) {
+        const { error } = await sb
+          .from('coach_group_members')
+          .insert(group.memberIds.map((a) => ({ group_id: id, athlete_id: a })));
+        if (error) throw error;
+      }
+      return { ...group, id };
+    },
+    async deleteGroup(id) {
+      const { error } = await sb.from('coach_groups').delete().eq('id', id);
+      if (error) throw error;
+    },
+    async assignPlan(plan, athleteIds) {
+      const me = await myId();
+      if (!me || !athleteIds.length) return;
+      const { error } = await sb.from('assigned_plans').upsert(
+        athleteIds.map((a) => ({ coach_id: me, athlete_id: a, source_plan_id: plan.id, plan })),
+        { onConflict: 'coach_id,athlete_id,source_plan_id' },
+      );
+      if (error) throw error;
+    },
+    async planAssignees(sourcePlanId) {
+      const me = await myId();
+      if (!me) return [];
+      const { data } = await sb.from('assigned_plans').select('athlete_id').eq('coach_id', me).eq('source_plan_id', sourcePlanId);
+      return (data ?? []).map((r: Row) => r.athlete_id as string);
+    },
+    async unassignPlan(sourcePlanId, athleteId) {
+      const me = await myId();
+      if (!me) return;
+      const { error } = await sb
+        .from('assigned_plans')
+        .delete()
+        .eq('coach_id', me)
+        .eq('source_plan_id', sourcePlanId)
+        .eq('athlete_id', athleteId);
+      if (error) throw error;
+    },
+    async updateAssignedPlan(plan) {
+      const me = await myId();
+      if (!me) return;
+      await sb.from('assigned_plans').update({ plan }).eq('coach_id', me).eq('source_plan_id', plan.id);
+    },
+    async myCoaches() {
+      const { data, error } = await sb.rpc('my_coaches');
+      if (error) return [];
+      return (data ?? []).map((r: Row) => ({
+        profile: mapProfile(r.profile),
+        status: r.status,
+        shareBodyweight: !!r.share_bodyweight,
+        createdAt: r.created_at,
+      }));
+    },
+    async acceptCoach(coachId, shareBodyweight) {
+      const { error } = await sb.rpc('accept_coach', { p_coach: coachId, p_share_bodyweight: shareBodyweight });
+      if (error) throw error;
+    },
+    async setCoachShare(coachId, shareBodyweight) {
+      const { error } = await sb.rpc('set_coach_share', { p_coach: coachId, p_share_bodyweight: shareBodyweight });
+      if (error) throw error;
+    },
+    async getCoach(coachId) {
+      const { data } = await sb.from('profiles').select('*').eq('id', coachId).maybeSingle();
+      return data && data.is_coach ? mapProfile(data) : null;
+    },
+    async myAssignedPlans() {
+      const me = await myId();
+      if (!me) return [];
+      const { data, error } = await sb
+        .from('assigned_plans')
+        .select('*, coach:profiles!assigned_plans_coach_id_fkey(first_name, last_name)')
+        .eq('athlete_id', me);
+      if (error) return [];
+      return (data ?? []).map(mapAssigned);
+    },
+    async markAssignedPlansSeen() {
+      await sb.rpc('mark_assigned_plans_seen');
+    },
+    async listComments(athleteId, logId) {
+      const { data, error } = await sb
+        .from('workout_comments')
+        .select('*, author:profiles!workout_comments_author_id_fkey(first_name, last_name, avatar_url)')
+        .eq('athlete_id', athleteId)
+        .eq('log_id', logId)
+        .order('created_at');
+      if (error) throw error;
+      return (data ?? []).map(mapComment);
+    },
+    async addComment(athleteId, logId, body) {
+      const me = await myId();
+      if (!me) throw new Error('not signed in');
+      const { data, error } = await sb
+        .from('workout_comments')
+        .insert({ athlete_id: athleteId, log_id: logId, author_id: me, body: body.trim() })
+        .select('*, author:profiles!workout_comments_author_id_fkey(first_name, last_name, avatar_url)')
+        .single();
+      if (error) throw error;
+      return mapComment(data);
+    },
+    async deleteComment(id) {
+      const { error } = await sb.from('workout_comments').delete().eq('id', id);
+      if (error) throw error;
+    },
+    async markCommentsRead(athleteId, logId) {
+      await sb.rpc('mark_comments_read', { p_athlete: athleteId, p_log: logId });
+    },
+    async unreadComments() {
+      const { data, error } = await sb.rpc('unread_comments');
+      if (error) return {};
+      const out: Record<string, number> = {};
+      for (const r of data ?? []) out[`${r.athlete_id}:${r.log_id}`] = Number(r.unread);
+      return out;
+    },
+    async listTrainingVideos(athleteId, logId) {
+      const { data, error } = await sb
+        .from('training_videos')
+        .select('*')
+        .eq('athlete_id', athleteId)
+        .eq('log_id', logId)
+        .order('created_at');
+      if (error) throw error;
+      const rows = (data ?? []) as Row[];
+      if (!rows.length) return [];
+      const { data: signed } = await sb.storage.from('training-videos').createSignedUrls(
+        rows.map((r) => r.storage_path),
+        60 * 60,
+      );
+      return rows.map(
+        (r, i): TrainingVideo => ({
+          id: r.id,
+          athleteId: r.athlete_id,
+          logId: r.log_id,
+          url: signed?.[i]?.signedUrl ?? '',
+          caption: r.caption,
+          createdAt: r.created_at,
+        }),
+      );
+    },
+    async uploadTrainingVideo(athleteId, logId, uri, mimeType) {
+      const path = `${athleteId}/${logId}-${Date.now()}.${extFromMime(mimeType, 'mp4')}`;
+      const body = await readAsArrayBuffer(uri);
+      const up = await sb.storage.from('training-videos').upload(path, body, { contentType: mimeType });
+      if (up.error) throw up.error;
+      const { data, error } = await sb
+        .from('training_videos')
+        .insert({ athlete_id: athleteId, log_id: logId, storage_path: path })
+        .select('*')
+        .single();
+      if (error) {
+        await sb.storage.from('training-videos').remove([path]);
+        throw error;
+      }
+      const { data: s1 } = await sb.storage.from('training-videos').createSignedUrl(path, 60 * 60);
+      return { id: data.id, athleteId, logId, url: s1?.signedUrl ?? '', caption: null, createdAt: data.created_at };
+    },
+    async deleteTrainingVideo(video) {
+      const { data } = await sb.from('training_videos').select('storage_path').eq('id', video.id).maybeSingle();
+      const { error } = await sb.from('training_videos').delete().eq('id', video.id);
+      if (error) throw error;
+      if (data?.storage_path) await sb.storage.from('training-videos').remove([data.storage_path]);
     },
 
     async loadTraining(userId) {

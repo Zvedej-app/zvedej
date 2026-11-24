@@ -1,14 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { exerciseName } from '../../data/exercises';
 import { TEMPLATES } from '../../data/templates';
 import { formatDate, todayISO, weekdayMon0 } from '../../lib/date';
 import { toast } from '../../lib/dialog';
+import { api } from '../../lib/api';
 import { plural, type TKey } from '../../lib/i18n';
 import { activePlan, dayForDate, dayLabel, planWeek, upcomingPlan, workoutFromDay } from '../../lib/training';
-import type { PlanDay, TrainingPlan } from '../../lib/types';
+import type { AssignedPlan, MyCoach, PlanDay, TrainingPlan } from '../../lib/types';
 import { formatNumber, ROUND_KG } from '../../lib/units';
 import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
@@ -33,6 +34,30 @@ export function TodayView() {
   const [editing, setEditing] = useState(false);
   const day = plan?.days.find((d) => d.id === picked) ?? todayDay;
   const { profile } = useAuth();
+  const [invites, setInvites] = useState<MyCoach[]>([]);
+  const [newPlans, setNewPlans] = useState<AssignedPlan[]>([]);
+  const sync = training.syncCoachPlans;
+  useFocusEffect(
+    useCallback(() => {
+      let alive = true;
+      sync();
+      api
+        .myCoaches()
+        .then((l) => alive && setInvites(l.filter((c) => c.status === 'pending')))
+        .catch(() => {});
+      api
+        .myAssignedPlans()
+        .then((l) => alive && setNewPlans(l.filter((a) => !a.seenAt)))
+        .catch(() => {});
+      return () => {
+        alive = false;
+      };
+    }, [sync]),
+  );
+  const seeNewPlans = () => {
+    setNewPlans([]);
+    api.markAssignedPlansSeen().catch(() => {});
+  };
   const wdName = (w: number) => t(`tr.weekdayFull.${w}` as TKey);
   const label = (d: PlanDay) => dayLabel(d, wdName, todayWd);
 
@@ -73,6 +98,48 @@ export function TodayView() {
         </T>
       </View>
 
+      {invites.map((c) => (
+        <Card
+          key={c.profile.id}
+          onPress={() => router.push('/coaches')}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: colors.accent, borderWidth: 1.5 }}
+        >
+          <Ionicons name="people" size={24} color={colors.accent} />
+          <View style={{ flex: 1 }}>
+            <T style={{ fontWeight: '800' }}>
+              {t('coach.inviteBanner', { name: `${c.profile.firstName} ${c.profile.lastName}`.trim() })}
+            </T>
+            <T v="caption" muted>
+              {t('coach.inviteBannerSub')}
+            </T>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </Card>
+      ))}
+
+      {newPlans.length > 0 && (
+        <Card style={{ gap: 10, backgroundColor: colors.success, borderColor: colors.success }}>
+          <Row gap={10}>
+            <Ionicons name="paper-plane" size={22} color="#FFF" />
+            <View style={{ flex: 1 }}>
+              <T style={{ fontWeight: '800' }} color="#FFF">
+                {t('coach.newPlanBanner', { name: newPlans[0].coachName })}
+              </T>
+              <T v="small" color="rgba(255,255,255,0.9)">
+                {newPlans.map((a) => a.plan.name).join(', ')}
+              </T>
+            </View>
+          </Row>
+          <Button
+            small
+            kind="secondary"
+            title={t('coach.gotIt')}
+            onPress={seeNewPlans}
+            style={{ alignSelf: 'flex-start', backgroundColor: '#FFF' }}
+          />
+        </Card>
+      )}
+
       <WeekHero data={data} plan={plan} />
 
       {plan ? (
@@ -84,7 +151,7 @@ export function TodayView() {
           >
             <Row style={{ justifyContent: 'space-between' }}>
               <T v="label" color={colors.success}>
-                {t('tr.activePlan')}
+                {plan.fromCoach ? t('coach.planFrom', { name: plan.fromCoach.coachName }) : t('tr.activePlan')}
               </T>
               <T v="small" muted>
                 {plan.weeks ? t('tr.weekOfTotal', { n: week, total: plan.weeks }) : t('tr.weekOf', { n: week })}
@@ -154,15 +221,17 @@ export function TodayView() {
                 <T v="h1" style={{ flex: 1, fontSize: 26 }}>
                   {label(day)}
                 </T>
-                <Chip
-                  icon={editing ? 'checkmark' : 'create-outline'}
-                  label={editing ? t('tr.editDone') : t('common.edit')}
-                  on={editing}
-                  onPress={() => {
-                    if (editing) toast(t('tr.savedToPlan'));
-                    setEditing(!editing);
-                  }}
-                />
+                {!plan.fromCoach && (
+                  <Chip
+                    icon={editing ? 'checkmark' : 'create-outline'}
+                    label={editing ? t('tr.editDone') : t('common.edit')}
+                    on={editing}
+                    onPress={() => {
+                      if (editing) toast(t('tr.savedToPlan'));
+                      setEditing(!editing);
+                    }}
+                  />
+                )}
               </Row>
               {editing ? (
                 <DayExercises

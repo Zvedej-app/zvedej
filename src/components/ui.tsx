@@ -189,7 +189,12 @@ export function PressScale({
 }) {
   const [scale] = React.useState(() => new Animated.Value(1));
   const to = (v: number) =>
-    Animated.spring(scale, { toValue: v, useNativeDriver: Platform.OS !== 'web', speed: 40, bounciness: v === 1 ? 8 : 0 }).start();
+    Animated.spring(scale, {
+      toValue: v,
+      useNativeDriver: Platform.OS !== 'web',
+      speed: 40,
+      bounciness: v === 1 ? 8 : 0,
+    }).start();
   return (
     <AnimatedPressable
       accessibilityRole={accessibilityRole}
@@ -606,12 +611,16 @@ export function ListItem({
       {onPress && toggle === undefined && <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />}
     </Row>
   );
-  if (!onPress) return content;
+  // řádek s přepínačem jde přepnout klepnutím kamkoli na řádek
+  const press = onPress ?? (toggle !== undefined && onToggle ? () => onToggle(!toggle) : null);
+  if (!press) return content;
   return (
     <Pressable
+      accessibilityRole={toggle !== undefined && !onPress ? 'switch' : 'button'}
+      accessibilityState={toggle !== undefined ? { checked: toggle } : undefined}
       onPress={() => {
         tap();
-        onPress();
+        press();
       }}
       style={({ pressed }) => pressed && { opacity: 0.6 }}
     >

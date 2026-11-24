@@ -183,6 +183,17 @@ export default function SettingsScreen() {
             <ListItem icon="ban-outline" title={t('safety.blockedUsers')} onPress={() => router.push('/blocked')} />
           </ListGroup>
 
+          <ListGroup title={t('coach.section')}>
+            <ListItem icon="people-outline" title={t('coach.myCoaches')} onPress={() => router.push('/coaches')} />
+            <ListItem
+              icon="clipboard-outline"
+              title={t('coach.iAmCoach')}
+              subtitle={t('coach.iAmCoachHint')}
+              toggle={profile?.isCoach ?? false}
+              onToggle={(isCoach) => saveProfile({ isCoach }).catch(() => {})}
+            />
+          </ListGroup>
+
           {profile?.isAdmin && (
             <ListGroup title={t('mod.section')}>
               <ListItem icon="shield-checkmark-outline" title={t('mod.title')} onPress={() => router.push('/moderation')} />

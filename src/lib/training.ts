@@ -1,7 +1,7 @@
 import { getExercise, MAX_LIFTS } from '../data/exercises';
 import { addDays, parseISODate, startOfWeek, toISODate, todayISO, weekNumberSince, weekdayMon0 } from './date';
 import { uid } from './id';
-import type { LoadSpec, LoggedExercise, PlanDay, SetScheme, TrainingData, TrainingPlan, WorkoutLog } from './types';
+import type { AssignedPlan, LoadSpec, LoggedExercise, PlanDay, SetScheme, TrainingData, TrainingPlan, WorkoutLog } from './types';
 import { roundTo } from './units';
 
 export const EMPTY_TRAINING: TrainingData = {
@@ -185,4 +185,41 @@ export function dayLabel(day: PlanDay, weekdayName: (w: number) => string, refWe
 /** Cviky v sekci „Moje maxima“: základní + přidané uživatelem + všechny, které mají zadanou hodnotu. */
 export function maxLiftIds(data: TrainingData) {
   return Array.from(new Set([...MAX_LIFTS, ...(data.maxLifts ?? []), ...Object.keys(data.maxes)]));
+}
+
+/**
+ * Promítne plány od trenéra do tréninkových dat svěřence.
+ * Nový plán se přidá jako aktivní, změněný se přepíše (stav a konec ponechá svěřenec),
+ * plán, který trenér odebral, se archivuje. Bez změny vrací stejný objekt.
+ */
+export function mergeAssignedPlans(data: TrainingData, assigned: AssignedPlan[]): TrainingData {
+  let changed = false;
+  const today = todayISO();
+  const ids = new Set(assigned.map((a) => `coach-${a.id}`));
+  const plans = data.plans.map((p) => {
+    if (p.fromCoach && !ids.has(p.id) && p.status === 'active') {
+      changed = true;
+      return { ...p, status: 'archived' as const, endDate: p.endDate && p.endDate < today ? p.endDate : today };
+    }
+    return p;
+  });
+  for (const a of assigned) {
+    const id = `coach-${a.id}`;
+    const i = plans.findIndex((p) => p.id === id);
+    const existing = i >= 0 ? plans[i] : null;
+    if (existing && existing.updatedAt === a.updatedAt) continue;
+    changed = true;
+    const next: TrainingPlan = {
+      ...a.plan,
+      id,
+      status: existing ? existing.status : 'active',
+      endDate: existing ? existing.endDate : a.plan.endDate && a.plan.endDate >= today ? a.plan.endDate : null,
+      fromCoach: { coachId: a.coachId, coachName: a.coachName, assignmentId: a.id },
+      updatedAt: a.updatedAt,
+      createdAt: existing?.createdAt ?? a.updatedAt,
+    };
+    if (existing) plans[i] = next;
+    else plans.push(next);
+  }
+  return changed ? { ...data, plans } : data;
 }

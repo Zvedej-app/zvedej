@@ -3,7 +3,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { api } from '../lib/api';
 import { addDays, nextMonday, startOfWeek, toISODate, todayISO } from '../lib/date';
 import { uid } from '../lib/id';
-import { clonePlan, EMPTY_TRAINING, mergeTraining } from '../lib/training';
+import { clonePlan, EMPTY_TRAINING, mergeAssignedPlans, mergeTraining } from '../lib/training';
 import type { LoggedExercise, TrainingData, TrainingPlan, WorkoutLog } from '../lib/types';
 import { useAuth } from './AuthProvider';
 
@@ -45,6 +45,8 @@ interface Ctx {
   discardWorkout: () => void;
   saveLog: (log: WorkoutLog) => void;
   deleteLog: (id: string) => void;
+  /** stáhne plány od trenéra a promítne je do dat */
+  syncCoachPlans: () => Promise<void>;
 }
 
 const TrainingContext = createContext<Ctx | null>(null);
@@ -60,6 +62,7 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const ready = loadedFor === userId;
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const syncRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -80,11 +83,13 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
           const remote = await api.loadTraining(userId);
           const merged = mergeTraining(local, remote);
           if (alive && merged !== local) {
+            local = merged;
             setData(merged);
             AsyncStorage.setItem(dataKey(userId), JSON.stringify(merged)).catch(() => {});
           }
         } catch {}
       }
+      if (alive && userId !== 'anon') syncRef.current?.();
     })();
     return () => {
       alive = false;
@@ -186,8 +191,7 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
           else delete maxes[exerciseId];
           return { ...d, maxes };
         }),
-      addMaxLift: (exerciseId) =>
-        mutate((d) => ({ ...d, maxLifts: Array.from(new Set([...(d.maxLifts ?? []), exerciseId])) })),
+      addMaxLift: (exerciseId) => mutate((d) => ({ ...d, maxLifts: Array.from(new Set([...(d.maxLifts ?? []), exerciseId])) })),
       removeMaxLift: (exerciseId) =>
         mutate((d) => {
           const maxes = { ...d.maxes };
@@ -227,8 +231,25 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
       discardWorkout: () => setActivePersist(null),
       saveLog: (log) => mutate((d) => ({ ...d, logs: [...d.logs.filter((l) => l.id !== log.id), log] })),
       deleteLog: (id) => mutate((d) => ({ ...d, logs: d.logs.filter((l) => l.id !== id) })),
+      syncCoachPlans: async () => {
+        if (userId === 'anon') return;
+        try {
+          const assigned = await api.myAssignedPlans();
+          setData((d) => {
+            const next = mergeAssignedPlans(d, assigned);
+            if (next === d) return d;
+            const out = { ...next, updatedAt: new Date().toISOString() };
+            persist(out);
+            return out;
+          });
+        } catch {}
+      },
     };
-  }, [data, ready, active, mutate, setActivePersist, userId]);
+  }, [data, ready, active, mutate, setActivePersist, userId, persist]);
+
+  useEffect(() => {
+    syncRef.current = value.syncCoachPlans;
+  }, [value]);
 
   return <TrainingContext.Provider value={value}>{children}</TrainingContext.Provider>;
 }

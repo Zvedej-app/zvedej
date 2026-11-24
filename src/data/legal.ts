@@ -66,6 +66,7 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
       h: '5. Kdo k údajům má přístup',
       p: [
         'Ostatní uživatelé vidí váš veřejný profil (jméno, foto, klub, kategorii, rekordy), vaše videa ve výzvě a zprávy, které jim pošlete. Ve vyhledávání se můžete skrýt v nastavení.',
+        'Trenér, ke kterému se sami připojíte (svým souhlasem), vidí váš deník tréninků, maxima, plány a videa, která k tréninku nahrajete; tělesnou hmotnost jen s vaším zvláštním souhlasem. Spojení můžete kdykoli zrušit v Nastavení → Moji trenéři. Svěřenci mladší 18 let se mohou připojit jen k trenérovi ze svého klubu.',
         'Zpracovatelé, kteří pro nás zajišťují provoz: Supabase Inc. (databáze, přihlášení a úložiště, servery v EU – Frankfurt), případně Cloudflare Inc. (úložiště videí) a GitHub Inc. (hostování webové verze aplikace). Se zpracovateli máme uzavřené smlouvy o zpracování osobních údajů.',
         'Údaje neprodáváme a nepředáváme k marketingovým účelům.',
       ],
@@ -127,6 +128,7 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
       h: '5. Kto má k údajom prístup',
       p: [
         'Ostatní používatelia vidia váš verejný profil, vaše videá vo výzve a správy, ktoré im pošlete. Vo vyhľadávaní sa môžete skryť v nastaveniach.',
+        'Tréner, ku ktorému sa sami pripojíte (svojím súhlasom), vidí váš denník tréningov, maximá, plány a videá, ktoré k tréningu nahráte; telesnú hmotnosť len s vaším osobitným súhlasom. Spojenie môžete kedykoľvek zrušiť v Nastaveniach → Moji tréneri. Zverenci mladší ako 18 rokov sa môžu pripojiť len k trénerovi zo svojho klubu.',
         'Sprostredkovatelia: Supabase Inc. (databáza, prihlásenie a úložisko, servery v EÚ – Frankfurt), prípadne Cloudflare Inc. (úložisko videí) a GitHub Inc. (hosting webovej verzie). So sprostredkovateľmi máme uzavreté zmluvy o spracúvaní osobných údajov.',
         'Údaje nepredávame ani neposkytujeme na marketingové účely.',
       ],
@@ -185,6 +187,7 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
       h: '5. Who can access the data',
       p: [
         'Other users see your public profile, your challenge videos and the messages you send them. You can hide from search in settings.',
+        'A coach you join (with your consent) sees your training log, maxes, plans and videos you upload to a workout; bodyweight only with your separate consent. You can disconnect at any time in Settings → My coaches. Athletes under 18 can only join a coach from their own club.',
         'Processors: Supabase Inc. (database, sign-in and storage, servers in the EU – Frankfurt), where applicable Cloudflare Inc. (video storage) and GitHub Inc. (hosting of the web version). We have data processing agreements with them.',
         'We do not sell your data or share it for marketing.',
       ],

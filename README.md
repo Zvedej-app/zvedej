@@ -227,3 +227,18 @@ Nastavení správce (v Supabase SQL Editoru):
 update public.profiles set is_admin = true
  where id = (select id from auth.users where email = 'tvuj@email.cz');
 ```
+
+## Trenérský režim (verze 1.4)
+
+- **Zapnutí:** Nastavení → Trenér → „Jsem trenér“. V Trénincích přibude tlačítko **Tým**.
+- **Pozvání svěřenců:** odkazem, QR kódem (vytisknout do posilovny) nebo podle jména. Svěřenec musí souhlasit a vidí přesně,
+  co trenér uvidí; tělesnou hmotnost sdílí jen se zvláštním souhlasem. Svěřenci do 18 let se mohou připojit jen k trenérovi
+  ze svého klubu (hlídá databáze).
+- **Přehled týmu:** poslední trénink (červeně po 7 dnech), tréninky tento týden, RPE, pocit, poznámky (např. bolest) a nepřečtené komentáře.
+- **Detail svěřence:** deník, grafy (vývoj váhy u cviku, tonáž po týdnech), poslané plány.
+- **Plány:** trenér plán vytvoří v Plánech a pošle ho jednomu, více svěřencům nebo celé skupině. Plán může být v procentech
+  (přepočítají se z maxim každého svěřence), v kilech, podle RPE i bez zátěže. Úprava poslaného plánu se svěřencům promítne sama.
+  Svěřenec plán od trenéra nemůže měnit, váhy si ale upraví přímo v tréninku.
+- **Zpětná vazba:** komentáře u každého tréninku a soukromá videa nástupů (bucket `training-videos`, vidí je jen svěřenec a jeho trenéři).
+- **Skupiny a žebříček:** tonáž a počet tréninků za měsíc, Sinclair z osobních rekordů.
+- Databáze: migrace `supabase/migrations/20261126000000_coach.sql`.

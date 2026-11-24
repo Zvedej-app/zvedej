@@ -1,4 +1,11 @@
 import type {
+  AssignedPlan,
+  CoachGroup,
+  MyCoach,
+  TeamMember,
+  TrainingPlan,
+  TrainingVideo,
+  WorkoutComment,
   ChallengeTheme,
   ChallengeVideo,
   ContentReport,
@@ -110,6 +117,43 @@ export interface Backend {
   markNoticesSeen(): Promise<void>;
   /** Všechna moje data jako JSON (GDPR) */
   exportMyData(): Promise<unknown>;
+
+  // trenér
+  /** svěřenci a čekající pozvánky */
+  coachTeam(): Promise<TeamMember[]>;
+  inviteAthlete(athleteId: string): Promise<void>;
+  /** zruší spojení (trenér i svěřenec) */
+  removeCoachLink(coachId: string, athleteId: string): Promise<void>;
+  /** celá tréninková data svěřence */
+  athleteTraining(athleteId: string): Promise<TrainingData | null>;
+  listGroups(): Promise<CoachGroup[]>;
+  saveGroup(group: CoachGroup): Promise<CoachGroup>;
+  deleteGroup(id: string): Promise<void>;
+  /** pošle (nebo aktualizuje) plán svěřencům */
+  assignPlan(plan: TrainingPlan, athleteIds: string[]): Promise<void>;
+  /** komu je plán poslaný */
+  planAssignees(sourcePlanId: string): Promise<string[]>;
+  unassignPlan(sourcePlanId: string, athleteId: string): Promise<void>;
+  /** aktualizuje už poslaný plán u všech svěřenců */
+  updateAssignedPlan(plan: TrainingPlan): Promise<void>;
+  // svěřenec
+  myCoaches(): Promise<MyCoach[]>;
+  acceptCoach(coachId: string, shareBodyweight: boolean): Promise<void>;
+  setCoachShare(coachId: string, shareBodyweight: boolean): Promise<void>;
+  /** profil trenéra pro připojení odkazem */
+  getCoach(coachId: string): Promise<Profile | null>;
+  myAssignedPlans(): Promise<AssignedPlan[]>;
+  markAssignedPlansSeen(): Promise<void>;
+  // komentáře a videa k tréninkům
+  listComments(athleteId: string, logId: string): Promise<WorkoutComment[]>;
+  addComment(athleteId: string, logId: string, body: string): Promise<WorkoutComment>;
+  deleteComment(id: string): Promise<void>;
+  markCommentsRead(athleteId: string, logId: string): Promise<void>;
+  /** nepřečtené komentáře: klíč `${athleteId}:${logId}` → počet */
+  unreadComments(): Promise<Record<string, number>>;
+  listTrainingVideos(athleteId: string, logId: string): Promise<TrainingVideo[]>;
+  uploadTrainingVideo(athleteId: string, logId: string, uri: string, mimeType: string): Promise<TrainingVideo>;
+  deleteTrainingVideo(video: TrainingVideo): Promise<void>;
 
   // ČSV
   fetchFeed(kind: 'calendar' | 'news'): Promise<FeedItem[]>;
