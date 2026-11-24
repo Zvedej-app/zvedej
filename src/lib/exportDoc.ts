@@ -35,8 +35,8 @@ export function trainingDoc(data: TrainingData, lang: Lang, unit: Unit, owner: s
 
   const css = `
     .zv{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#0A1633;padding:28px;font-size:13px}
-    h1{color:#000080;margin:0 0 2px;font-size:26px} .sub{color:#5B6B84;margin:0 0 18px}
-    .bar{height:5px;background:linear-gradient(90deg,#000080 33%,#fff 33% 66%,#D4060D 66%);border:1px solid #DCE3EC;margin-bottom:18px}
+    h1{color:#000072;margin:0 0 2px;font-size:26px} .sub{color:#5B6B84;margin:0 0 18px}
+    .bar{height:5px;background:linear-gradient(90deg,#000072 33%,#fff 33% 66%,#D4060D 66%);border:1px solid #DCE3EC;margin-bottom:18px}
     h2{font-size:15px;border-bottom:2px solid #D4060D;padding-bottom:3px;margin:22px 0 8px}
     h3{font-size:14px;margin:14px 0 2px;display:flex;justify-content:space-between} h3 span{color:#5B6B84;font-weight:400}
     .meta{color:#5B6B84;margin:0 0 4px;font-size:12px} table{width:100%;border-collapse:collapse}

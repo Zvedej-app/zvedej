@@ -23,8 +23,8 @@ export interface Palette {
   other: string;
 }
 
-/** Tmavě modrá (navy #000080), červená #D4060D, bílá */
-export const FLAG = { blue: '#000080', red: '#D4060D', white: '#FFFFFF' };
+/** Tmavě modrá (navy #000072), červená #D4060D, bílá */
+export const FLAG = { blue: '#000072', red: '#D4060D', white: '#FFFFFF' };
 
 export const BLUE = {
   50: '#EEF2F7',
@@ -32,10 +32,10 @@ export const BLUE = {
   200: '#A9BFDC',
   300: '#6F93C3',
   400: '#3F6FAE',
-  500: '#1A1A99',
-  600: '#000080',
-  700: '#00006B',
-  800: '#000057',
+  500: '#14148A',
+  600: '#000072',
+  700: '#000060',
+  800: '#00004D',
   900: '#071B35',
   950: '#07142A',
 };
@@ -48,7 +48,7 @@ export const lightPalette: Palette = {
   text: '#0A1633',
   textMuted: '#5B6B84',
   primary: FLAG.blue,
-  primaryStrong: '#00006B',
+  primaryStrong: '#000060',
   primarySoft: '#DDE6F2',
   onPrimary: '#FFFFFF',
   accent: FLAG.red,
