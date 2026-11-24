@@ -105,7 +105,7 @@ function SchemeBody({ scheme, exerciseId, onClose, onSave, onDelete }: SchemeShe
       {type === 'percent' && (
         <View style={{ gap: 8 }}>
           <T v="label" muted>
-            {t('tr.of')} {t('tr.maxes').toLowerCase()}
+            {t('tr.fromMyMax')}
           </T>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             {lifts.map((l) => (

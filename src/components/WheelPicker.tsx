@@ -9,8 +9,6 @@ import {
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
-  type StyleProp,
-  type ViewStyle,
 } from 'react-native';
 import { webTick } from '../lib/tick';
 import { useSettings } from '../providers/SettingsProvider';
@@ -78,13 +76,14 @@ export function Wheel<V extends string | number>({
         else Haptics.selectionAsync().catch(() => {});
       }
     }
-    // po doznění pohybu číslo přesně ukotvíme do středu výběru a teprve pak uložíme
+    // po doznění pohybu (i rychlého švihu) číslo přesně ukotvíme do středu výběru a teprve pak uložíme.
+    // Na webu záměrně není CSS scroll-snap: brzdil by švih a kolečko by jelo pomalu.
     if (settleTimer.current) clearTimeout(settleTimer.current);
     settleTimer.current = setTimeout(() => {
       const target = curRef.current * ITEM_H;
       if (Math.abs(y - target) > 0.5) ref.current?.scrollToOffset({ offset: target, animated: true });
       commit(curRef.current);
-    }, 110);
+    }, 130);
   };
 
   useEffect(
@@ -113,13 +112,12 @@ export function Wheel<V extends string | number>({
           showsVerticalScrollIndicator={false}
           snapToOffsets={offsets}
           snapToAlignment="start"
-          decelerationRate="fast"
+          decelerationRate="normal"
           initialScrollIndex={initial}
           getItemLayout={(_, i) => ({ length: ITEM_H, offset: ITEM_H * i, index: i })}
           contentContainerStyle={{ paddingVertical: pad }}
           onScroll={onScroll}
           scrollEventThrottle={16}
-          style={webSnap(pad)}
           windowSize={7}
           initialNumToRender={15}
           renderItem={({ item, index }) => {
@@ -127,7 +125,7 @@ export function Wheel<V extends string | number>({
             return (
               <Pressable
                 onPress={() => ref.current?.scrollToOffset({ offset: index * ITEM_H, animated: true })}
-                style={[{ height: ITEM_H, alignItems: 'center', justifyContent: 'center' }, webSnapItem]}
+                style={{ height: ITEM_H, alignItems: 'center', justifyContent: 'center' }}
               >
                 <Text
                   style={{
@@ -148,11 +146,6 @@ export function Wheel<V extends string | number>({
     </View>
   );
 }
-
-// Na webu zajistí přesné ukotvení čísla CSS scroll-snap (prohlížeč „zacvakne“ vždy na číslo).
-const webSnap = (pad: number) =>
-  (Platform.OS === 'web' ? { scrollSnapType: 'y mandatory', scrollPaddingTop: pad } : undefined) as StyleProp<ViewStyle>;
-const webSnapItem = (Platform.OS === 'web' ? { scrollSnapAlign: 'start' } : undefined) as StyleProp<ViewStyle>;
 
 export function range(from: number, to: number, step = 1) {
   const out: number[] = [];

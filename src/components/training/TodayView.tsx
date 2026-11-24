@@ -77,7 +77,11 @@ export function TodayView() {
 
       {plan ? (
         <>
-          <Card onPress={() => router.push(`/plan/${plan.id}`)}>
+          <SectionHead icon="calendar" color={colors.success} title={t('tr.planSection')} />
+          <Card
+            onPress={() => router.push(`/plan/${plan.id}`)}
+            style={{ borderLeftWidth: 5, borderLeftColor: colors.success, gap: 6 }}
+          >
             <Row style={{ justifyContent: 'space-between' }}>
               <T v="label" color={colors.success}>
                 {t('tr.activePlan')}
@@ -96,7 +100,7 @@ export function TodayView() {
             {plan.weeks ? (
               <View style={{ height: 6, borderRadius: 3, backgroundColor: colors.primarySoft, overflow: 'hidden' }}>
                 <View
-                  style={{ width: `${Math.min(100, (week / plan.weeks) * 100)}%`, height: 6, backgroundColor: colors.accent }}
+                  style={{ width: `${Math.min(100, (week / plan.weeks) * 100)}%`, height: 6, backgroundColor: colors.success }}
                 />
               </View>
             ) : null}
@@ -112,11 +116,19 @@ export function TodayView() {
             />
           )}
 
+          {/* zřetelný předěl mezi plánem a dnešním tréninkem */}
+          <View style={{ height: 1, backgroundColor: colors.border, marginTop: 10, marginHorizontal: 4 }} />
+          <SectionHead
+            icon="barbell"
+            color={colors.accent}
+            title={t('tr.todaySection')}
+            sub={formatDate(todayISO(), locale, { weekday: 'long', day: 'numeric', month: 'long' })}
+          />
           <View style={{ gap: 8 }}>
-            <T v="label" muted>
-              {t('tr.todaysWorkout')}
-            </T>
             {!todayDay && !picked && <T muted>{t('tr.restDay')}</T>}
+            <T v="caption" muted style={{ marginLeft: 2 }}>
+              {t('tr.pickDay')}
+            </T>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {plan.days.map((d) => (
                 <Chip
@@ -133,7 +145,7 @@ export function TodayView() {
           </View>
 
           {day && (
-            <Card style={{ borderRadius: 22, padding: 18, gap: 10 }}>
+            <Card style={{ borderRadius: 22, padding: 18, gap: 10, borderWidth: 1.5, borderColor: colors.accent }}>
               <T v="label" color={colors.accent}>
                 {todayDay && day.id === todayDay.id ? t('tr.todayTitle') : t('tr.todaysWorkout')} · {day.exercises.length}{' '}
                 {t('tr.exercisesCount')}
@@ -207,7 +219,49 @@ export function TodayView() {
         </Card>
       )}
 
+      <View style={{ height: 1, backgroundColor: colors.border, marginTop: 10, marginHorizontal: 4 }} />
+      <SectionHead icon="flash" color={colors.primary} title={t('tr.otherOptions')} />
       <Button kind="secondary" icon="flash-outline" title={t('tr.freeWorkout')} onPress={() => start(null, null)} />
     </ScrollView>
+  );
+}
+
+/** Nadpis oddílu: barevná ikona v kroužku, název a volitelný podtitul */
+function SectionHead({
+  icon,
+  color,
+  title,
+  sub,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  color: string;
+  title: string;
+  sub?: string;
+}) {
+  return (
+    <Row gap={10} style={{ marginTop: 6 }}>
+      <View
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 17,
+          backgroundColor: color,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Ionicons name={icon} size={18} color="#FFF" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <T v="h2" style={{ fontSize: 20 }}>
+          {title}
+        </T>
+        {sub ? (
+          <T v="small" muted>
+            {sub.charAt(0).toUpperCase() + sub.slice(1)}
+          </T>
+        ) : null}
+      </View>
+    </Row>
   );
 }

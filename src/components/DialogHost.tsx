@@ -47,11 +47,6 @@ export function DialogHost() {
       <Modal visible={!!cur} transparent animationType="fade" onRequestClose={() => close(false)} statusBarTranslucent>
         <View style={[styles.backdrop, { backgroundColor: colors.overlay }]}>
           <View style={[styles.card, { backgroundColor: colors.bg, borderColor: colors.border }]}>
-            <View style={[styles.stripe]}>
-              <View style={{ flex: 1, backgroundColor: colors.primary }} />
-              <View style={{ flex: 1, backgroundColor: colors.bg }} />
-              <View style={{ flex: 1, backgroundColor: colors.accent }} />
-            </View>
             {cur?.kind === 'confirm' && cur.options.title ? <T v="h3">{cur.options.title}</T> : null}
             {cur?.kind === 'notify' && cur.title ? <T v="h3">{cur.title}</T> : null}
             <T style={{ fontSize: 16, lineHeight: 22 }}>{cur?.message}</T>
@@ -107,7 +102,6 @@ const styles = StyleSheet.create({
     gap: 12,
     overflow: 'hidden',
   },
-  stripe: { flexDirection: 'row', height: 5, marginHorizontal: -20, marginTop: -20, marginBottom: 4 },
   toastWrap: { position: 'absolute', left: 16, right: 16, alignItems: 'center' },
   toast: {
     flexDirection: 'row',

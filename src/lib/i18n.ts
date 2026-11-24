@@ -472,6 +472,12 @@ const cs = {
   'log.today': 'Dnes',
   'log.allTime': 'Celkem zapsáno',
   'log.weekTonnage': 'tonáž',
+  'tr.fromMyMax': 'Z mého maxima',
+  'tr.setN': 'Nástup',
+  'tr.planSection': 'Tvůj plán',
+  'tr.todaySection': 'Dnešní trénink',
+  'tr.pickDay': 'Vyber den z plánu',
+  'tr.otherOptions': 'Jiný trénink',
 };
 
 export type TKey = keyof typeof cs;
@@ -934,6 +940,12 @@ const en: Dict = {
   'log.today': 'Today',
   'log.allTime': 'Logged in total',
   'log.weekTonnage': 'tonnage',
+  'tr.fromMyMax': 'From my max',
+  'tr.setN': 'Set',
+  'tr.planSection': 'Your plan',
+  'tr.todaySection': 'Today\'s workout',
+  'tr.pickDay': 'Pick a day from the plan',
+  'tr.otherOptions': 'Other workout',
 };
 
 const sk: Dict = {
@@ -1393,6 +1405,12 @@ const sk: Dict = {
   'log.today': 'Dnes',
   'log.allTime': 'Spolu zapísané',
   'log.weekTonnage': 'tonáž',
+  'tr.fromMyMax': 'Z môjho maxima',
+  'tr.setN': 'Nástup',
+  'tr.planSection': 'Tvoj plán',
+  'tr.todaySection': 'Dnešný tréning',
+  'tr.pickDay': 'Vyber deň z plánu',
+  'tr.otherOptions': 'Iný tréning',
 };
 
 export const DICTS: Record<Lang, Dict> = { cs, en, sk };

@@ -128,7 +128,7 @@ export function WorkoutEditor({
         visible={!!editingSet}
         title={
           editing
-            ? `${exerciseName(editing.exerciseId, settings.lang, data.customExercises, editing.customName)} · ${t('tr.set')} ${(edit?.i ?? 0) + 1}`
+            ? `${exerciseName(editing.exerciseId, settings.lang, data.customExercises, editing.customName)} · ${t('tr.setN')} ${(edit?.i ?? 0) + 1}`
             : ''
         }
         reps={editingSet?.reps ?? 1}
