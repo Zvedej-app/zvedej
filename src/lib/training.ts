@@ -172,7 +172,41 @@ export function clonePlan(p: TrainingPlan, patch: Partial<TrainingPlan>): Traini
 
 export function mergeTraining(local: TrainingData, remote: TrainingData | null): TrainingData {
   if (!remote) return local;
-  return remote.updatedAt > local.updatedAt ? remote : local;
+  // Sloučení po záznamech (tréninky a plány se z offline zařízení neztratí):
+  // tréninky a plány se spojí podle id, smazané zůstanou smazané, ostatní z novější verze.
+  const newer = (remote.updatedAt ?? '') > (local.updatedAt ?? '') ? remote : local;
+  const older = newer === remote ? local : remote;
+  const deleted = Array.from(new Set([...(local.deleted ?? []), ...(remote.deleted ?? [])])).slice(-2000);
+  const gone = new Set(deleted);
+  const byId = <T extends { id: string }>(a: T[], b: T[], pick: (x: T, y: T) => T) => {
+    const m = new Map<string, T>();
+    for (const x of a) if (!gone.has(x.id)) m.set(x.id, x);
+    for (const y of b) {
+      if (gone.has(y.id)) continue;
+      const x = m.get(y.id);
+      m.set(y.id, x ? pick(x, y) : y);
+    }
+    return [...m.values()];
+  };
+  const logs = byId(older.logs ?? [], newer.logs ?? [], (_o, n) => n);
+  const plans = byId(older.plans ?? [], newer.plans ?? [], (o, n) => ((o.updatedAt ?? '') > (n.updatedAt ?? '') ? o : n));
+  const customExercises = byId(older.customExercises ?? [], newer.customExercises ?? [], (_o, n) => n);
+  const hist = new Map<string, { exerciseId: string; kg: number; date: string }>();
+  for (const h of [...(older.maxHistory ?? []), ...(newer.maxHistory ?? [])]) hist.set(`${h.exerciseId}:${h.date}`, h);
+  return {
+    ...newer,
+    logs,
+    plans,
+    customExercises,
+    maxHistory: [...hist.values()],
+    deleted,
+    updatedAt: newer.updatedAt,
+  };
+}
+
+/** Jsou data stejná (pro rozhodnutí, zda ukládat / odesílat)? */
+export function sameTraining(a: TrainingData, b: TrainingData) {
+  return JSON.stringify(a) === JSON.stringify(b);
 }
 
 /** Název tréninkového dne. U automaticky pojmenovaných dnů se řídí dnem v týdnu, ve kterém trénink otevíráš. */

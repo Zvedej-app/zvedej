@@ -3,7 +3,9 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { api } from '../lib/api';
 import { addDays, nextMonday, startOfWeek, toISODate, todayISO } from '../lib/date';
 import { uid } from '../lib/id';
-import { clonePlan, EMPTY_TRAINING, mergeAssignedPlans, mergeTraining } from '../lib/training';
+import * as Network from 'expo-network';
+import { AppState, Platform } from 'react-native';
+import { clonePlan, EMPTY_TRAINING, mergeAssignedPlans, mergeTraining, sameTraining } from '../lib/training';
 import type { LoggedExercise, TrainingData, TrainingPlan, WorkoutLog } from '../lib/types';
 import { useAuth } from './AuthProvider';
 
@@ -24,6 +26,8 @@ export interface ActiveWorkout {
 
 interface Ctx {
   data: TrainingData;
+  /** 'pending' = změny čekají v telefonu na odeslání (bez signálu) */
+  syncState: 'synced' | 'pending';
   ready: boolean;
   active: ActiveWorkout | null;
   savePlan: (p: TrainingPlan) => void;
@@ -53,6 +57,7 @@ const TrainingContext = createContext<Ctx | null>(null);
 
 const dataKey = (u: string) => `zvedej:training:${u}`;
 const activeKey = (u: string) => `zvedej:training:active:${u}`;
+const pendingKey = (u: string) => `zvedej:training:pending:${u}`;
 
 export function TrainingProvider({ children }: { children: React.ReactNode }) {
   const { session } = useAuth();
@@ -63,6 +68,44 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
   const ready = loadedFor === userId;
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const syncRef = useRef<(() => Promise<void>) | null>(null);
+  const dataRef = useRef<TrainingData>(EMPTY_TRAINING);
+  const flushing = useRef(false);
+  const flushRef = useRef<(() => Promise<void>) | null>(null);
+  // 'synced' = vše na serveru, 'pending' = změny čekají v telefonu na odeslání (např. bez signálu)
+  const [syncState, setSyncState] = useState<'synced' | 'pending'>('synced');
+  const canSync = api.mode === 'supabase' && userId !== 'anon';
+
+  /** Odešle neodeslané změny; při chybě (bez signálu) to zkusí znovu za 30 s a hned po připojení. */
+  const flush = useCallback(async () => {
+    if (!canSync || flushing.current) return;
+    const pending = await AsyncStorage.getItem(pendingKey(userId)).catch(() => null);
+    if (!pending) {
+      setSyncState('synced');
+      return;
+    }
+    flushing.current = true;
+    try {
+      const sent = dataRef.current;
+      await api.saveTraining(userId, sent);
+      // mezitím mohla přibýt další změna – příznak smažeme jen když se nic nezměnilo
+      if (dataRef.current === sent) {
+        await AsyncStorage.removeItem(pendingKey(userId)).catch(() => {});
+        setSyncState('synced');
+      } else {
+        if (syncTimer.current) clearTimeout(syncTimer.current);
+        syncTimer.current = setTimeout(() => flushRef.current?.(), 1500);
+      }
+    } catch {
+      setSyncState('pending');
+      if (syncTimer.current) clearTimeout(syncTimer.current);
+      syncTimer.current = setTimeout(() => flushRef.current?.(), 30000);
+    } finally {
+      flushing.current = false;
+    }
+  }, [canSync, userId]);
+  useEffect(() => {
+    flushRef.current = flush;
+  }, [flush]);
 
   useEffect(() => {
     let alive = true;
@@ -75,6 +118,7 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
         if (alive) setActive(a ? JSON.parse(a) : null);
       } catch {}
       if (alive) {
+        dataRef.current = local;
         setData(local);
         setLoadedFor(userId);
       }
@@ -82,12 +126,16 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
         try {
           const remote = await api.loadTraining(userId);
           const merged = mergeTraining(local, remote);
-          if (alive && merged !== local) {
+          if (alive && !sameTraining(merged, local)) {
             local = merged;
+            dataRef.current = merged;
             setData(merged);
             AsyncStorage.setItem(dataKey(userId), JSON.stringify(merged)).catch(() => {});
           }
+          // v telefonu je něco, co server nemá (zapsáno bez signálu) → odeslat
+          if (!remote || !sameTraining(merged, remote)) await AsyncStorage.setItem(pendingKey(userId), '1').catch(() => {});
         } catch {}
+        if (alive) flushRef.current?.();
       }
       if (alive && userId !== 'anon') syncRef.current?.();
     })();
@@ -96,17 +144,36 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
     };
   }, [userId]);
 
+  // po obnovení připojení nebo návratu do aplikace hned odešli, co čeká
+  useEffect(() => {
+    if (!canSync) return;
+    const sub = Network.addNetworkStateListener((e) => {
+      if (e.isConnected) flushRef.current?.();
+    });
+    const app = AppState.addEventListener('change', (st) => {
+      if (st === 'active') flushRef.current?.();
+    });
+    const online = () => flushRef.current?.();
+    if (Platform.OS === 'web' && typeof window !== 'undefined') window.addEventListener('online', online);
+    return () => {
+      sub.remove();
+      app.remove();
+      if (Platform.OS === 'web' && typeof window !== 'undefined') window.removeEventListener('online', online);
+    };
+  }, [canSync]);
+
   const persist = useCallback(
     (next: TrainingData) => {
+      dataRef.current = next;
       AsyncStorage.setItem(dataKey(userId), JSON.stringify(next)).catch(() => {});
-      if (api.mode === 'supabase' && userId !== 'anon') {
+      if (canSync) {
+        AsyncStorage.setItem(pendingKey(userId), '1').catch(() => {});
+        setSyncState('pending');
         if (syncTimer.current) clearTimeout(syncTimer.current);
-        syncTimer.current = setTimeout(() => {
-          api.saveTraining(userId, next).catch(() => {});
-        }, 1500);
+        syncTimer.current = setTimeout(() => flushRef.current?.(), 1500);
       }
     },
-    [userId],
+    [userId, canSync],
   );
 
   const mutate = useCallback(
@@ -136,10 +203,12 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
     });
     return {
       data,
+      syncState,
       ready,
       active,
       savePlan: (p) => mutate((d) => replacePlan(d, { ...p, updatedAt: new Date().toISOString() })),
-      deletePlan: (id) => mutate((d) => ({ ...d, plans: d.plans.filter((p) => p.id !== id) })),
+      deletePlan: (id) =>
+        mutate((d) => ({ ...d, plans: d.plans.filter((p) => p.id !== id), deleted: [...(d.deleted ?? []), id] })),
       activatePlan: (id) =>
         mutate((d) => {
           const today = todayISO();
@@ -243,7 +312,7 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
       },
       discardWorkout: () => setActivePersist(null),
       saveLog: (log) => mutate((d) => ({ ...d, logs: [...d.logs.filter((l) => l.id !== log.id), log] })),
-      deleteLog: (id) => mutate((d) => ({ ...d, logs: d.logs.filter((l) => l.id !== id) })),
+      deleteLog: (id) => mutate((d) => ({ ...d, logs: d.logs.filter((l) => l.id !== id), deleted: [...(d.deleted ?? []), id] })),
       syncCoachPlans: async () => {
         if (userId === 'anon') return;
         try {
@@ -258,7 +327,7 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       },
     };
-  }, [data, ready, active, mutate, setActivePersist, userId, persist]);
+  }, [data, syncState, ready, active, mutate, setActivePersist, userId, persist]);
 
   useEffect(() => {
     syncRef.current = value.syncCoachPlans;

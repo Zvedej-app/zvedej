@@ -30,6 +30,7 @@ import { formatBodyweight, formatWeight } from '../lib/units';
 import { useAuth } from '../providers/AuthProvider';
 import { useSettings } from '../providers/SettingsProvider';
 import { useTraining } from '../providers/TrainingProvider';
+import { OfflineBadge } from '../components/OfflineBadge';
 
 const RPE = range(1, 10, 0.5);
 
@@ -319,6 +320,7 @@ export default function WorkoutScreen() {
         right={<Button small title={t('common.done')} onPress={() => setFinishing(true)} />}
       />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 170, gap: 12 }}>
+        <OfflineBadge compact />
         <WorkoutEditor
           exercises={active.exercises}
           onChange={(exercises) => training.updateActive((w) => ({ ...w, exercises }))}

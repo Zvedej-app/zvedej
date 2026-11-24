@@ -253,3 +253,13 @@ update public.profiles set is_admin = true
 - Hosté neaktivní 90 dní se automaticky mažou.
 - Nastavení Supabase: Authentication → Sign In / Providers → zapnout **Allow anonymous sign-ins** a **Allow manual linking**;
   doporučeno zapnout CAPTCHA (Cloudflare Turnstile). Migrace `20261127000000_guest.sql`.
+
+## Bez signálu (verze 1.5)
+
+- Tréninky, plány i maxima se ukládají okamžitě do zařízení. Neodeslané změny čekají ve frontě a odešlou se samy
+  po obnovení připojení, při návratu do aplikace nebo každých 30 s.
+- Synchronizace slučuje data po záznamech (tréninky, plány, vlastní cviky, historie maxim). Trénink zapsaný offline
+  na telefonu se tak nepřepíše změnami z počítače a smazané záznamy se nevracejí.
+- Bez signálu ukazuje aplikace v Trénincích a při tréninku informaci, že se vše ukládá do telefonu.
+- Web (PWA): service worker `public/sw.js` uloží celou aplikaci, takže se otevře i bez připojení.
+  Seznam souborů a verzi mezipaměti vytváří `scripts/sw-manifest.mjs` při `npm run build:web`.

@@ -638,6 +638,8 @@ const cs = {
   'guest.youAreGuest': 'Používáš Zvedej jako host',
   'guest.youAreGuestHint': 'Vytvoř si účet, ať o tréninky nepřijdeš, a odemkni zprávy, výzvu a trenéra.',
   'guest.logoutWarning': 'Jsi přihlášený jako host. Po odhlášení o všechny tréninky přijdeš. Opravdu se odhlásit?',
+  'off.saved': 'Bez signálu – trénink se ukládá do telefonu, nic se neztratí.',
+  'off.pending': 'Bez signálu – tréninky se ukládají do telefonu a odešlou se samy po připojení.',
 };
 
 export type TKey = keyof typeof cs;
@@ -1267,6 +1269,8 @@ const en: Dict = {
   'guest.youAreGuest': 'You\'re using Zvedej as a guest',
   'guest.youAreGuestHint': 'Create an account so you don\'t lose your workouts, and unlock messages, the challenge and coaching.',
   'guest.logoutWarning': 'You\'re signed in as a guest. Signing out will lose all your workouts. Sign out anyway?',
+  'off.saved': 'Offline – your workout is saved on the phone, nothing gets lost.',
+  'off.pending': 'Offline – workouts are saved on the phone and will sync automatically when you\'re back online.',
 };
 
 const sk: Dict = {
@@ -1893,6 +1897,8 @@ const sk: Dict = {
   'guest.youAreGuest': 'Používaš Zvedej ako hosť',
   'guest.youAreGuestHint': 'Vytvor si účet, aby si neprišiel o tréningy, a odomkni správy, výzvu a trénera.',
   'guest.logoutWarning': 'Si prihlásený ako hosť. Po odhlásení o všetky tréningy prídeš. Naozaj sa odhlásiť?',
+  'off.saved': 'Bez signálu – tréning sa ukladá do telefónu, nič sa nestratí.',
+  'off.pending': 'Bez signálu – tréningy sa ukladajú do telefónu a odošlú sa samy po pripojení.',
 };
 
 export const DICTS: Record<Lang, Dict> = { cs, en, sk };

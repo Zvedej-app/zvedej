@@ -5,6 +5,7 @@ import { Pressable, View } from 'react-native';
 import { LogView } from '../../components/training/LogView';
 import { TodayView } from '../../components/training/TodayView';
 import { ToolsView } from '../../components/training/ToolsView';
+import { OfflineBadge } from '../../components/OfflineBadge';
 import { Header, IconButton, Screen, Segmented, T } from '../../components/ui';
 import { activePlan } from '../../lib/training';
 import { radius } from '../../lib/theme';
@@ -52,7 +53,8 @@ export default function TrainingScreen() {
           />
         )}
       </View>
-      <View style={{ paddingHorizontal: 16, paddingTop: 10 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 10, gap: 8 }}>
+        <OfflineBadge />
         <Segmented
           value={tab}
           onChange={setTab}

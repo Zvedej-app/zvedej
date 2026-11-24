@@ -130,6 +130,23 @@
         };
         document.addEventListener('visibilitychange', function () { if (!document.hidden) checkUpdate(); });
         window.addEventListener('load', function () { setTimeout(checkUpdate, 4000); });
+        // service worker: aplikace se otevře i bez signálu (v posilovně)
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/zvedej/sw.js', { scope: '/zvedej/' }).catch(function () {});
+            // soubory načtené před spuštěním service workeru (balík aplikace, písma) mu předáme k uložení
+            var send = function () {
+              navigator.serviceWorker.ready.then(function (reg) {
+                if (!reg.active || !window.performance) return;
+                var urls = performance.getEntriesByType('resource').map(function (r) { return r.name; });
+                urls.push(location.origin + '/zvedej/');
+                reg.active.postMessage({ type: 'cache-urls', urls: urls });
+              });
+            };
+            setTimeout(send, 6000);
+            setTimeout(send, 20000);
+          });
+        }
         // dvojité klepnutí neblokujeme v JS (rušilo by rychlá klepnutí na tlačítka) –
         // přiblížení dvojitým klepnutím vypíná CSS touch-action: manipulation
       })();
