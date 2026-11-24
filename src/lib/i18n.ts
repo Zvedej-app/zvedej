@@ -466,6 +466,12 @@ const cs = {
   'tr.log.rpe': 'Náročnost (RPE)',
   'tr.log.feeling': 'Pocit',
   'tr.log.weekTonnage': 'tonáž',
+  'log.thisWeek': 'Tento týden',
+  'log.lastWeek': 'Minulý týden',
+  'log.sets': 'nástupů',
+  'log.today': 'Dnes',
+  'log.allTime': 'Celkem zapsáno',
+  'log.weekTonnage': 'tonáž',
 };
 
 export type TKey = keyof typeof cs;
@@ -922,6 +928,12 @@ const en: Dict = {
   'tr.log.rpe': 'Effort (RPE)',
   'tr.log.feeling': 'Feeling',
   'tr.log.weekTonnage': 'tonnage',
+  'log.thisWeek': 'This week',
+  'log.lastWeek': 'Last week',
+  'log.sets': 'sets',
+  'log.today': 'Today',
+  'log.allTime': 'Logged in total',
+  'log.weekTonnage': 'tonnage',
 };
 
 const sk: Dict = {
@@ -1375,6 +1387,12 @@ const sk: Dict = {
   'tr.log.rpe': 'Náročnosť (RPE)',
   'tr.log.feeling': 'Pocit',
   'tr.log.weekTonnage': 'tonáž',
+  'log.thisWeek': 'Tento týždeň',
+  'log.lastWeek': 'Minulý týždeň',
+  'log.sets': 'nástupov',
+  'log.today': 'Dnes',
+  'log.allTime': 'Spolu zapísané',
+  'log.weekTonnage': 'tonáž',
 };
 
 export const DICTS: Record<Lang, Dict> = { cs, en, sk };
