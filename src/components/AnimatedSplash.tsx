@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useBottomInset } from '../lib/insets';
 import { BLUE } from '../lib/theme';
@@ -7,10 +7,11 @@ import { BarbellHalf } from './Logo';
 
 /**
  * Úvodní obrazovka při načítání: název aplikace Zvedej, logo činky
- * a dole „By Sladký&Vejvoda“. Zobrazí se minimálně ~2,6 s a pak plynule zmizí.
+ * a dole „By Sladký&Vejvoda“. Činka se zvedá a dopadá na zem; aplikace se otevře
+ * až po druhém dopadu (a jen pokud je už načtená – jinak po dalším dopadu).
  */
-/** minimální doba zobrazení (ms) */
-const MIN_MS = 2600;
+/** po kolikátém dopadu se aplikace otevře */
+const LANDINGS = 2;
 
 export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () => void }) {
   const bottomInset = useBottomInset();
@@ -25,28 +26,39 @@ export function AnimatedSplash({ ready, onDone }: { ready: boolean; onDone: () =
   const [lift] = useState(() => new Animated.Value(0));
   const [fade] = useState(() => new Animated.Value(1));
   const [text] = useState(() => new Animated.Value(0));
-  const [started] = useState(() => Date.now());
+  const readyRef = useRef(ready);
+  const doneRef = useRef(onDone);
+  useEffect(() => {
+    readyRef.current = ready;
+    doneRef.current = onDone;
+  }, [ready, onDone]);
 
   useEffect(() => {
-    Animated.loop(
+    let alive = true;
+    let landings = 0;
+    // jeden zdvih: nahoru, krátká výdrž, pád na zem
+    const rep = () => {
       Animated.sequence([
         Animated.timing(lift, { toValue: 1, duration: 650, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
         Animated.delay(150),
         Animated.timing(lift, { toValue: 0, duration: 550, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
-        Animated.delay(120),
-      ]),
-    ).start();
+      ]).start(({ finished }) => {
+        if (!alive || !finished) return;
+        landings += 1;
+        if (landings >= LANDINGS && readyRef.current) {
+          // činka dopadla podruhé – chvilku leží na zemi a obrazovka zmizí
+          Animated.timing(fade, { toValue: 0, duration: 380, delay: 120, useNativeDriver: true }).start(() => doneRef.current());
+          return;
+        }
+        setTimeout(() => alive && rep(), 120);
+      });
+    };
+    rep();
     Animated.timing(text, { toValue: 1, duration: 700, delay: 200, useNativeDriver: true }).start();
-  }, [lift, text]);
-
-  useEffect(() => {
-    if (!ready) return;
-    const wait = Math.max(0, MIN_MS - (Date.now() - started));
-    const timer = setTimeout(() => {
-      Animated.timing(fade, { toValue: 0, duration: 380, useNativeDriver: true }).start(() => onDone());
-    }, wait);
-    return () => clearTimeout(timer);
-  }, [ready, fade, onDone, started]);
+    return () => {
+      alive = false;
+    };
+  }, [lift, text, fade]);
 
   const translateY = lift.interpolate({ inputRange: [0, 1], outputRange: [14, -22] });
 
