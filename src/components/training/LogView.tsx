@@ -140,7 +140,7 @@ export function LogList({
   if (!sections.length)
     return (
       <View style={{ flex: 1 }}>
-        {header}
+        <View style={{ paddingHorizontal: 16, paddingTop: 4 }}>{header}</View>
         <Empty icon="book-outline" text={t('tr.noLogs')} />
       </View>
     );
