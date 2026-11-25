@@ -21,6 +21,9 @@ import { TrainingProvider } from '../providers/TrainingProvider';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
+// neočekávaná chyba kdekoli v aplikaci: srozumitelná obrazovka s tlačítkem Zkusit znovu
+export { ErrorScreen as ErrorBoundary } from '../components/ErrorScreen';
+
 export default function RootLayout() {
   return (
     <SafeAreaProvider>

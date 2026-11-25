@@ -46,10 +46,14 @@
     "react-native-web": "^0.21.4"
   },
   "devDependencies": {
+    "@jest/globals": "~30.5.2",
+    "@types/jest": "30.0.0",
     "@types/qrcode": "^1.5.6",
     "@types/react": "~19.3.0",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~58.0.4",
+    "jest": "~30.5.2",
+    "jest-expo": "~58.0.15",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -61,7 +65,14 @@
     "update:clubs": "node scripts/update-clubs.mjs",
     "build:web": "expo export --platform web && cp dist/index.html dist/404.html && touch dist/.nojekyll && node scripts/sw-manifest.mjs",
     "lint": "expo lint",
-    "update:feeds": "node --experimental-strip-types --no-warnings scripts/update-feeds.mts"
+    "update:feeds": "node --experimental-strip-types --no-warnings scripts/update-feeds.mts",
+    "test": "jest"
   },
-  "private": true
+  "private": true,
+  "jest": {
+    "preset": "jest-expo",
+    "testMatch": [
+      "<rootDir>/__tests__/**/*.test.ts?(x)"
+    ]
+  }
 }

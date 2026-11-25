@@ -172,6 +172,8 @@ export function parseQuickLog(text: string, custom: { id: string; name: string }
 /** Skupiny nástupů oddělené čárkou, středníkem, lomítkem – nebo mezerou mezi zápisy typu „70x2x3 75x2“. */
 function splitGroups(spec: string) {
   const out: string[] = [];
+  // desetinná čárka (82,5 kg) není oddělovač – oddělovač je čárka před další skupinou (…, 75x2)
+  spec = spec.replace(/(\d),(\d+)(?!\d*\s*[x×*@])/g, '$1.$2');
   for (const part of spec.split(/\s*[;,/]\s*(?=\d)/)) {
     const p = part.trim().replace(/[×*]/g, 'x');
     const groups = /^\d+(?:[.,]\d+)?\s*x\s*\d+(?:\s*x\s*\d+)?(?:\s+\d+(?:[.,]\d+)?\s*x\s*\d+(?:\s*x\s*\d+)?)+$/.test(p);

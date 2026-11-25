@@ -1,0 +1,23 @@
+# Kontrola kvality při každém pushi a pull requestu: typy, lint, testy.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typy (TypeScript)
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npx expo lint --no-cache
+      - name: Testy
+        run: npx jest --ci
