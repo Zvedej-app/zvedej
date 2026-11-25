@@ -31,7 +31,8 @@ function InstaTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
       style={[
         desktop ? [styles.side, { borderRightColor: dark ? '#222' : colors.border }] : styles.bar,
         {
-          paddingBottom: desktop ? 16 : Math.max(bottomInset, 8),
+          // iPhony s tlačítkem nemají spodní odsazení – ikony by byly nalepené u okraje displeje
+          paddingBottom: desktop ? 16 : Math.max(bottomInset, 22),
           backgroundColor: dark ? '#000000' : colors.tabBar,
           borderTopColor: dark ? '#222' : colors.border,
         },
