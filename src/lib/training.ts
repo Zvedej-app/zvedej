@@ -193,11 +193,20 @@ export function mergeTraining(local: TrainingData, remote: TrainingData | null):
   const customExercises = byId(older.customExercises ?? [], newer.customExercises ?? [], (_o, n) => n);
   const hist = new Map<string, { exerciseId: string; kg: number; date: string }>();
   for (const h of [...(older.maxHistory ?? []), ...(newer.maxHistory ?? [])]) hist.set(`${h.exerciseId}:${h.date}`, h);
+  // deník regenerace: jeden záznam na den, platí ten později upravený
+  const well = new Map<string, NonNullable<TrainingData['wellness']>[number]>();
+  for (const w of [...(older.wellness ?? []), ...(newer.wellness ?? [])]) {
+    const cur = well.get(w.date);
+    if (!cur || (w.updatedAt ?? '') >= (cur.updatedAt ?? '')) well.set(w.date, w);
+  }
+  // odvolaný souhlas (v novější verzi) maže i záznamy
+  const wellness = newer.wellnessConsentAt === null ? [] : [...well.values()];
   return {
     ...newer,
     logs,
     plans,
     customExercises,
+    wellness,
     maxHistory: [...hist.values()],
     deleted,
     updatedAt: newer.updatedAt,

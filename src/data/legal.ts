@@ -6,7 +6,7 @@
  */
 import type { Lang } from '../lib/i18n';
 
-export const LEGAL_UPDATED = '2026-11-28';
+export const LEGAL_UPDATED = '2026-11-25';
 
 /** Údaje o provozovateli – doplnit před spuštěním. */
 export const OPERATOR = {
@@ -54,6 +54,7 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
         'Oprávněný zájem (čl. 6 odst. 1 písm. f GDPR): bezpečnost, ochrana před zneužitím, řešení nahlášení a moderace obsahu.',
         'Plnění právních povinností (čl. 6 odst. 1 písm. c GDPR): např. vyřizování žádostí úřadů nebo povinnosti podle nařízení o digitálních službách (DSA).',
         'Tělesnou hmotnost a tréninková data používáme jen k výpočtům v aplikaci (Sinclair, procenta z maxim). Hmotnost ostatním uživatelům nezobrazujeme, pokud to sami nepovolíte.',
+        'Deník regenerace (spánek, energie, únava svalů, nálada, bolest či zranění) obsahuje údaje o zdraví. Zpracováváme je jen s vaším výslovným souhlasem (čl. 9 odst. 2 písm. a GDPR), jen pro výpočet připravenosti k tréninku a trenérovi je zpřístupníme jen se zvláštním souhlasem. Odvoláním souhlasu se záznamy smažou.',
       ],
     },
     {
@@ -141,6 +142,7 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
         'Oprávnený záujem (čl. 6 ods. 1 písm. f GDPR): bezpečnosť, ochrana pred zneužitím, riešenie nahlásení a moderovanie obsahu.',
         'Plnenie zákonných povinností (čl. 6 ods. 1 písm. c GDPR), napr. podľa nariadenia o digitálnych službách (DSA).',
         'Telesnú hmotnosť a tréningové dáta používame len na výpočty v aplikácii. Hmotnosť ostatným nezobrazujeme, pokiaľ to sami nepovolíte.',
+        'Denník regenerácie (spánok, energia, únava svalov, nálada, bolesť či zranenie) obsahuje údaje o zdraví. Spracúvame ich len s vaším výslovným súhlasom (čl. 9 ods. 2 písm. a GDPR) a trénerovi ich sprístupníme len s osobitným súhlasom. Odvolaním súhlasu sa záznamy zmažú.',
       ],
     },
     {
@@ -220,6 +222,7 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
         'Legitimate interest (Art. 6(1)(f) GDPR): security, abuse prevention, handling reports and content moderation.',
         'Legal obligations (Art. 6(1)(c) GDPR), e.g. under the Digital Services Act (DSA).',
         'Bodyweight and training data are used only for calculations in the app. Your bodyweight is not shown to others unless you allow it.',
+        'The recovery diary (sleep, energy, muscle soreness, mood, pain or injury) contains health data. We process it only with your explicit consent (Art. 9(2)(a) GDPR), only to calculate training readiness, and share it with your coach only with separate consent. Withdrawing consent deletes the entries.',
       ],
     },
     {

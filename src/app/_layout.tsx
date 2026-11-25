@@ -82,6 +82,7 @@ function App() {
             <Stack.Screen name="moderation" />
             <Stack.Screen name="coaches" />
             <Stack.Screen name="progress" />
+            <Stack.Screen name="wellness" />
             <Stack.Screen name="account" options={{ presentation: 'modal' }} />
             <Stack.Screen name="parent-request" options={{ presentation: 'modal' }} />
             <Stack.Screen name="appeal" options={{ presentation: 'modal' }} />

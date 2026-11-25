@@ -1,6 +1,6 @@
 # Zvedej – právní soulad (kontrolní seznam)
 
-Stav k 28. 11. 2026. Nejde o právní radu – před spuštěním pro veřejnost doporučujeme kontrolu advokátem
+Stav k 25. 11. 2026. Nejde o právní radu – před spuštěním pro veřejnost doporučujeme kontrolu advokátem
 (zaměřte se hlavně na body označené ⚠️).
 
 ## Co řeší aplikace sama ✅

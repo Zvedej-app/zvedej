@@ -21,6 +21,8 @@ import {
 import { ageGroupLabel, sinclairTotal } from '../../lib/categories';
 import { api } from '../../lib/api';
 import { memberSummary, monthStats } from '../../lib/coach';
+import { addDays, toISODate } from '../../lib/date';
+import { readiness } from '../../lib/wellness';
 import { confirm } from '../../lib/dialog';
 import { plural, type TKey } from '../../lib/i18n';
 import { FONTS } from '../../lib/theme';
@@ -117,6 +119,10 @@ function Athletes({ team, unread, onChange }: { team: TeamMember[]; unread: Reco
       </T>
       {sorted.map((m) => {
         const s = memberSummary(m);
+        // poslední záznam regenerace za 2 dny (jen se souhlasem svěřence)
+        const twoDays = toISODate(addDays(new Date(), -2));
+        const well =
+          [...m.recentWellness].filter((w) => w.date >= twoDays).sort((a, b) => b.date.localeCompare(a.date))[0] ?? null;
         const name = `${m.profile.firstName} ${m.profile.lastName}`.trim();
         const stale = s.days === null || s.days >= 7;
         const unreadCount = Object.entries(unread)
@@ -172,15 +178,27 @@ function Athletes({ team, unread, onChange }: { team: TeamMember[]; unread: Reco
               />
               <Mini label={t('coach.thisWeek')} value={String(s.thisWeek)} />
               <Mini label={t('coach.lastRpe')} value={s.last?.rpe ? String(s.last.rpe).replace('.', ',') : '—'} />
-              <Mini
-                label={t('tr.log.feeling')}
-                value={
-                  s.last?.feeling
-                    ? t(`tr.feeling.${s.last.feeling}` as TKey).replace(/[^\p{Extended_Pictographic}]/gu, '') || '—'
-                    : '—'
-                }
-              />
+              {well ? (
+                <Mini label={t('well.readiness')} value={String(readiness(well))} danger={readiness(well) < 45} />
+              ) : (
+                <Mini
+                  label={t('tr.log.feeling')}
+                  value={
+                    s.last?.feeling
+                      ? t(`tr.feeling.${s.last.feeling}` as TKey).replace(/[^\p{Extended_Pictographic}]/gu, '') || '—'
+                      : '—'
+                  }
+                />
+              )}
             </Row>
+            {well?.pain ? (
+              <Row gap={8}>
+                <Ionicons name="bandage-outline" size={17} color={colors.accent} />
+                <T v="small" color={colors.accent} style={{ flex: 1 }}>
+                  {t('well.painOf', { area: t(`well.area.${well.pain.area}` as TKey), level: well.pain.level })}
+                </T>
+              </Row>
+            ) : null}
             {s.note ? (
               <Row gap={8} style={{ alignItems: 'flex-start' }}>
                 <Ionicons name="alert-circle" size={17} color={colors.accent} style={{ marginTop: 1 }} />

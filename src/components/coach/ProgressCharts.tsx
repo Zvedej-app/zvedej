@@ -5,7 +5,9 @@ import { exerciseName, MAX_LIFTS } from '../../data/exercises';
 import { bestLiftSeries, maxSeries, monthlyTonnage, topExercises, weeklyTonnage } from '../../lib/coach';
 import { formatDate, parseISODate, todayISO } from '../../lib/date';
 import { FONTS } from '../../lib/theme';
-import type { TrainingData } from '../../lib/types';
+import type { TKey } from '../../lib/i18n';
+import type { TrainingData, WellnessEntry } from '../../lib/types';
+import { weekReadiness, wellnessSeries } from '../../lib/wellness';
 import { formatNumber, toDisplay } from '../../lib/units';
 import { useSettings } from '../../providers/SettingsProvider';
 import { formatTonnage } from '../training/format';
@@ -115,6 +117,7 @@ export function ProgressCharts({ data }: { data: TrainingData }) {
           {t('prog.tonnageHint')}
         </T>
       </Card>
+      {(data.wellness ?? []).length > 0 && <WellnessChart entries={data.wellness ?? []} />}
     </View>
   );
 }
@@ -247,4 +250,38 @@ const CS_MONTHS = ['led', 'úno', 'bře', 'dub', 'kvě', 'čer', 'čvc', 'srp', 
 function monthShort(iso: string, lang: string, locale: string) {
   if (lang === 'cs') return CS_MONTHS[parseISODate(iso).getMonth()];
   return formatDate(iso, locale, { month: 'short' }).replace('.', '');
+}
+
+/** Připravenost z deníku regenerace za posledních 28 dní a poslední bolesti */
+function WellnessChart({ entries }: { entries: WellnessEntry[] }) {
+  const { t, locale } = useSettings();
+  const series = wellnessSeries(entries, 28);
+  const week = weekReadiness(entries);
+  const pains = [...entries]
+    .filter((e) => e.pain)
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 3);
+  if (!series.length) return null;
+  return (
+    <Card style={{ gap: 12 }}>
+      <T v="h3">{t('well.chart')}</T>
+      <Row gap={0} style={{ justifyContent: 'space-between' }}>
+        <Big label={t('well.weekAvg')} value={week === null ? '—' : String(week)} />
+        <Big label={t('well.entries')} value={String(series.length)} />
+      </Row>
+      <BarChart
+        bars={series.map((x) => ({ label: formatDate(x.date, locale, { day: 'numeric', month: 'numeric' }), value: x.score }))}
+        format={(v) => String(Math.round(v))}
+      />
+      {pains.map((p) => (
+        <T key={p.date} v="small" muted>
+          {formatDate(p.date, locale, { day: 'numeric', month: 'numeric' })}:{' '}
+          {t('well.painOf', { area: t(`well.area.${p.pain!.area}` as TKey), level: p.pain!.level })}
+        </T>
+      ))}
+      <T v="caption" muted>
+        {t('well.chartHint')}
+      </T>
+    </Card>
+  );
 }

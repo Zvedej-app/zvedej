@@ -6,7 +6,7 @@ import { uid } from '../lib/id';
 import * as Network from 'expo-network';
 import { AppState, Platform } from 'react-native';
 import { clonePlan, EMPTY_TRAINING, mergeAssignedPlans, mergeTraining, sameTraining } from '../lib/training';
-import type { LoggedExercise, TrainingData, TrainingPlan, WorkoutLog } from '../lib/types';
+import type { LoggedExercise, TrainingData, TrainingPlan, WellnessEntry, WorkoutLog } from '../lib/types';
 import { useAuth } from './AuthProvider';
 
 /**
@@ -51,6 +51,11 @@ interface Ctx {
   deleteLog: (id: string) => void;
   /** stáhne plány od trenéra a promítne je do dat */
   syncCoachPlans: () => Promise<void>;
+  /** deník regenerace */
+  saveWellness: (e: WellnessEntry) => void;
+  /** souhlas se zpracováním údajů o zdraví; odvolání smaže všechny záznamy */
+  setWellnessConsent: (on: boolean) => void;
+  setWellnessShareCoach: (on: boolean) => void;
 }
 
 const TrainingContext = createContext<Ctx | null>(null);
@@ -313,6 +318,18 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
       discardWorkout: () => setActivePersist(null),
       saveLog: (log) => mutate((d) => ({ ...d, logs: [...d.logs.filter((l) => l.id !== log.id), log] })),
       deleteLog: (id) => mutate((d) => ({ ...d, logs: d.logs.filter((l) => l.id !== id), deleted: [...(d.deleted ?? []), id] })),
+      saveWellness: (e) =>
+        mutate((d) => ({
+          ...d,
+          wellness: [...(d.wellness ?? []).filter((w) => w.date !== e.date), { ...e, updatedAt: new Date().toISOString() }],
+        })),
+      setWellnessConsent: (on) =>
+        mutate((d) =>
+          on
+            ? { ...d, wellnessConsentAt: new Date().toISOString() }
+            : { ...d, wellnessConsentAt: null, wellness: [], wellnessShareCoach: false },
+        ),
+      setWellnessShareCoach: (on) => mutate((d) => ({ ...d, wellnessShareCoach: on })),
       syncCoachPlans: async () => {
         if (userId === 'anon') return;
         try {

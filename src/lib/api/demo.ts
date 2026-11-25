@@ -114,10 +114,29 @@ function fakeTraining(p: Profile): TrainingData {
       createdAt: day.toISOString(),
     });
   }
+  // ukázková regenerace (sdílená s trenérem jen u části svěřenců)
+  const wellness = Array.from({ length: 14 }, (_, i) => {
+    const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+    const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+    const r = (lo: number) => Math.min(5, lo + Math.floor(rnd() * 3));
+    return {
+      date: iso,
+      sleepHours: 6 + Math.round(rnd() * 6) / 2,
+      sleep: r(2),
+      energy: r(2),
+      soreness: r(1),
+      mood: r(3),
+      pain: p.id === 'demo-1' && i < 3 ? { area: 'wrist', level: 4 } : null,
+      updatedAt: day.toISOString(),
+    };
+  });
   return {
     version: 1,
     plans: [],
     logs,
+    wellness,
+    wellnessConsentAt: today.toISOString(),
+    wellnessShareCoach: p.id !== 'demo-3',
     maxes: { snatch: sn, clean_jerk: cj, back_squat: Math.round(sn * 1.8) },
     customExercises: [],
     updatedAt: new Date().toISOString(),
@@ -941,6 +960,7 @@ export function createDemoBackend(): Backend {
           shareBodyweight: l.shareBodyweight,
           createdAt: l.createdAt,
           maxes: d?.maxes ?? {},
+          recentWellness: d?.wellnessShareCoach ? (d.wellness ?? []) : [],
           recentLogs: (d?.logs ?? [])
             .filter((x) => x.date >= from)
             .map((x) => (l.shareBodyweight ? x : { ...x, bodyweight: null })),

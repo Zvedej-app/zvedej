@@ -15,6 +15,7 @@ import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
 import { useAuth } from '../../providers/AuthProvider';
 import { WeekHero } from './WeekHero';
+import { WellnessCard } from '../wellness/WellnessCard';
 import { Banner, Button, Card, Chip, Empty, Row, T } from '../ui';
 import { DayExercises } from './DayExercises';
 import { schemeLabel } from './format';
@@ -183,6 +184,8 @@ export function TodayView() {
       )}
 
       <WeekHero data={data} plan={plan} />
+
+      <WellnessCard />
 
       {plan ? (
         <>

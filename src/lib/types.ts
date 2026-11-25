@@ -256,6 +256,12 @@ export interface TrainingData {
   customExercises: { id: string; name: string }[];
   /** cviky přidané uživatelem do sekce „Moje maxima“ (i bez zadané hodnoty) */
   maxLifts?: string[];
+  /** deník regenerace (zdravotní údaje – jen s výslovným souhlasem) */
+  wellness?: WellnessEntry[];
+  /** čas výslovného souhlasu se zpracováním údajů o zdraví (GDPR čl. 9) */
+  wellnessConsentAt?: string | null;
+  /** trenér smí vidět deník regenerace (zvláštní souhlas) */
+  wellnessShareCoach?: boolean;
   /** smazané tréninky a plány (id) – aby se při synchronizaci z jiného zařízení nevrátily */
   deleted?: string[];
   /** historie zapsaných maxim (pro graf vývoje) */
@@ -305,6 +311,8 @@ export interface TeamMember {
   maxes: Record<string, number>;
   /** tréninky za posledních ~60 dní */
   recentLogs: WorkoutLog[];
+  /** regenerace za posledních 14 dní (jen se souhlasem svěřence) */
+  recentWellness: WellnessEntry[];
 }
 
 /** Trenér z pohledu svěřence */
@@ -366,4 +374,19 @@ export interface ModerationAppeal {
   decision: string | null;
   createdAt: string;
   userBanned: boolean;
+}
+
+/** Denní záznam regenerace. Škály 1–5: čím víc, tím lépe (5 = výborně / nic nebolí). */
+export interface WellnessEntry {
+  /** YYYY-MM-DD */
+  date: string;
+  sleepHours: number | null;
+  sleep: number;
+  energy: number;
+  soreness: number;
+  mood: number;
+  /** bolest nebo zranění (nepovinné) */
+  pain?: { area: string; level: number } | null;
+  note?: string;
+  updatedAt: string;
 }

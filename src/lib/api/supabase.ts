@@ -704,6 +704,7 @@ export function createSupabaseBackend(): Backend {
         createdAt: r.created_at,
         maxes: r.maxes ?? {},
         recentLogs: r.recent_logs ?? [],
+        recentWellness: r.recent_wellness ?? [],
       }));
     },
     async inviteAthlete(athleteId) {
