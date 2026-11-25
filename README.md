@@ -290,3 +290,11 @@ update public.profiles set is_admin = true
   dnešní trénink z plánu (nebo „Dnes volno“), cviky, série týdnů a odtrénované dny týdne. Klepnutím se otevřou Tréninky.
 - Data posílá `HomeWidgetBridge` při každé změně tréninků; na iOS se widget o půlnoci sám přepne na další den.
 - Potřebuje nový build přes EAS (není v Expo Go ani na webu).
+
+## Technická kvalita (verze 1.7)
+
+- Automatické testy (`npm test`, Jest + jest-expo, složka `__tests__/`): Sinclair, kotouče na ose, rychlý zápis,
+  slučování dat při synchronizaci, plány od trenéra, regenerace, věk a souhlas rodičů, úplnost překladů.
+- GitHub Actions (`.github/workflows/ci.yml`) při každém pushi spustí kontrolu typů, lint a testy.
+- Když se v aplikaci něco pokazí, místo bílé obrazovky se ukáže chybová stránka s tlačítkem „Zkusit znovu“
+  a možností poslat hlášení e-mailem (`src/components/ErrorScreen.tsx`).
