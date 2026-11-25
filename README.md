@@ -283,3 +283,10 @@ update public.profiles set is_admin = true
 - Při změně podmínek (`LEGAL_UPDATED`) aplikace požádá o nový souhlas.
 - Zásady doplněny o děti, cookies/úložiště a předávání mimo EU; nová stránka Provozovatel a kontakt.
 - Kontrolní seznam pro provozovatele: [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md). Migrace `20261128000000_minors.sql`.
+
+## Widget na plochu (verze 1.7)
+
+- iPhone (SwiftUI, `src/widgets/TodayWidget.tsx`, malý a střední) a Android (Jetpack Compose, `src/widgets/TodayWidgetAndroid.tsx`):
+  dnešní trénink z plánu (nebo „Dnes volno“), cviky, série týdnů a odtrénované dny týdne. Klepnutím se otevřou Tréninky.
+- Data posílá `HomeWidgetBridge` při každé změně tréninků; na iOS se widget o půlnoci sám přepne na další den.
+- Potřebuje nový build přes EAS (není v Expo Go ani na webu).

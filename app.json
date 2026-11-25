@@ -74,7 +74,34 @@
         }
       ],
       "expo-sharing",
-      "expo-widgets",
+      [
+        "expo-widgets",
+        {
+          "enableAndroid": true,
+          "widgets": [
+            {
+              "name": "TodayWidget",
+              "displayName": "Zvedej – dnes",
+              "description": "Dnešní trénink, série týdnů a odtrénované dny",
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium"
+                ],
+                "initialLayout": "./src/widgets/TodayWidget.tsx"
+              },
+              "android": {
+                "minWidth": 180,
+                "minHeight": 110,
+                "targetCellWidth": 3,
+                "targetCellHeight": 2,
+                "resizeMode": "both",
+                "initialLayout": "./src/widgets/TodayWidgetAndroid.tsx"
+              }
+            }
+          ]
+        }
+      ],
       "expo-asset"
     ],
     "experiments": {

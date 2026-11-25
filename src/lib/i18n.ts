@@ -807,6 +807,9 @@ const cs = {
   'ql.saved': 'Trénink uložen do deníku',
   'ql.nothing': 'Zatím tu není žádný cvik s nástupy.',
   'ql.tickAll': 'Odškrtnout všechny nástupy',
+  'widget.rest': 'Dnes volno',
+  'widget.done': 'Dnes odtrénováno',
+  'widget.noPlan': 'Volný trénink',
 };
 
 export type TKey = keyof typeof cs;
@@ -1605,6 +1608,9 @@ const en: Dict = {
   'ql.saved': 'Workout saved to your log',
   'ql.nothing': 'No exercise with sets yet.',
   'ql.tickAll': 'Tick all sets',
+  'widget.rest': 'Rest day',
+  'widget.done': 'Done today',
+  'widget.noPlan': 'Free workout',
 };
 
 const sk: Dict = {
@@ -2400,6 +2406,9 @@ const sk: Dict = {
   'ql.saved': 'Tréning uložený do denníka',
   'ql.nothing': 'Zatiaľ tu nie je žiadny cvik s nástupmi.',
   'ql.tickAll': 'Odškrtnúť všetky nástupy',
+  'widget.rest': 'Dnes voľno',
+  'widget.done': 'Dnes odtrénované',
+  'widget.noPlan': 'Voľný tréning',
 };
 
 export const DICTS: Record<Lang, Dict> = { cs, en, sk };
