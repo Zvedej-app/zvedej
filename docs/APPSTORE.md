@@ -12,7 +12,7 @@ jako další lokalizace). Při změně názvu aplikace je potřeba upravit náze
 | Marketingová stránka (nepovinné) | https://zvedej-app.github.io/zvedej/ |
 | Podmínky použití (do popisu / EULA) | https://zvedej-app.github.io/zvedej/legal/terms |
 
-Google Play navíc chce odkaz na smazání účtu – stačí stránka kontaktu (smazání je i přímo v aplikaci: Nastavení → Účet).
+Google Play navíc chce odkaz na smazání účtu – stačí stránka kontaktu (smazání je i přímo v aplikaci: Nastavení → Smazat účet).
 
 ## Název a podtitul
 
@@ -91,10 +91,10 @@ Analytika, reklama, poloha, nákupy: **nesbíráme**.
 ```
 Testovací účet: <e-mail> / <heslo>   (založit předem, ideálně s pár tréninky a rolí trenéra)
 
-Aplikaci lze vyzkoušet i bez účtu („Vyzkoušet bez registrace“ na úvodní obrazovce).
+Aplikaci lze vyzkoušet i bez účtu („Začít hned bez registrace“ na úvodní obrazovce).
 
 Obsah od uživatelů (profily, zprávy, videa) lze nahlásit (⋯ → Nahlásit) a uživatele zablokovat.
-Nahlášení vyřizuje správce v Nastavení → Správa. Smazání účtu: Nastavení → Účet → Smazat účet.
+Nahlášení vyřizuje správce v Nastavení → Správa. Smazání účtu: Nastavení → Smazat účet.
 
 Režim trenéra: Tréninky → Tým. Trenér pozve svěřence odkazem/QR kódem a přiřazuje plány.
 
