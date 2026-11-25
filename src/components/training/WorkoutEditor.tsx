@@ -49,6 +49,19 @@ export function WorkoutEditor({
                   {e.note ? ` · ${e.note}` : ''}
                 </T>
               </View>
+              {/* rychlé odškrtnutí všech nástupů cviku (např. když se zapisuje až po tréninku) */}
+              {e.sets.length > 0 && doneCount < e.sets.length && (
+                <IconButton
+                  name="checkmark-done"
+                  size={22}
+                  color={colors.success}
+                  label={t('ql.tickAll')}
+                  onPress={() => {
+                    tap('success');
+                    patchEx(e.id, (x) => ({ ...x, sets: x.sets.map((st) => ({ ...st, done: true })) }));
+                  }}
+                />
+              )}
               <IconButton
                 name="trash-outline"
                 size={20}

@@ -335,7 +335,22 @@ export function TodayView() {
 
       <View style={{ height: 1, backgroundColor: colors.border, marginTop: 10, marginHorizontal: 4 }} />
       <SectionHead icon="flash" color={colors.primary} title={t('tr.otherOptions')} />
-      <Button kind="secondary" icon="flash-outline" title={t('tr.freeWorkout')} onPress={() => start(null, null)} />
+      <Row gap={8}>
+        <Button
+          kind="secondary"
+          icon="flash-outline"
+          title={t('tr.freeWorkout')}
+          onPress={() => start(null, null)}
+          style={{ flex: 1 }}
+        />
+        <Button
+          kind="secondary"
+          icon="create-outline"
+          title={t('ql.short')}
+          onPress={() => router.push('/quick-log')}
+          style={{ flex: 1 }}
+        />
+      </Row>
     </ScrollView>
   );
 }

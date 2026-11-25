@@ -12,7 +12,7 @@ import type { TrainingData, WorkoutLog } from '../../lib/types';
 import { useAuth } from '../../providers/AuthProvider';
 import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
-import { Empty, PressScale, T } from '../ui';
+import { Button, Empty, PressScale, T } from '../ui';
 import { formatTonnage } from './format';
 
 interface WeekSection {
@@ -61,41 +61,44 @@ export function LogView() {
 function ProgressLink() {
   const { t, colors } = useSettings();
   return (
-    <PressScale
-      onPress={() => router.push('/progress')}
-      scaleTo={0.98}
-      style={{
-        marginTop: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        padding: 14,
-        borderRadius: 18,
-        backgroundColor: colors.primarySoft,
-      }}
-    >
-      <View
+    <View style={{ gap: 10 }}>
+      <PressScale
+        onPress={() => router.push('/progress')}
+        scaleTo={0.98}
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          backgroundColor: colors.primary,
+          marginTop: 12,
+          flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'center',
+          gap: 12,
+          padding: 14,
+          borderRadius: 18,
+          backgroundColor: colors.primarySoft,
         }}
       >
-        <Ionicons name="trending-up" size={22} color="#FFF" />
-      </View>
-      <View style={{ flex: 1 }}>
-        <T v="h3" color={colors.primary}>
-          {t('prog.title')}
-        </T>
-        <T v="caption" muted>
-          {t('prog.linkSub')}
-        </T>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={colors.primary} />
-    </PressScale>
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: colors.primary,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Ionicons name="trending-up" size={22} color="#FFF" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <T v="h3" color={colors.primary}>
+            {t('prog.title')}
+          </T>
+          <T v="caption" muted>
+            {t('prog.linkSub')}
+          </T>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+      </PressScale>
+      <Button kind="secondary" icon="create-outline" title={t('ql.addPast')} onPress={() => router.push('/quick-log')} />
+    </View>
   );
 }
 
