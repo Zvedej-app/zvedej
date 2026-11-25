@@ -301,6 +301,9 @@ export default function SettingsScreen() {
             <T v="small" muted>
               {t('app.by')}
             </T>
+            <T v="caption" muted style={{ textAlign: 'center', paddingHorizontal: 24 }}>
+              {t('app.unofficial')}
+            </T>
             <ScreenDiagnostics />
           </View>
         </Screen>

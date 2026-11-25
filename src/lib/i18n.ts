@@ -61,7 +61,7 @@ const cs = {
   'csv.noResults': 'Nic jsme nenašli.',
   'csv.upcoming': 'Nadcházející',
   'csv.past': 'Proběhlé',
-  'csv.source': 'Zdroj: vzpirani.cz',
+  'csv.source': 'Zdroj: vzpirani.cz · Zvedej není oficiální aplikace Českého svazu vzpírání',
   'csv.openWeb': 'Otevřít na webu',
   'csv.readMore': 'Číst dál',
   'csv.empty': 'Zatím tu nic není.',
@@ -810,6 +810,7 @@ const cs = {
   'widget.rest': 'Dnes volno',
   'widget.done': 'Dnes odtrénováno',
   'widget.noPlan': 'Volný trénink',
+  'app.unofficial': 'Neoficiální aplikace – není provozována Českým svazem vzpírání.',
 };
 
 export type TKey = keyof typeof cs;
@@ -869,7 +870,7 @@ const en: Dict = {
   'csv.noResults': 'Nothing found.',
   'csv.upcoming': 'Upcoming',
   'csv.past': 'Past',
-  'csv.source': 'Source: vzpirani.cz',
+  'csv.source': 'Source: vzpirani.cz · Zvedej is not an official app of the Czech Weightlifting Federation',
   'csv.openWeb': 'Open on the web',
   'csv.readMore': 'Read more',
   'csv.empty': 'Nothing here yet.',
@@ -1611,6 +1612,7 @@ const en: Dict = {
   'widget.rest': 'Rest day',
   'widget.done': 'Done today',
   'widget.noPlan': 'Free workout',
+  'app.unofficial': 'Unofficial app – not operated by the Czech Weightlifting Federation.',
 };
 
 const sk: Dict = {
@@ -1667,7 +1669,7 @@ const sk: Dict = {
   'csv.noResults': 'Nič sme nenašli.',
   'csv.upcoming': 'Nadchádzajúce',
   'csv.past': 'Uplynulé',
-  'csv.source': 'Zdroj: vzpirani.cz',
+  'csv.source': 'Zdroj: vzpirani.cz · Zvedej nie je oficiálna aplikácia Českého zväzu vzpierania',
   'csv.openWeb': 'Otvoriť na webe',
   'csv.readMore': 'Čítať ďalej',
   'csv.empty': 'Zatiaľ tu nič nie je.',
@@ -2409,6 +2411,7 @@ const sk: Dict = {
   'widget.rest': 'Dnes voľno',
   'widget.done': 'Dnes odtrénované',
   'widget.noPlan': 'Voľný tréning',
+  'app.unofficial': 'Neoficiálna aplikácia – nie je prevádzkovaná Českým zväzom vzpierania.',
 };
 
 export const DICTS: Record<Lang, Dict> = { cs, en, sk };

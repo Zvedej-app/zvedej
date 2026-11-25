@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#FFFFFF",
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "cz.sladkyvejvoda.zvedej",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
