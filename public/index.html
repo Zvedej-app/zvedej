@@ -13,7 +13,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Zvedej" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!--
+      iPhony s výřezem: průhledný stavový řádek (aplikace jde až pod hodiny).
+      iPhony s tlačítkem (8, SE): iOS s průhledným řádkem zkrátí okno aplikace o výšku řádku a dole
+      zůstane bílá lišta – proto tam neprůhledný řádek a aplikace začíná až pod hodinami.
+    -->
+    <script>
+      (function () {
+        var tall = window.screen && Math.max(screen.width, screen.height) >= 800;
+        window.__zvedejTranslucent = tall;
+        document.write('<meta name="apple-mobile-web-app-status-bar-style" content="' + (tall ? 'black-translucent' : 'default') + '" />');
+      })();
+    </script>
     <meta name="theme-color" content="#000072" />
 
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
@@ -98,7 +109,7 @@
       // dole pak zůstane bílá lišta. Pokud okno zabírá celou šířku displeje, natáhneme ho na celou výšku displeje.
       (function () {
         var standalone = window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-        if (!standalone || !window.screen) return;
+        if (!standalone || !window.screen || !window.__zvedejTranslucent) return;
         var fit = function () {
           var portrait = window.innerHeight >= window.innerWidth;
           var sw = portrait ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
