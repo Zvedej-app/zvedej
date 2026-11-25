@@ -94,6 +94,26 @@
     <script>
       // starší iOS nezná display-mode: standalone – rozpoznáme aplikaci na ploše podle navigator.standalone
       if (window.navigator.standalone) document.documentElement.classList.add('ios-pwa');
+      // Některé iPhony (např. iPhone 8) i se 100vh počítají výšku aplikace na ploše bez stavového řádku –
+      // dole pak zůstane bílá lišta. Pokud okno zabírá celou šířku displeje, natáhneme ho na celou výšku displeje.
+      (function () {
+        var standalone = window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+        if (!standalone || !window.screen) return;
+        var fit = function () {
+          var portrait = window.innerHeight >= window.innerWidth;
+          var sw = portrait ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
+          var sh = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+          var h = window.innerWidth === sw ? Math.max(window.innerHeight, sh) : window.innerHeight;
+          var v = h + 'px';
+          document.documentElement.style.height = v;
+          document.body.style.height = v;
+          var root = document.getElementById('root');
+          if (root) root.style.height = v;
+        };
+        fit();
+        window.addEventListener('resize', fit);
+        window.addEventListener('orientationchange', function () { setTimeout(fit, 300); });
+      })();
       // iOS Safari ignoruje user-scalable=no – zablokujeme gesto přiblížení dvěma prsty
       (function () {
         var block = function (e) { e.preventDefault(); };
