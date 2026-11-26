@@ -7,10 +7,11 @@ import { LogFeedback } from '../../components/coach/LogFeedback';
 import { api } from '../../lib/api';
 import { useAuth } from '../../providers/AuthProvider';
 import { Button, Card, Empty, Field, Header, IconButton, Row, Screen, Stat, T } from '../../components/ui';
-import { todayISO, formatDate } from '../../lib/date';
+import { todayISO, formatDate, parseISODate } from '../../lib/date';
 import { confirm } from '../../lib/dialog';
 import { uid } from '../../lib/id';
-import { logSetCount, logTonnage } from '../../lib/training';
+import { logRecords, logSetCount, logTonnage, weekStreak } from '../../lib/training';
+import { ShareSheet } from '../../components/share/ShareSheet';
 import type { WorkoutLog } from '../../lib/types';
 import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
@@ -21,6 +22,7 @@ export default function LogDetail() {
   const training = useTraining();
   const orig = training.data.logs.find((l) => l.id === id);
   const [log, setLog] = useState<WorkoutLog | null>(orig ?? null);
+  const [sharing, setSharing] = useState(false);
   const { session } = useAuth();
   // komentáře a videa ukážeme, když má svěřenec trenéra
   const [hasCoach, setHasCoach] = useState(false);
@@ -75,6 +77,13 @@ export default function LogDetail() {
         <Row>
           <Button
             kind="secondary"
+            icon="share-outline"
+            title={t('share.shareLog')}
+            style={{ flex: 1 }}
+            onPress={() => setSharing(true)}
+          />
+          <Button
+            kind="secondary"
             icon="repeat-outline"
             title={t('tr.repeatLast')}
             style={{ flex: 1 }}
@@ -111,6 +120,14 @@ export default function LogDetail() {
           {formatDate(log.createdAt, locale)}
         </T>
       </ScrollView>
+      <ShareSheet
+        visible={sharing}
+        onClose={() => setSharing(false)}
+        log={log}
+        records={logRecords(training.data, log)}
+        streak={weekStreak(training.data, parseISODate(log.date))}
+        customExercises={training.data.customExercises}
+      />
     </Screen>
   );
 }

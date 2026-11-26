@@ -266,3 +266,30 @@ export function mergeAssignedPlans(data: TrainingData, assigned: AssignedPlan[])
   }
   return changed ? { ...data, plans } : data;
 }
+
+/** Nejtěžší odtrénovaná váha cviku v tréninku. */
+export function bestKg(log: WorkoutLog, exerciseId: string) {
+  const sets = log.exercises.filter((e) => e.exerciseId === exerciseId).flatMap((e) => e.sets.filter((s) => s.done && s.kg > 0));
+  return sets.length ? Math.max(...sets.map((s) => s.kg)) : 0;
+}
+
+/**
+ * Osobní rekordy v tréninku: cviky, kde je nejtěžší váha vyšší než cokoli dřív
+ * (předchozí tréninky i zadané maximum). Cvik bez historie rekord není – nemá s čím srovnat.
+ */
+export function logRecords(data: TrainingData, log: WorkoutLog) {
+  const out: { exerciseId: string; customName?: string; kg: number; prev: number }[] = [];
+  const seen = new Set<string>();
+  for (const e of log.exercises) {
+    if (seen.has(e.exerciseId)) continue;
+    seen.add(e.exerciseId);
+    const kg = bestKg(log, e.exerciseId);
+    if (!kg) continue;
+    const earlier = data.logs.filter(
+      (l) => l.id !== log.id && (l.date < log.date || (l.date === log.date && l.createdAt < log.createdAt)),
+    );
+    const prev = Math.max(0, data.maxes[e.exerciseId] ?? 0, ...earlier.map((l) => bestKg(l, e.exerciseId)));
+    if (prev > 0 && kg > prev) out.push({ exerciseId: e.exerciseId, customName: e.customName, kg, prev });
+  }
+  return out.sort((a, b) => b.kg - b.prev - (a.kg - a.prev));
+}

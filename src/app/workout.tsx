@@ -8,7 +8,7 @@ import { WeightSheet } from '../components/training/ToolsView';
 import { WorkoutEditor } from '../components/training/WorkoutEditor';
 import { Celebration, type CelebrationData } from '../components/training/Celebration';
 import { formatTonnage } from '../components/training/format';
-import { logSetCount, logTonnage, weekStreak } from '../lib/training';
+import { logRecords, logSetCount, logTonnage, weekStreak } from '../lib/training';
 import { Button, Chip, Empty, Field, Header, IconButton, Row, Screen, Sheet, T } from '../components/ui';
 import { range, Wheel } from '../components/WheelPicker';
 import { exerciseName } from '../data/exercises';
@@ -515,6 +515,9 @@ export default function WorkoutScreen() {
                 tonnage: formatTonnage(logTonnage(log), settings.unit),
                 minutes: log.durationMin ?? null,
                 streak: weekStreak(after),
+                log,
+                records: logRecords(training.data, log),
+                customExercises: training.data.customExercises,
               });
             }}
           />

@@ -811,6 +811,18 @@ const cs = {
   'widget.done': 'Dnes odtrénováno',
   'widget.noPlan': 'Volný trénink',
   'app.unofficial': 'Neoficiální aplikace – není provozována Českým svazem vzpírání.',
+  'share.title': 'Sdílet',
+  'share.button': 'Sdílet obrázek',
+  'share.workout': 'Trénink',
+  'share.workoutDone': 'Trénink hotový',
+  'share.record': 'Nový osobní rekord',
+  'share.previous': 'dřív',
+  'share.more': 'a další cviky: {n}',
+  'share.tagline': 'Zvedej – aplikace pro vzpěrače',
+  'share.hint': 'Obrázek má rozměr na Instagram story. Pošli ho kamarádům nebo trenérovi.',
+  'share.failed': 'Obrázek se nepodařilo vytvořit.',
+  'share.newRecords': 'Nový rekord!',
+  'share.shareLog': 'Sdílet trénink',
 };
 
 export type TKey = keyof typeof cs;
@@ -1613,6 +1625,18 @@ const en: Dict = {
   'widget.done': 'Done today',
   'widget.noPlan': 'Free workout',
   'app.unofficial': 'Unofficial app – not operated by the Czech Weightlifting Federation.',
+  'share.title': 'Share',
+  'share.button': 'Share image',
+  'share.workout': 'Workout',
+  'share.workoutDone': 'Workout done',
+  'share.record': 'New personal record',
+  'share.previous': 'before',
+  'share.more': 'and {n} more',
+  'share.tagline': 'Zvedej – the weightlifting app',
+  'share.hint': 'The image is sized for an Instagram story. Send it to friends or your coach.',
+  'share.failed': 'Couldn\'t create the image.',
+  'share.newRecords': 'New record!',
+  'share.shareLog': 'Share workout',
 };
 
 const sk: Dict = {
@@ -2412,6 +2436,18 @@ const sk: Dict = {
   'widget.done': 'Dnes odtrénované',
   'widget.noPlan': 'Voľný tréning',
   'app.unofficial': 'Neoficiálna aplikácia – nie je prevádzkovaná Českým zväzom vzpierania.',
+  'share.title': 'Zdieľať',
+  'share.button': 'Zdieľať obrázok',
+  'share.workout': 'Tréning',
+  'share.workoutDone': 'Tréning hotový',
+  'share.record': 'Nový osobný rekord',
+  'share.previous': 'predtým',
+  'share.more': 'a ďalšie cviky: {n}',
+  'share.tagline': 'Zvedej – aplikácia pre vzpieračov',
+  'share.hint': 'Obrázok má rozmer na Instagram story. Pošli ho kamarátom alebo trénerovi.',
+  'share.failed': 'Obrázok sa nepodarilo vytvoriť.',
+  'share.newRecords': 'Nový rekord!',
+  'share.shareLog': 'Zdieľať tréning',
 };
 
 export const DICTS: Record<Lang, Dict> = { cs, en, sk };

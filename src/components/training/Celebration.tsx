@@ -8,6 +8,11 @@ import { plural, type TKey } from '../../lib/i18n';
 import { BLUE, FONTS, FLAG } from '../../lib/theme';
 import { useSettings } from '../../providers/SettingsProvider';
 import { Button } from '../ui';
+import type { ShareRecord } from '../share/ShareCard';
+import { ShareSheet } from '../share/ShareSheet';
+import { exerciseName } from '../../data/exercises';
+import type { WorkoutLog } from '../../lib/types';
+import { formatNumber } from '../../lib/units';
 
 const COLORS = [FLAG.red, '#FFFFFF', '#F1B100', '#4F86C9', FLAG.red, '#FFFFFF'];
 const PIECES = 46;
@@ -60,6 +65,11 @@ export interface CelebrationData {
   tonnage: string;
   minutes: number | null;
   streak: number;
+  /** uložený trénink – pro sdílecí kartu */
+  log?: WorkoutLog;
+  /** nové osobní rekordy v tréninku */
+  records?: ShareRecord[];
+  customExercises?: { id: string; name: string }[];
 }
 
 /** Oslava po dokončení tréninku: konfety a shrnutí. */
@@ -81,6 +91,7 @@ export function Celebration({
   const insets = useSafeAreaInsets();
   const [pop] = useState(() => new Animated.Value(0));
   const [cheer] = useState(() => Math.floor(Math.random() * 4));
+  const [sharing, setSharing] = useState(false);
   useEffect(() => {
     if (!data) return;
     pop.setValue(0);
@@ -116,6 +127,23 @@ export function Celebration({
           </View>
         )}
 
+        {data.records?.length ? (
+          <View style={styles.record}>
+            <Ionicons name="trophy" size={24} color="#F1B100" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.recordTitle}>{t('share.newRecords')}</Text>
+              <Text style={styles.recordText}>
+                {data.records
+                  .map(
+                    (r) =>
+                      `${exerciseName(r.exerciseId, settings.lang, data.customExercises, r.customName)} ${formatNumber(r.kg, Number.isInteger(r.kg) ? 0 : 1)} kg`,
+                  )
+                  .join(' · ')}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         <View style={{ flex: 1 }} />
         {guest && onSaveAccount ? (
           <View style={styles.guest}>
@@ -135,12 +163,32 @@ export function Celebration({
             style={{ alignSelf: 'stretch', minHeight: 56, borderRadius: 16, backgroundColor: '#FFFFFF' }}
           />
         ) : null}
+        {data.log ? (
+          <Button
+            title={t('share.title')}
+            icon="share-outline"
+            kind="secondary"
+            onPress={() => setSharing(true)}
+            style={{ alignSelf: 'stretch', minHeight: 56, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.14)' }}
+            textColor="#FFFFFF"
+          />
+        ) : null}
         <Button
           title={t('cel.continue')}
           onPress={onClose}
           style={{ alignSelf: 'stretch', minHeight: 56, borderRadius: 16, backgroundColor: FLAG.red }}
         />
       </View>
+      {data.log ? (
+        <ShareSheet
+          visible={sharing}
+          onClose={() => setSharing(false)}
+          log={data.log}
+          records={data.records ?? []}
+          streak={data.streak}
+          customExercises={data.customExercises}
+        />
+      ) : null}
       {Array.from({ length: PIECES }, (_, i) => (
         <Piece key={i} i={i} width={width} height={height} />
       ))}
@@ -191,6 +239,19 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
   },
+  record: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    alignSelf: 'stretch',
+    backgroundColor: 'rgba(241,177,0,0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(241,177,0,0.5)',
+    borderRadius: 16,
+    padding: 14,
+  },
+  recordTitle: { color: '#F1B100', fontSize: 16, fontFamily: FONTS.black },
+  recordText: { color: '#FFF', fontSize: 14, fontFamily: FONTS.semi },
   guestTitle: { color: '#FFF', fontSize: 16, fontFamily: FONTS.bold },
   guestText: { color: 'rgba(255,255,255,0.85)', fontSize: 13 },
 });

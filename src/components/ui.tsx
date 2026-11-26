@@ -231,10 +231,13 @@ export function Button({
   loading,
   small,
   style,
+  textColor,
 }: {
   title: string;
   onPress?: () => void;
   kind?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  /** barva textu a ikony (např. na tmavém pozadí) */
+  textColor?: string;
   icon?: IconName;
   disabled?: boolean;
   loading?: boolean;
@@ -250,7 +253,7 @@ export function Button({
         : kind === 'danger'
           ? colors.danger
           : 'transparent';
-  const fg = kind === 'primary' || kind === 'danger' ? colors.onPrimary : colors.primary;
+  const fg = textColor ?? (kind === 'primary' || kind === 'danger' ? colors.onPrimary : colors.primary);
   return (
     <PressScale
       disabled={disabled || loading}
