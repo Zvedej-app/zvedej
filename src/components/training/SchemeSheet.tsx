@@ -50,9 +50,7 @@ function SchemeBody({ scheme, exerciseId, onClose, onSave, onDelete }: SchemeShe
   const [type, setType] = useState<LoadSpec['type']>(l?.type ?? 'percent');
   const [pct, setPct] = useState(l?.type === 'percent' ? l.value : 75);
   const [of, setOf] = useState(l?.type === 'percent' ? l.of : defaultPctOf(exerciseId));
-  const [kgDisp, setKgDisp] = useState(
-    l?.type === 'kg' ? Math.round(toDisplay(l.value, unit)) : unit === 'kg' ? 60 : 135,
-  );
+  const [kgDisp, setKgDisp] = useState(l?.type === 'kg' ? Math.round(toDisplay(l.value, unit)) : unit === 'kg' ? 60 : 135);
   const [rpe, setRpe] = useState(l?.type === 'rpe' ? l.value : 8);
 
   const lifts = useMemo(() => Array.from(new Set([defaultPctOf(exerciseId), ...maxLiftIds(data)])), [exerciseId, data]);

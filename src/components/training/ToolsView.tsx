@@ -210,6 +210,14 @@ export function ToolsView() {
         />
       </Row>
 
+      <ListGroup>
+        <ListItem
+          icon="body-outline"
+          title={t('rt.title')}
+          subtitle={t('rt.toolsHint')}
+          onPress={() => router.push('/routines')}
+        />
+      </ListGroup>
       <PlateCalculator />
       <SinclairCalc />
       <Converter />

@@ -298,3 +298,20 @@ update public.profiles set is_admin = true
 - GitHub Actions (`.github/workflows/ci.yml`) při každém pushi spustí kontrolu typů, lint a testy.
 - Když se v aplikaci něco pokazí, místo bílé obrazovky se ukáže chybová stránka s tlačítkem „Zkusit znovu“
   a možností poslat hlášení e-mailem (`src/components/ErrorScreen.tsx`).
+
+## Sdílení, upozornění, knihovna plánů, rozcvičky, přehled týmu (verze 1.8)
+
+- **Sdílecí karta** (`src/components/share/`): po tréninku a v detailu tréninku obrázek 1080 × 1920 (Instagram story)
+  v barvách aplikace – souhrn tréninku nebo nový osobní rekord (`logRecords`). Mobil: `react-native-view-shot`
+  + systémové sdílení; web: `html2canvas` + Web Share API / stažení.
+- **Upozornění** (Nastavení → Upozornění, jen mobilní aplikace):
+  - připomínka tréninku v plánovaný den v nastavený čas (bez plánu podle dnů, kdy obvykle trénuješ),
+  - závody, které pořádá můj klub (2 dny předem),
+  - push od trenéra (nový / upravený plán, komentář) a nové zprávy – posílá je databáze přes `pg_net`
+    do Expo Push API (migrace `20261130000000_push_team.sql`, tabulka `push_tokens`).
+- **Knihovna hotových plánů** (`/plan-library`, `src/data/templates.ts`): 8 plánů podle úrovně a cíle
+  (začátečník, technika, síla, příprava na závod, podle RPE…), náhled a převzetí jedním klepnutím.
+- **Rozcvičky a doplňky** (Nástroje → Rozcvičky a doplňky): vlastní seznamy i předlohy. V tréninku rozcvička
+  k odškrtání a doplňky přidané na konec; ke dni plánu se ukládá kopie (vidí ji i svěřenec).
+- **Trenér – přehled týmu** (Tým → Dnes): kdo dnes trénoval, kdo vynechal plánovaný trénink, kdo hlásí bolest
+  nebo má nízkou připravenost a kdo dlouho netrénoval.

@@ -6,7 +6,7 @@ import { uid } from '../lib/id';
 import * as Network from 'expo-network';
 import { AppState, Platform } from 'react-native';
 import { clonePlan, EMPTY_TRAINING, mergeAssignedPlans, mergeTraining, sameTraining } from '../lib/training';
-import type { LoggedExercise, TrainingData, TrainingPlan, WellnessEntry, WorkoutLog } from '../lib/types';
+import type { LoggedExercise, Routine, RoutineItem, TrainingData, TrainingPlan, WellnessEntry, WorkoutLog } from '../lib/types';
 import { useAuth } from './AuthProvider';
 
 /**
@@ -22,6 +22,8 @@ export interface ActiveWorkout {
   dayId: string | null;
   title: string;
   exercises: LoggedExercise[];
+  /** rozcvička k odškrtání (nepočítá se do nástupů ani tonáže) */
+  warmup?: { name: string; items: RoutineItem[]; done: string[] } | null;
 }
 
 interface Ctx {
@@ -56,6 +58,9 @@ interface Ctx {
   /** souhlas se zpracováním údajů o zdraví; odvolání smaže všechny záznamy */
   setWellnessConsent: (on: boolean) => void;
   setWellnessShareCoach: (on: boolean) => void;
+  /** rozcvičky a doplňky */
+  saveRoutine: (r: Routine) => void;
+  deleteRoutine: (id: string) => void;
 }
 
 const TrainingContext = createContext<Ctx | null>(null);
@@ -307,6 +312,7 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
           dayId: active.dayId,
           title: active.title,
           exercises: active.exercises.map((e) => ({ ...e, sets: e.sets.filter((s) => s.done) })).filter((e) => e.sets.length > 0),
+          warmup: active.warmup && active.warmup.done.length > 0 ? active.warmup.name : undefined,
           durationMin: Math.max(1, Math.round((Date.now() - new Date(active.startedAt).getTime()) / 60000)),
           createdAt: new Date().toISOString(),
           ...extra,
@@ -316,6 +322,17 @@ export function TrainingProvider({ children }: { children: React.ReactNode }) {
         return log;
       },
       discardWorkout: () => setActivePersist(null),
+      saveRoutine: (r) =>
+        mutate((d) => ({
+          ...d,
+          routines: [...(d.routines ?? []).filter((x) => x.id !== r.id), { ...r, updatedAt: new Date().toISOString() }],
+        })),
+      deleteRoutine: (id) =>
+        mutate((d) => ({
+          ...d,
+          routines: (d.routines ?? []).filter((x) => x.id !== id),
+          deleted: [...(d.deleted ?? []), id],
+        })),
       saveLog: (log) => mutate((d) => ({ ...d, logs: [...d.logs.filter((l) => l.id !== log.id), log] })),
       deleteLog: (id) => mutate((d) => ({ ...d, logs: d.logs.filter((l) => l.id !== id), deleted: [...(d.deleted ?? []), id] })),
       saveWellness: (e) =>

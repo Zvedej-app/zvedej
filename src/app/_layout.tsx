@@ -76,6 +76,7 @@ function App() {
             <Stack.Screen name="plan/[id]" />
             <Stack.Screen name="plans" />
             <Stack.Screen name="plan-library" />
+            <Stack.Screen name="routines" />
             <Stack.Screen name="friends" />
             <Stack.Screen name="messages" />
             <Stack.Screen name="chat/[id]" />

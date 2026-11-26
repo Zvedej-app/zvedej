@@ -1,7 +1,7 @@
 import { getExercise, MAX_LIFTS } from '../data/exercises';
 import { addDays, parseISODate, startOfWeek, toISODate, todayISO, weekNumberSince, weekdayMon0 } from './date';
 import { uid } from './id';
-import type { AssignedPlan, LoadSpec, LoggedExercise, PlanDay, SetScheme, TrainingData, TrainingPlan, WorkoutLog } from './types';
+import type { AssignedPlan, LoadSpec, LoggedExercise, PlanDay, Routine, SetScheme, TrainingData, TrainingPlan, WorkoutLog } from './types';
 import { roundTo } from './units';
 
 export const EMPTY_TRAINING: TrainingData = {
@@ -84,7 +84,7 @@ export function workoutFromDay(
   date = new Date(),
 ): LoggedExercise[] {
   const week = planWeek(plan, date);
-  return day.exercises.map((pe) => ({
+  const main = day.exercises.map((pe) => ({
     id: uid('le'),
     exerciseId: pe.exerciseId,
     customName: pe.customName,
@@ -94,6 +94,7 @@ export function workoutFromDay(
       return Array.from({ length: s.sets }, () => ({ reps: s.reps, kg, done: false }));
     }),
   }));
+  return day.accessories ? [...main, ...routineExercises(day.accessories)] : main;
 }
 
 /** Poslední použitá váha u cviku (pro předvyplnění). */
@@ -191,6 +192,7 @@ export function mergeTraining(local: TrainingData, remote: TrainingData | null):
   const logs = byId(older.logs ?? [], newer.logs ?? [], (_o, n) => n);
   const plans = byId(older.plans ?? [], newer.plans ?? [], (o, n) => ((o.updatedAt ?? '') > (n.updatedAt ?? '') ? o : n));
   const customExercises = byId(older.customExercises ?? [], newer.customExercises ?? [], (_o, n) => n);
+  const routines = byId(older.routines ?? [], newer.routines ?? [], (o, n) => ((o.updatedAt ?? '') > (n.updatedAt ?? '') ? o : n));
   const hist = new Map<string, { exerciseId: string; kg: number; date: string }>();
   for (const h of [...(older.maxHistory ?? []), ...(newer.maxHistory ?? [])]) hist.set(`${h.exerciseId}:${h.date}`, h);
   // deník regenerace: jeden záznam na den, platí ten později upravený
@@ -206,6 +208,7 @@ export function mergeTraining(local: TrainingData, remote: TrainingData | null):
     logs,
     plans,
     customExercises,
+    routines,
     wellness,
     maxHistory: [...hist.values()],
     deleted,
@@ -292,4 +295,19 @@ export function logRecords(data: TrainingData, log: WorkoutLog) {
     if (prev > 0 && kg > prev) out.push({ exerciseId: e.exerciseId, customName: e.customName, kg, prev });
   }
   return out.sort((a, b) => b.kg - b.prev - (a.kg - a.prev));
+}
+
+/** Doplňkové cviky ze šablony jako cviky tréninku (vlastní položky jako vlastní cvik s názvem). */
+export function routineExercises(r: Routine): LoggedExercise[] {
+  return r.items.map((it) => ({
+    id: uid('le'),
+    exerciseId: it.exerciseId || 'other',
+    customName: it.exerciseId ? undefined : it.text,
+    sets: Array.from({ length: Math.max(1, it.sets) }, () => ({ reps: Math.max(1, it.reps), kg: it.kg ?? 0, done: false })),
+  }));
+}
+
+/** Kopie šablony s novými id (do plánu nebo do tréninku). */
+export function copyRoutine(r: Routine): Routine {
+  return { ...r, items: r.items.map((it) => ({ ...it, id: uid('ri') })) };
 }

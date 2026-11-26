@@ -186,9 +186,32 @@ export interface PlanExercise {
   note?: string;
 }
 
+/** Položka rozcvičky nebo doplňků: cvik z katalogu, nebo vlastní text („5 min veslo“). */
+export interface RoutineItem {
+  id: string;
+  exerciseId?: string | null;
+  text?: string;
+  sets: number;
+  reps: number;
+  kg?: number | null;
+}
+
+/** Uložená rozcvička nebo sada doplňkových cviků. */
+export interface Routine {
+  id: string;
+  kind: 'warmup' | 'accessory';
+  name: string;
+  items: RoutineItem[];
+  updatedAt: string;
+}
+
 export interface PlanDay {
   id: string;
   name: string;
+  /** kopie rozcvičky pro tento den (zůstane i u plánu poslaného trenérem) */
+  warmup?: Routine | null;
+  /** kopie doplňkových cviků – přidají se na konec tréninku */
+  accessories?: Routine | null;
   /** 0 = pondělí … 6 = neděle */
   weekdays: number[];
   /** true = název se řídí dnem v týdnu (Pondělí, Čtvrtek …) a mění se podle dne, kdy trénink otevřeš */
@@ -244,6 +267,8 @@ export interface WorkoutLog {
   feeling?: 'easy' | 'ok' | 'hard' | 'bad' | null;
   bodyweight?: number | null;
   durationMin?: number | null;
+  /** název odcvičené rozcvičky */
+  warmup?: string | null;
   createdAt: string;
 }
 
@@ -266,6 +291,8 @@ export interface TrainingData {
   deleted?: string[];
   /** historie zapsaných maxim (pro graf vývoje) */
   maxHistory?: { exerciseId: string; kg: number; date: string }[];
+  /** uložené rozcvičky a doplňky */
+  routines?: Routine[];
   updatedAt: string;
 }
 

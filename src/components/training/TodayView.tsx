@@ -7,7 +7,7 @@ import { formatDate, todayISO, weekdayMon0 } from '../../lib/date';
 import { toast } from '../../lib/dialog';
 import { api } from '../../lib/api';
 import { plural, type TKey } from '../../lib/i18n';
-import { activePlan, dayForDate, dayLabel, planWeek, upcomingPlan, workoutFromDay } from '../../lib/training';
+import { activePlan, copyRoutine, dayForDate, dayLabel, planWeek, upcomingPlan, workoutFromDay } from '../../lib/training';
 import type { AssignedPlan, MyCoach, PlanDay, TrainingPlan } from '../../lib/types';
 import { formatNumber, ROUND_KG } from '../../lib/units';
 import { useSettings } from '../../providers/SettingsProvider';
@@ -69,6 +69,7 @@ export function TodayView() {
       dayId: d?.id ?? null,
       title: d ? label(d) : t('tr.freeWorkout'),
       exercises: p && d ? workoutFromDay(d, p, data, ROUND_KG, now) : [],
+      warmup: d?.warmup ? { name: d.warmup.name, items: copyRoutine(d.warmup).items, done: [] } : null,
     });
     router.push('/workout');
   };

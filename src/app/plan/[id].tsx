@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { CalendarPicker } from '../../components/CalendarPicker';
 import { DayExercises } from '../../components/training/DayExercises';
+import { DayRoutines } from '../../components/training/DayRoutines';
 import { Banner, Button, Card, Chip, Field, Header, IconButton, ListItem, Row, Screen, Sheet, T } from '../../components/ui';
 import { range, Wheel } from '../../components/WheelPicker';
 import { newPlan } from '../../data/templates';
@@ -140,6 +141,7 @@ export default function PlanEditor() {
                   <Card key={d.id}>
                     <T style={{ fontSize: 22, fontWeight: '800' }}>{dayLabel(d, wdName)}</T>
                     <DayExercises plan={plan} day={d} onChange={(fn) => patchDay(d.id, fn)} />
+                    <DayRoutines day={d} onChange={(fn) => patchDay(d.id, fn)} />
                   </Card>
                 ))}
               </>
@@ -454,6 +456,7 @@ function DaysSection({
               </T>
             )}
             <DayExercises plan={plan} day={d} onChange={(fn) => patchDay(d.id, fn)} showNotes />
+            <DayRoutines day={d} onChange={(fn) => patchDay(d.id, fn)} />
           </Card>
         );
       })}

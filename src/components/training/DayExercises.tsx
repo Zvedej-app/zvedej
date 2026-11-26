@@ -113,7 +113,9 @@ export function DayExercises({
               {
                 id: uid('pe'),
                 exerciseId,
-                schemes: [{ id: uid('ss'), sets: 3, reps: 3, load: { type: 'percent', value: 70, of: defaultPctOf(exerciseId) } }],
+                schemes: [
+                  { id: uid('ss'), sets: 3, reps: 3, load: { type: 'percent', value: 70, of: defaultPctOf(exerciseId) } },
+                ],
               },
             ],
           }))
