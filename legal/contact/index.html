@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <!-- viewport-fit=cover: aplikace na ploše iPhonu jde až pod výřez, okraje řeší safe-area -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>Zvedej</title>
+
+    <!-- Instalace na plochu (PWA). Cesty odpovídají experiments.baseUrl v app.json. -->
+    <link rel="manifest" href="/zvedej/manifest.json" />
+    <link rel="apple-touch-icon" href="/zvedej/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Zvedej" />
+    <!--
+      iPhony s výřezem: průhledný stavový řádek (aplikace jde až pod hodiny).
+      iPhony s tlačítkem (8, SE): iOS s průhledným řádkem zkrátí okno aplikace o výšku řádku a dole
+      zůstane bílá lišta – proto tam neprůhledný řádek a aplikace začíná až pod hodinami.
+    -->
+    <script>
+      (function () {
+        var tall = window.screen && Math.max(screen.width, screen.height) >= 800;
+        window.__zvedejTranslucent = tall;
+        document.write('<meta name="apple-mobile-web-app-status-bar-style" content="' + (tall ? 'black-translucent' : 'default') + '" />');
+      })();
+    </script>
+    <meta name="theme-color" content="#000072" />
+
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+        background: #000072;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+        overscroll-behavior: none;
+      }
+      /* stránka se nesmí posunout (iOS ji po zavření klávesnice nechával posunutou nahoru) */
+      html,
+      body {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        margin: 0;
+      }
+      /* aplikace se posouvá jen nahoru a dolů – žádné přibližování ani posun do stran */
+      html,
+      body,
+      #root {
+        touch-action: manipulation;
+        overflow-x: hidden;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+      input,
+      textarea {
+        font-size: 16px;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+      /*
+       * Aplikace na ploše iPhonu (průhledný stavový řádek): iOS kreslí stránku od horního okraje
+       * pod hodinami, ale její výšku (100 %) počítá bez stavového řádku – dole by zůstala mezera
+       * velká jako stavový řádek a celá aplikace by byla „posunutá nahoru“. Výšku proto
+       * natáhneme na celou obrazovku.
+       */
+      @media (display-mode: standalone) {
+        html,
+        body {
+          bottom: auto;
+          height: 100vh;
+        }
+        #root {
+          height: 100vh;
+        }
+      }
+      html.ios-pwa,
+      html.ios-pwa body {
+        bottom: auto;
+        height: 100vh;
+      }
+      html.ios-pwa #root {
+        height: 100vh;
+      }
+    </style>
+  <meta name="theme-color" content="#000072">
+<link rel="icon" href="/zvedej/favicon.ico"/></head>
+
+  <body>
+    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
+    <noscript> You need to enable JavaScript to run this app. </noscript>
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+    <script>
+      // starší iOS nezná display-mode: standalone – rozpoznáme aplikaci na ploše podle navigator.standalone
+      if (window.navigator.standalone) document.documentElement.classList.add('ios-pwa');
+      // Některé iPhony (např. iPhone 8) i se 100vh počítají výšku aplikace na ploše bez stavového řádku –
+      // dole pak zůstane bílá lišta. Pokud okno zabírá celou šířku displeje, natáhneme ho na celou výšku displeje.
+      (function () {
+        var standalone = window.navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+        if (!standalone || !window.screen || !window.__zvedejTranslucent) return;
+        var fit = function () {
+          var portrait = window.innerHeight >= window.innerWidth;
+          var sw = portrait ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
+          var sh = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+          var h = window.innerWidth === sw ? Math.max(window.innerHeight, sh) : window.innerHeight;
+          var v = h + 'px';
+          document.documentElement.style.height = v;
+          document.body.style.height = v;
+          var root = document.getElementById('root');
+          if (root) root.style.height = v;
+        };
+        fit();
+        window.addEventListener('resize', fit);
+        window.addEventListener('orientationchange', function () { setTimeout(fit, 300); });
+      })();
+      // iOS Safari ignoruje user-scalable=no – zablokujeme gesto přiblížení dvěma prsty
+      (function () {
+        var block = function (e) { e.preventDefault(); };
+        document.addEventListener('gesturestart', block, { passive: false });
+        document.addEventListener('gesturechange', block, { passive: false });
+        document.addEventListener('touchmove', function (e) { if (e.scale && e.scale !== 1) e.preventDefault(); }, { passive: false });
+        // iOS po zavření klávesnice nechá celou stránku posunutou nahoru – vrátíme ji zpět
+        var reset = function () {
+          var a = document.activeElement;
+          if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) return;
+          if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
+          if (document.body.scrollTop) document.body.scrollTop = 0;
+          if (document.documentElement.scrollTop) document.documentElement.scrollTop = 0;
+        };
+        document.addEventListener('focusout', function () { setTimeout(reset, 50); setTimeout(reset, 350); });
+        window.addEventListener('scroll', function () { setTimeout(reset, 100); });
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', function () { setTimeout(reset, 50); });
+        window.addEventListener('orientationchange', function () { setTimeout(reset, 300); });
+        // nová verze: při otevření aplikace zkontrolujeme, jestli na webu není novější sestavení
+        var current = function () {
+          var el = document.querySelector('script[src*="/entry-"]');
+          return el ? el.getAttribute('src') : null;
+        };
+        var checkUpdate = function () {
+          var mine = current();
+          if (!mine || !window.fetch) return;
+          fetch('/zvedej/?v=' + Date.now(), { cache: 'no-store' })
+            .then(function (r) { return r.text(); })
+            .then(function (html) {
+              var m = html.match(/src="([^"]*\/entry-[^"]*)"/);
+              if (m && m[1] !== mine) location.reload();
+            })
+            .catch(function () {});
+        };
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) checkUpdate(); });
+        window.addEventListener('load', function () { setTimeout(checkUpdate, 4000); });
+        // service worker: aplikace se otevře i bez signálu (v posilovně)
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/zvedej/sw.js', { scope: '/zvedej/' }).catch(function () {});
+            // soubory načtené před spuštěním service workeru (balík aplikace, písma) mu předáme k uložení
+            var send = function () {
+              navigator.serviceWorker.ready.then(function (reg) {
+                if (!reg.active || !window.performance) return;
+                var urls = performance.getEntriesByType('resource').map(function (r) { return r.name; });
+                urls.push(location.origin + '/zvedej/');
+                reg.active.postMessage({ type: 'cache-urls', urls: urls });
+              });
+            };
+            setTimeout(send, 6000);
+            setTimeout(send, 20000);
+          });
+        }
+        // dvojité klepnutí neblokujeme v JS (rušilo by rychlá klepnutí na tlačítka) –
+        // přiblížení dvojitým klepnutím vypíná CSS touch-action: manipulation
+      })();
+    </script>
+  <script src="/zvedej/_expo/static/js/web/__expo-metro-runtime-8c088df87a31e4e6accd81c554ec290d.js" defer></script><script src="/zvedej/_expo/static/js/web/__common-ff30b4c27ed16a5c50cb0472fcce2703.js" defer></script><script src="/zvedej/_expo/static/js/web/entry-15c81a70ab31a228f337a0c235f98d51.js" defer></script>
+</body>
+</html>
