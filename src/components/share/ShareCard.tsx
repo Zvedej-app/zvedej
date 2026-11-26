@@ -17,7 +17,8 @@ export type CardRef = React.ComponentRef<typeof View>;
 /** Poměr karty 9 : 16 – přesně na Instagram story (1080 × 1920). */
 export const CARD_RATIO = 16 / 9;
 const GOLD = '#F1B100';
-const ICON = require('../../../assets/images/logo-share.png');
+const LOGO = require('../../../assets/images/logo-white.png');
+const LOGO_RATIO = 560 / 658;
 
 export interface ShareRecord {
   exerciseId: string;
@@ -100,19 +101,12 @@ export const ShareCard = forwardRef<CardRef, ShareCardProps>(function ShareCard(
       />
 
       <View style={{ flex: 1, padding: 26 * u, paddingTop: 30 * u }}>
-        {/* značka */}
-        <View style={{ alignItems: 'center' }}>
-          {Platform.OS === 'web' ? (
-            // na webu obyčejný <img> – html2canvas ho vykreslí ostře
-            React.createElement('img', {
-              src: Asset.fromModule(ICON).uri,
-              alt: 'Zvedej',
-              style: { width: 84 * u, height: 84 * u, borderRadius: 20 * u, display: 'block' },
-            })
-          ) : (
-            <Image source={ICON} style={{ width: 84 * u, height: 84 * u, borderRadius: 20 * u }} accessibilityLabel="Zvedej" />
-          )}
-        </View>
+        {/* u tréninku logo nahoře, u rekordu je logo hlavním prvkem uprostřed */}
+        {!record && (
+          <View style={{ alignItems: 'center' }}>
+            <Logo height={86 * u} />
+          </View>
+        )}
 
         <View style={{ flex: 1, justifyContent: 'center', paddingBottom: 20 * u }}>
           {record ? (
@@ -306,20 +300,7 @@ function RecordBody({
   const diff = record.kg - record.prev;
   return (
     <View style={{ gap: 16 * u, alignItems: 'center' }}>
-      <View
-        style={{
-          width: 96 * u,
-          height: 96 * u,
-          borderRadius: 48 * u,
-          borderWidth: 2 * u,
-          borderColor: GOLD,
-          backgroundColor: 'rgba(255,255,255,0.1)',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Ionicons name="trophy" size={50 * u} color={GOLD} />
-      </View>
+      <Logo height={120 * u} />
       <Pill center u={u} txt={txt} icon="star" text={labels.record} bg={GOLD} color={BLUE[800]} />
       <Text style={[txt(26, FONTS.black), { textAlign: 'center' }]} numberOfLines={2}>
         {exerciseName(record.exerciseId, lang, customExercises, record.customName)}
@@ -328,15 +309,24 @@ function RecordBody({
         {formatNumber(record.kg, Number.isInteger(record.kg) ? 0 : 1)}
         <Text style={txt(30, FONTS.black, GOLD)}> kg</Text>
       </Text>
-      <View style={{ flexDirection: 'row', gap: 10 * u, alignItems: 'center' }}>
-        <View style={{ backgroundColor: '#4CBB17', borderRadius: 999, paddingHorizontal: 12 * u, paddingVertical: 5 * u }}>
-          <Text style={txt(15, FONTS.black)}>+{kgText(diff)}</Text>
-        </View>
-        <Text style={txt(14, FONTS.medium, 'rgba(255,255,255,0.75)')}>
-          {labels.previous} {kgText(record.prev)}
-        </Text>
+      <View style={{ backgroundColor: '#4CBB17', borderRadius: 999, paddingHorizontal: 14 * u, paddingVertical: 5 * u }}>
+        <Text style={txt(16, FONTS.black)}>+{kgText(diff)}</Text>
       </View>
       <Text style={txt(14, FONTS.medium, 'rgba(255,255,255,0.75)')}>{date}</Text>
     </View>
   );
+}
+
+/** Bílé logo aplikace bez pozadí (červený terč zůstává). */
+function Logo({ height }: { height: number }) {
+  const width = height * LOGO_RATIO;
+  if (Platform.OS === 'web') {
+    // na webu obyčejný <img> – html2canvas ho vykreslí ostře
+    return React.createElement('img', {
+      src: Asset.fromModule(LOGO).uri,
+      alt: 'Zvedej',
+      style: { width, height, display: 'block' },
+    });
+  }
+  return <Image source={LOGO} style={{ width, height }} accessibilityLabel="Zvedej" />;
 }
