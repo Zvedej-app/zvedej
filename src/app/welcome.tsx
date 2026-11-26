@@ -14,6 +14,8 @@ import { useBottomInset, useTopInset } from '../lib/insets';
 import { recommendTemplate, type Experience, type Goal, type PerWeek } from '../lib/recommend';
 import { BLUE, FLAG, FONTS } from '../lib/theme';
 import { startTour } from '../lib/tour';
+import { confirm } from '../lib/dialog';
+import { activePlan } from '../lib/training';
 import { useAuth } from '../providers/AuthProvider';
 import { useSettings } from '../providers/SettingsProvider';
 import { useTraining } from '../providers/TrainingProvider';
@@ -258,7 +260,14 @@ export default function Welcome() {
               <>
                 <Big
                   title={t('wel.usePlan')}
-                  onPress={() => {
+                  onPress={async () => {
+                    // spuštěno znovu z Návodu: aktivní plán nahradíme jen po potvrzení
+                    const current = activePlan(training.data);
+                    if (
+                      current &&
+                      !(await confirm(t('lib.replaceQ', { name: current.name }), { ok: t('common.yes'), cancel: t('common.cancel') }))
+                    )
+                      return;
                     createPlanFromTemplate(training, rec.id, settings.lang, true);
                     next();
                   }}

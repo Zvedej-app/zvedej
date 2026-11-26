@@ -49,6 +49,12 @@ export default function HelpScreen() {
             style={{ backgroundColor: '#FFF' }}
           />
         </View>
+        <Button
+          kind="secondary"
+          icon="sparkles-outline"
+          title={t('help.welcomeAgain')}
+          onPress={() => router.push('/welcome')}
+        />
         <SearchBar value={q} onChangeText={setQ} placeholder={t('help.search')} />
         {sections.map((s) => {
           const isOpen = !!nq || open === s.id;

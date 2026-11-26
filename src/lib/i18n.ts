@@ -1001,6 +1001,7 @@ const cs = {
   'sug.lowTitle': 'Dnešní připravenost je nízká ({n})',
   'sug.lowText': 'Podle deníku regenerace doporučujeme dnes ubrat zhruba o {pct} % a soustředit se na techniku.',
   'sug.lowApply': 'Ubrat váhy o {pct} %',
+  'help.welcomeAgain': 'Projít znovu úvodního průvodce',
 };
 
 export type TKey = keyof typeof cs;
@@ -1993,6 +1994,7 @@ const en: Dict = {
   'sug.lowTitle': 'Today\'s readiness is low ({n})',
   'sug.lowText': 'Based on your recovery diary we suggest going about {pct}% lighter today and focusing on technique.',
   'sug.lowApply': 'Reduce weights by {pct}%',
+  'help.welcomeAgain': 'Go through the welcome guide again',
 };
 
 const sk: Dict = {
@@ -2982,6 +2984,7 @@ const sk: Dict = {
   'sug.lowTitle': 'Dnešná pripravenosť je nízka ({n})',
   'sug.lowText': 'Podľa denníka regenerácie odporúčame dnes ubrať zhruba o {pct} % a sústrediť sa na techniku.',
   'sug.lowApply': 'Ubrať váhy o {pct} %',
+  'help.welcomeAgain': 'Prejsť znova úvodného sprievodcu',
 };
 
 export const DICTS: Record<Lang, Dict> = { cs, en, sk };
