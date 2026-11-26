@@ -2,14 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
 import { ScrollView, View } from 'react-native';
-import { TEMPLATES } from '../../data/templates';
 import { formatDate, todayISO, weeksBetween } from '../../lib/date';
 import { plural } from '../../lib/i18n';
 import type { TrainingPlan } from '../../lib/types';
 import { useSettings } from '../../providers/SettingsProvider';
 import { useTraining } from '../../providers/TrainingProvider';
 import { Button, Card, Row, SectionTitle, T } from '../ui';
-import { createPlanFromTemplate } from './planActions';
+import { LibraryLink } from './LibraryLink';
 
 export function PlansView() {
   const { t, colors, locale, settings } = useSettings();
@@ -61,18 +60,7 @@ export function PlansView() {
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }}>
       <Button icon="add" title={t('tr.createPlan')} onPress={() => router.push('/plan/new')} />
-      <Row gap={8} style={{ flexWrap: 'wrap' }}>
-        {TEMPLATES.map((tp) => (
-          <Button
-            key={tp.id}
-            small
-            kind="secondary"
-            icon="copy-outline"
-            title={t(tp.label)}
-            onPress={() => router.push(`/plan/${createPlanFromTemplate(training, tp.id, settings.lang, false)}`)}
-          />
-        ))}
-      </Row>
+      <LibraryLink />
       {running.length > 0 && <SectionTitle>{t('tr.active')}</SectionTitle>}
       {running.map((p) => (
         <PlanCard key={p.id} p={p} />

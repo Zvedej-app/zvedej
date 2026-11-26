@@ -3,7 +3,6 @@ import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { exerciseName } from '../../data/exercises';
-import { TEMPLATES } from '../../data/templates';
 import { formatDate, todayISO, weekdayMon0 } from '../../lib/date';
 import { toast } from '../../lib/dialog';
 import { api } from '../../lib/api';
@@ -19,7 +18,7 @@ import { WellnessCard } from '../wellness/WellnessCard';
 import { Banner, Button, Card, Chip, Empty, Row, T } from '../ui';
 import { DayExercises } from './DayExercises';
 import { schemeLabel } from './format';
-import { createPlanFromTemplate } from './planActions';
+import { LibraryLink } from './LibraryLink';
 
 export function TodayView() {
   const { t, colors, settings, locale } = useSettings();
@@ -315,21 +314,7 @@ export function TodayView() {
         <Card>
           <Empty icon="barbell-outline" text={`${t('tr.noActivePlan')}\n${t('tr.noActivePlanHint')}`} />
           <Button icon="add" title={t('tr.createPlan')} onPress={() => router.push('/plan/new')} />
-          <T v="label" muted style={{ marginTop: 8 }}>
-            {t('tr.fromTemplate')}
-          </T>
-          {TEMPLATES.map((tp) => (
-            <Button
-              key={tp.id}
-              kind="secondary"
-              icon="copy-outline"
-              title={t(tp.label)}
-              onPress={() => {
-                const id = createPlanFromTemplate(training, tp.id, settings.lang, true);
-                router.push(`/plan/${id}`);
-              }}
-            />
-          ))}
+          <LibraryLink />
         </Card>
       )}
 
