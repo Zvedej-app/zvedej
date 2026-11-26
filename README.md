@@ -315,3 +315,14 @@ update public.profiles set is_admin = true
   k odškrtání a doplňky přidané na konec; ke dni plánu se ukládá kopie (vidí ji i svěřenec).
 - **Trenér – přehled týmu** (Tým → Dnes): kdo dnes trénoval, kdo vynechal plánovaný trénink, kdo hlásí bolest
   nebo má nízkou připravenost a kdo dlouho netrénoval.
+
+## Průvodce, návod a návrh vah (verze 1.9)
+
+- **Úvodní průvodce** (`/welcome`): nový uživatel odpoví na 5 otázek (zkušenost, kolikrát týdně, cíl, trenér,
+  maxima) a dostane doporučený plán z knihovny (`src/lib/recommend.ts`). Pak nabídka prohlídky.
+- **Prohlídka ovládání** (`src/components/tour/`): jako v Native Land – krok za krokem zvýrazní prvek
+  (spodní lišta, Plány, Dnes/Deník/Nástroje…) a vysvětlí ho. Prvky se označí `<TourTarget id="…">`.
+- **Návod** (Nastavení → Návod a prohlídka, ikona ? vpravo nahoře): kompletní návod se všemi funkcemi
+  a vyhledáváním (`src/data/help.ts`), tlačítko pro spuštění prohlídky.
+- **Návrh vah podle formy** (`src/lib/suggest.ts`): nízká připravenost → nabídka ubrat 5 %;
+  cvik minule lehce (RPE ≤ 7) → +2,5 kg; minule těžce → držet váhu.

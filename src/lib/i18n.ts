@@ -996,6 +996,11 @@ const cs = {
   'wel.doneSub': 'Chceš krátkou prohlídku, kde co v aplikaci najdeš?',
   'wel.tour': 'Ukaž mi aplikaci',
   'wel.noTour': 'Zvládnu to sám',
+  'sug.up': 'Minule šlo lehce (RPE {rpe}, {kg}). Zkus přidat:',
+  'sug.hold': 'Minule to bylo těžké ({kg}) – dnes váhu spíš drž.',
+  'sug.lowTitle': 'Dnešní připravenost je nízká ({n})',
+  'sug.lowText': 'Podle deníku regenerace doporučujeme dnes ubrat zhruba o {pct} % a soustředit se na techniku.',
+  'sug.lowApply': 'Ubrat váhy o {pct} %',
 };
 
 export type TKey = keyof typeof cs;
@@ -1983,6 +1988,11 @@ const en: Dict = {
   'wel.doneSub': 'Want a quick tour of where everything is?',
   'wel.tour': 'Show me the app',
   'wel.noTour': 'I\'ll figure it out',
+  'sug.up': 'Last time felt easy (RPE {rpe}, {kg}). Try adding:',
+  'sug.hold': 'Last time was hard ({kg}) – better hold the weight today.',
+  'sug.lowTitle': 'Today\'s readiness is low ({n})',
+  'sug.lowText': 'Based on your recovery diary we suggest going about {pct}% lighter today and focusing on technique.',
+  'sug.lowApply': 'Reduce weights by {pct}%',
 };
 
 const sk: Dict = {
@@ -2967,6 +2977,11 @@ const sk: Dict = {
   'wel.doneSub': 'Chceš krátku prehliadku, kde čo v aplikácii nájdeš?',
   'wel.tour': 'Ukáž mi aplikáciu',
   'wel.noTour': 'Zvládnem to sám',
+  'sug.up': 'Minule išlo ľahko (RPE {rpe}, {kg}). Skús pridať:',
+  'sug.hold': 'Minule to bolo ťažké ({kg}) – dnes váhu skôr drž.',
+  'sug.lowTitle': 'Dnešná pripravenosť je nízka ({n})',
+  'sug.lowText': 'Podľa denníka regenerácie odporúčame dnes ubrať zhruba o {pct} % a sústrediť sa na techniku.',
+  'sug.lowApply': 'Ubrať váhy o {pct} %',
 };
 
 export const DICTS: Record<Lang, Dict> = { cs, en, sk };

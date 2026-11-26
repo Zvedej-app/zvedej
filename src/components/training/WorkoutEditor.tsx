@@ -5,7 +5,8 @@ import { exerciseName } from '../../data/exercises';
 import { uid } from '../../lib/id';
 import { lastWeightFor } from '../../lib/training';
 import type { LoggedExercise } from '../../lib/types';
-import { formatWeight } from '../../lib/units';
+import { formatNumber, formatWeight } from '../../lib/units';
+import { adjustUndone, exerciseSuggestion, heavier, lowReadiness } from '../../lib/suggest';
 import { radius } from '../../lib/theme';
 import { plural } from '../../lib/i18n';
 import { useSettings } from '../../providers/SettingsProvider';
@@ -18,15 +19,20 @@ export function WorkoutEditor({
   exercises,
   onChange,
   onSetDone,
+  suggestDate,
 }: {
   exercises: LoggedExercise[];
   onChange: (ex: LoggedExercise[]) => void;
   onSetDone?: (loggedExId: string, setIndex: number) => void;
+  /** datum rozpracovaného tréninku – zapne návrhy vah podle minulého tréninku */
+  suggestDate?: string;
 }) {
   const { t, colors, settings, tap } = useSettings();
   const { data } = useTraining();
   const [edit, setEdit] = useState<{ exId: string; i: number } | null>(null);
   const [picker, setPicker] = useState(false);
+  // návrhy, které uživatel použil nebo zavřel
+  const [dismissed, setDismissed] = useState<Set<string>>(() => new Set());
 
   const patchEx = (exId: string, fn: (e: LoggedExercise) => LoggedExercise) =>
     onChange(exercises.map((e) => (e.id === exId ? fn(e) : e)));
@@ -69,6 +75,48 @@ export function WorkoutEditor({
                 onPress={() => onChange(exercises.filter((x) => x.id !== e.id))}
               />
             </Row>
+            {suggestDate && !dismissed.has(e.id)
+              ? (() => {
+                  const sug = exerciseSuggestion(data, e, suggestDate);
+                  // při nízké připravenosti nepřidáváme
+                  if (!sug || (sug.kind === 'up' && lowReadiness(data, suggestDate) !== null)) return null;
+                  const close = () => setDismissed((d) => new Set(d).add(e.id));
+                  return (
+                    <Row
+                      gap={8}
+                      style={{
+                        backgroundColor: sug.kind === 'up' ? colors.primarySoft : colors.surface,
+                        borderRadius: 12,
+                        paddingVertical: 8,
+                        paddingHorizontal: 10,
+                      }}
+                    >
+                      <Ionicons
+                        name={sug.kind === 'up' ? 'trending-up' : 'pause-circle-outline'}
+                        size={18}
+                        color={sug.kind === 'up' ? colors.success : colors.textMuted}
+                      />
+                      <T v="small" style={{ flex: 1 }}>
+                        {sug.kind === 'up'
+                          ? t('sug.up', { rpe: sug.rpe ?? '—', kg: formatWeight(sug.lastKg, settings.unit) })
+                          : t('sug.hold', { kg: formatWeight(sug.lastKg, settings.unit) })}
+                      </T>
+                      {sug.kind === 'up' && (
+                        <Button
+                          small
+                          title={`+${formatNumber(sug.deltaKg, 1)} kg`}
+                          onPress={() => {
+                            tap('success');
+                            patchEx(e.id, (x) => adjustUndone(x, heavier));
+                            close();
+                          }}
+                        />
+                      )}
+                      <IconButton name="close" size={18} color={colors.textMuted} label={t('common.close')} onPress={close} />
+                    </Row>
+                  );
+                })()
+              : null}
             {e.sets.map((s, i) => (
               <Row
                 key={i}

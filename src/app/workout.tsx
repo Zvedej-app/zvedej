@@ -8,6 +8,7 @@ import { WeightSheet } from '../components/training/ToolsView';
 import { WorkoutEditor } from '../components/training/WorkoutEditor';
 import { Celebration, type CelebrationData } from '../components/training/Celebration';
 import { WarmupCard } from '../components/training/WarmupCard';
+import { FormBanner } from '../components/training/FormBanner';
 import { formatTonnage } from '../components/training/format';
 import { logRecords, logSetCount, logTonnage, weekStreak } from '../lib/training';
 import { Button, Chip, Empty, Field, Header, IconButton, Row, Screen, Sheet, T } from '../components/ui';
@@ -342,8 +343,10 @@ export default function WorkoutScreen() {
       />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 170, gap: 12 }}>
         <OfflineBadge compact />
+        <FormBanner />
         <WarmupCard />
         <WorkoutEditor
+          suggestDate={active.date}
           exercises={active.exercises}
           onChange={(exercises) => training.updateActive((w) => ({ ...w, exercises }))}
           onSetDone={onSetDone}

@@ -24,6 +24,8 @@ export interface ActiveWorkout {
   exercises: LoggedExercise[];
   /** rozcvička k odškrtání (nepočítá se do nástupů ani tonáže) */
   warmup?: { name: string; items: RoutineItem[]; done: string[] } | null;
+  /** návrh podle připravenosti: true = váhy ubrané, false = zavřeno */
+  formAdjusted?: boolean;
 }
 
 interface Ctx {
