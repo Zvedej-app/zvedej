@@ -75,7 +75,8 @@ export default function Welcome() {
           style={{
             flex: 1,
             paddingTop: Math.max(topInset, insets.top) + 12,
-            paddingBottom: Math.max(bottom, 16),
+            // tlačítka nesmí sedět až u spodního okraje
+            paddingBottom: Math.max(bottom, 0) + 36,
             width: '100%',
             maxWidth: 560,
             alignSelf: 'center',
@@ -106,8 +107,8 @@ export default function Welcome() {
 
           <ScrollView contentContainerStyle={{ padding: 20, gap: 12, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
             {step === 'hello' && (
-              <View style={{ flex: 1, justifyContent: 'center', gap: 18 }}>
-                <Image source={LOGO} style={{ width: 110, height: 129, alignSelf: 'center' }} accessibilityLabel="Zvedej" />
+              <View style={{ flex: 1, justifyContent: 'center', gap: 16, paddingBottom: 12 }}>
+                <Image source={LOGO} style={{ width: 94, height: 110, alignSelf: 'center' }} accessibilityLabel="Zvedej" />
                 <T color="#FFF" style={{ fontSize: 30, lineHeight: 36, fontFamily: FONTS.black, textAlign: 'center' }}>
                   {t('wel.hello')}
                 </T>
