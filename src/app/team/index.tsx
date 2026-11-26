@@ -3,6 +3,7 @@ import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { formatTonnage } from '../../components/training/format';
+import { TeamOverview } from '../../components/coach/TeamOverview';
 import {
   Avatar,
   Button,
@@ -31,12 +32,12 @@ import { formatNumber } from '../../lib/units';
 import { useAuth } from '../../providers/AuthProvider';
 import { useSettings } from '../../providers/SettingsProvider';
 
-type Tab = 'athletes' | 'groups' | 'ranking';
+type Tab = 'today' | 'athletes' | 'groups' | 'ranking';
 
 /** Trenér: přehled týmu, skupiny a žebříček. */
 export default function TeamScreen() {
   const { t } = useSettings();
-  const [tab, setTab] = useState<Tab>('athletes');
+  const [tab, setTab] = useState<Tab>('today');
   const [team, setTeam] = useState<TeamMember[] | null>(null);
   const [groups, setGroups] = useState<CoachGroup[]>([]);
   const [unread, setUnread] = useState<Record<string, number>>({});
@@ -69,6 +70,7 @@ export default function TeamScreen() {
           value={tab}
           onChange={setTab}
           options={[
+            { key: 'today', label: t('team.overview') },
             { key: 'athletes', label: t('coach.athletes') },
             { key: 'groups', label: t('coach.groups') },
             { key: 'ranking', label: t('coach.ranking') },
@@ -77,6 +79,8 @@ export default function TeamScreen() {
       </View>
       {team === null ? (
         <Loading />
+      ) : tab === 'today' ? (
+        <TeamOverview team={team} />
       ) : tab === 'athletes' ? (
         <Athletes team={team} unread={unread} onChange={load} />
       ) : tab === 'groups' ? (
