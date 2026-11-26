@@ -7,6 +7,7 @@ import { TodayView } from '../../components/training/TodayView';
 import { ToolsView } from '../../components/training/ToolsView';
 import { OfflineBadge } from '../../components/OfflineBadge';
 import { Header, IconButton, Screen, Segmented, T } from '../../components/ui';
+import { TourTarget } from '../../components/tour/TourTarget';
 import { activePlan } from '../../lib/training';
 import { radius } from '../../lib/theme';
 import { useTabEnter } from '../../lib/tabReset';
@@ -29,11 +30,13 @@ export default function TrainingScreen() {
       <Header
         title={t('tab.training')}
         right={
-          <IconButton name="add-circle-outline" size={26} label={t('tr.createPlan')} onPress={() => router.push('/plan/new')} />
+          <TourTarget id="tr-add">
+            <IconButton name="add-circle-outline" size={26} label={t('tr.createPlan')} onPress={() => router.push('/plan/new')} />
+          </TourTarget>
         }
       />
       {/* Plány (a u trenéra Tým) jako samostatná tlačítka mezi nadpisem a přepínačem */}
-      <View style={{ flexDirection: 'row', gap: 10, marginHorizontal: 16, marginTop: 10 }}>
+      <TourTarget id="tr-plans" style={{ flexDirection: 'row', gap: 10, marginHorizontal: 16, marginTop: 10 }}>
         <BigLink
           icon="calendar"
           title={t('tr.sheetPlans')}
@@ -52,18 +55,20 @@ export default function TrainingScreen() {
             compact
           />
         )}
-      </View>
+      </TourTarget>
       <View style={{ paddingHorizontal: 16, paddingTop: 10, gap: 8 }}>
         <OfflineBadge />
-        <Segmented
-          value={tab}
-          onChange={setTab}
-          options={[
-            { key: 'today', label: t('tr.today') },
-            { key: 'log', label: t('tr.log') },
-            { key: 'tools', label: t('tr.tools') },
-          ]}
-        />
+        <TourTarget id="tr-seg">
+          <Segmented
+            value={tab}
+            onChange={setTab}
+            options={[
+              { key: 'today', label: t('tr.today') },
+              { key: 'log', label: t('tr.log') },
+              { key: 'tools', label: t('tr.tools') },
+            ]}
+          />
+        </TourTarget>
       </View>
       <View style={{ flex: 1 }}>
         {tab === 'today' && <TodayView />}

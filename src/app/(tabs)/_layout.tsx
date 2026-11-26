@@ -4,6 +4,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useBottomInset } from '../../lib/insets';
 import { LionLogo } from '../../components/Logo';
+import { TourTarget } from '../../components/tour/TourTarget';
 import { Avatar, type IconName } from '../../components/ui';
 import { useAuth } from '../../providers/AuthProvider';
 import { useSettings } from '../../providers/SettingsProvider';
@@ -91,15 +92,15 @@ function InstaTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
             }
           >
             {desktop ? (
-              <>
+              <TourTarget id={`tab-${route.name}`} style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                 <View style={styles.sideIcon}>{icon}</View>
                 <Text style={[styles.sideLabel, { color: fg, fontWeight: focused ? '800' : '500' }]}>{label}</Text>
-              </>
+              </TourTarget>
             ) : (
-              <>
+              <TourTarget id={`tab-${route.name}`} style={{ alignItems: 'center', gap: 4, paddingHorizontal: 6 }}>
                 {icon}
                 <View style={[styles.dot, { backgroundColor: focused ? (dark ? '#FFF' : colors.accent) : 'transparent' }]} />
-              </>
+              </TourTarget>
             )}
           </Pressable>
         );

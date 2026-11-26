@@ -15,6 +15,8 @@ import { ModerationNotices } from '../components/safety/ModerationNotices';
 import { TermsGate } from '../components/safety/TermsGate';
 import { RestNotificationBridge } from '../components/RestNotificationBridge';
 import { PushBridge } from '../components/PushBridge';
+import { TourOverlay } from '../components/tour/TourOverlay';
+import { WelcomeGate } from '../components/WelcomeGate';
 import { HomeWidgetBridge } from '../components/HomeWidgetBridge';
 import { AuthProvider, useAuth } from '../providers/AuthProvider';
 import { SettingsProvider, useSettings } from '../providers/SettingsProvider';
@@ -77,6 +79,8 @@ function App() {
             <Stack.Screen name="plans" />
             <Stack.Screen name="plan-library" />
             <Stack.Screen name="routines" />
+            <Stack.Screen name="help" />
+            <Stack.Screen name="welcome" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
             <Stack.Screen name="friends" />
             <Stack.Screen name="messages" />
             <Stack.Screen name="chat/[id]" />
@@ -118,6 +122,8 @@ function App() {
       <RestNotificationBridge />
       <HomeWidgetBridge />
       <PushBridge />
+      {allReady && splashDone && <TourOverlay />}
+      {allReady && splashDone && <WelcomeGate />}
       {!splashDone && <AnimatedSplash ready={allReady} onDone={done} />}
     </>
   );

@@ -7,7 +7,8 @@ import React, { useState } from 'react';
 import { Platform, View } from 'react-native';
 import { AppIcon } from '../../components/Logo';
 import { NotificationSettings } from '../../components/NotificationSettings';
-import { Banner, Button, Header, ListGroup, ListItem, Row, Screen, Segmented, Sheet, T } from '../../components/ui';
+import { Banner, Button, Header, IconButton, ListGroup, ListItem, Row, Screen, Segmented, Sheet, T } from '../../components/ui';
+import { TourTarget } from '../../components/tour/TourTarget';
 import { range, Wheel } from '../../components/WheelPicker';
 import { api } from '../../lib/api';
 import { forgetDevice } from '../../lib/push';
@@ -55,7 +56,10 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
-      <Header title={t('tab.settings')} />
+      <Header
+        title={t('tab.settings')}
+        right={<IconButton name="help-circle-outline" size={26} label={t('help.title')} onPress={() => router.push('/help')} />}
+      />
       <View style={{ flex: 1 }}>
         <Screen scroll edges={[]}>
           {session?.isAnonymous && (
@@ -84,6 +88,17 @@ export default function SettingsScreen() {
               />
             </ListGroup>
           )}
+
+          <TourTarget id="st-help">
+            <ListGroup>
+              <ListItem
+                icon="help-buoy-outline"
+                title={t('help.entry')}
+                subtitle={t('help.entrySub')}
+                onPress={() => router.push('/help')}
+              />
+            </ListGroup>
+          </TourTarget>
 
           <ListGroup title={t('st.appearance')}>
             <View style={{ padding: 12, gap: 8 }}>
