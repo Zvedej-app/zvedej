@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Asset } from 'expo-asset';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { forwardRef } from 'react';
-import { Text, View, type TextStyle } from 'react-native';
+import { Image, Platform, Text, View, type TextStyle } from 'react-native';
 import { exerciseName } from '../../data/exercises';
 import type { Lang } from '../../lib/i18n';
 import { formatDate } from '../../lib/date';
@@ -16,6 +17,7 @@ export type CardRef = React.ComponentRef<typeof View>;
 /** Poměr karty 9 : 16 – přesně na Instagram story (1080 × 1920). */
 export const CARD_RATIO = 16 / 9;
 const GOLD = '#F1B100';
+const ICON = require('../../../assets/images/logo-share.png');
 
 export interface ShareRecord {
   exerciseId: string;
@@ -99,9 +101,17 @@ export const ShareCard = forwardRef<CardRef, ShareCardProps>(function ShareCard(
 
       <View style={{ flex: 1, padding: 26 * u, paddingTop: 30 * u }}>
         {/* značka */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 * u }}>
-          <Barbell u={u} />
-          <Text style={txt(22, FONTS.black)}>Zvedej</Text>
+        <View style={{ alignItems: 'center' }}>
+          {Platform.OS === 'web' ? (
+            // na webu obyčejný <img> – html2canvas ho vykreslí ostře
+            React.createElement('img', {
+              src: Asset.fromModule(ICON).uri,
+              alt: 'Zvedej',
+              style: { width: 84 * u, height: 84 * u, borderRadius: 20 * u, display: 'block' },
+            })
+          ) : (
+            <Image source={ICON} style={{ width: 84 * u, height: 84 * u, borderRadius: 20 * u }} accessibilityLabel="Zvedej" />
+          )}
         </View>
 
         <View style={{ flex: 1, justifyContent: 'center', paddingBottom: 20 * u }}>
@@ -327,24 +337,6 @@ function RecordBody({
         </Text>
       </View>
       <Text style={txt(14, FONTS.medium, 'rgba(255,255,255,0.75)')}>{date}</Text>
-    </View>
-  );
-}
-
-/** Malá činka z kotoučů v barvách aplikace. */
-function Barbell({ u }: { u: number }) {
-  const plate = (h: number, c: string) => (
-    <View style={{ width: 5 * u, height: h * u, borderRadius: 1.5 * u, backgroundColor: c }} />
-  );
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 1.5 * u }}>
-      {plate(10, '#FFFFFF')}
-      {plate(22, FLAG.red)}
-      {plate(26, '#3B6FD8')}
-      <View style={{ width: 22 * u, height: 3.5 * u, borderRadius: 2 * u, backgroundColor: '#FFFFFF' }} />
-      {plate(26, '#3B6FD8')}
-      {plate(22, FLAG.red)}
-      {plate(10, '#FFFFFF')}
     </View>
   );
 }
