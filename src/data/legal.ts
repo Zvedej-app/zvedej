@@ -103,6 +103,7 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
       p: [
         'Nepoužíváme reklamní, analytické ani sledovací cookies. V zařízení (v prohlížeči nebo v aplikaci) ukládáme jen to, co je nutné pro fungování: přihlášení, nastavení (jazyk, vzhled, jednotky), rozpracovaný trénink a data pro práci bez signálu, a ve webové verzi soubory aplikace pro spuštění offline.',
         'Toto úložiště je technicky nezbytné (§ 89 odst. 3 zákona o elektronických komunikacích), proto nevyžaduje souhlas. Smažete ho odhlášením nebo vymazáním dat prohlížeče či aplikace.',
+        'Upozornění (push): když je v telefonu povolíte, uložíme k vašemu účtu identifikátor zařízení pro doručování oznámení (Expo / Apple / Google), jazyk a vaše volby upozornění. Oznámení posíláme jen o novém plánu a komentářích od trenéra a o zprávách; připomínky tréninku a závodů plánuje jen telefon sám. Identifikátor smažeme při odhlášení, smazání účtu nebo po 180 dnech nepoužívání. Upozornění vypnete v Nastavení aplikace nebo telefonu.',
       ],
     },
     {
@@ -186,6 +187,7 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
       h: '9. Cookies a úložisko v zariadení',
       p: [
         'Nepoužívame reklamné, analytické ani sledovacie cookies. V zariadení ukladáme len to, čo je nevyhnutné na fungovanie (prihlásenie, nastavenia, rozpracovaný tréning, dáta na prácu bez signálu, súbory aplikácie na spustenie offline). Takéto úložisko nevyžaduje súhlas.',
+        'Upozornenia (push): ak ich v telefóne povolíte, uložíme k vášmu účtu identifikátor zariadenia na doručovanie oznámení (Expo / Apple / Google), jazyk a vaše voľby upozornení. Posielame len oznámenia o novom pláne a komentároch od trénera a o správach; pripomienky tréningu a pretekov plánuje len telefón sám. Identifikátor zmažeme pri odhlásení, zmazaní účtu alebo po 180 dňoch nepoužívania.',
       ],
     },
     {
@@ -268,6 +270,7 @@ const PRIVACY: Record<Lang, LegalSection[]> = {
       h: '9. Cookies and device storage',
       p: [
         'We use no advertising, analytics or tracking cookies. We only store what is strictly necessary on your device (sign-in, settings, the workout in progress, offline data and app files for offline start). Such storage does not require consent.',
+        'Push notifications: if you allow them on your phone, we store a device identifier for delivering notifications (Expo / Apple / Google), your language and your notification choices with your account. We only send notifications about new plans and comments from your coach and about messages; workout and competition reminders are scheduled by the phone itself. The identifier is deleted when you sign out, delete your account or after 180 days of inactivity.',
       ],
     },
     {

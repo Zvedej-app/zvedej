@@ -21,6 +21,15 @@ export interface Settings {
   haptics: boolean;
   autoplay: boolean;
   muted: boolean;
+  /** připomínka tréninku v plánovaný den */
+  notifyTraining: boolean;
+  /** čas připomínky HH:MM */
+  notifyTime: string;
+  /** nový plán a komentáře od trenéra */
+  notifyCoach: boolean;
+  notifyMessages: boolean;
+  /** závody pořádané mým klubem */
+  notifyComp: boolean;
 }
 
 const KEY = 'zvedej:settings:v1';
@@ -41,6 +50,11 @@ const DEFAULTS: Settings = {
   haptics: true,
   autoplay: true,
   muted: false,
+  notifyTraining: false,
+  notifyTime: '17:00',
+  notifyCoach: true,
+  notifyMessages: true,
+  notifyComp: true,
 };
 
 interface Ctx {

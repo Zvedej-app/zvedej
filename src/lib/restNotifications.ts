@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { AndroidImportance, AndroidNotificationVisibility } from 'expo-notifications';
 import { Platform } from 'react-native';
+import { installNotificationHandler } from './push';
 import type { RestSound } from './restSound';
 
 /**
@@ -21,15 +22,8 @@ let ready = false;
 export async function setupRestNotifications(actionTitle: string, extendTitle = '+30 s') {
   if (!supported || ready) return ready;
   try {
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        // ve spuštěné aplikaci pauzu ukazuje přímo obrazovka tréninku
-        shouldShowBanner: false,
-        shouldShowList: false,
-        shouldPlaySound: false,
-        shouldSetBadge: false,
-      }),
-    });
+    // ve spuštěné aplikaci pauzu ukazuje přímo obrazovka tréninku (ostatní oznámení jako banner)
+    installNotificationHandler();
     if (Platform.OS === 'android') {
       for (const s of ['gong', 'whistle', 'bell', 'none']) {
         await Notifications.setNotificationChannelAsync(`rest-${s}`, {

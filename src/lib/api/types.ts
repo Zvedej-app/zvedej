@@ -145,6 +145,10 @@ export interface Backend {
   // trenér
   /** svěřenci a čekající pozvánky */
   coachTeam(): Promise<TeamMember[]>;
+
+  /* push notifikace (jen mobilní aplikace) */
+  registerPushToken(token: string, platform: 'ios' | 'android', lang: string, prefs: { coach: boolean; messages: boolean }): Promise<void>;
+  unregisterPushToken(token: string): Promise<void>;
   inviteAthlete(athleteId: string): Promise<void>;
   /** zruší spojení (trenér i svěřenec) */
   removeCoachLink(coachId: string, athleteId: string): Promise<void>;

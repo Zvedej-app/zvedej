@@ -705,7 +705,22 @@ export function createSupabaseBackend(): Backend {
         maxes: r.maxes ?? {},
         recentLogs: r.recent_logs ?? [],
         recentWellness: r.recent_wellness ?? [],
+        planWeekdays: r.plan_weekdays ?? [],
       }));
+    },
+    async registerPushToken(token, platform, lang, prefs) {
+      const { error } = await sb.rpc('register_push_token', {
+        p_token: token,
+        p_platform: platform,
+        p_lang: lang,
+        p_coach: prefs.coach,
+        p_messages: prefs.messages,
+      });
+      if (error) throw error;
+    },
+    async unregisterPushToken(token) {
+      const { error } = await sb.rpc('unregister_push_token', { p_token: token });
+      if (error) throw error;
     },
     async inviteAthlete(athleteId) {
       const me = await myId();

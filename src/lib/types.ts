@@ -313,6 +313,8 @@ export interface TeamMember {
   recentLogs: WorkoutLog[];
   /** regenerace za posledních 14 dní (jen se souhlasem svěřence) */
   recentWellness: WellnessEntry[];
+  /** dny v týdnu podle aktivního plánu svěřence (0 = pondělí) */
+  planWeekdays: number[];
 }
 
 /** Trenér z pohledu svěřence */

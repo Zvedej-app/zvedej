@@ -6,9 +6,11 @@ import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
 import { Platform, View } from 'react-native';
 import { AppIcon } from '../../components/Logo';
+import { NotificationSettings } from '../../components/NotificationSettings';
 import { Banner, Button, Header, ListGroup, ListItem, Row, Screen, Segmented, Sheet, T } from '../../components/ui';
 import { range, Wheel } from '../../components/WheelPicker';
 import { api } from '../../lib/api';
+import { forgetDevice } from '../../lib/push';
 import { clearFeedCache } from '../../lib/api/feeds';
 import { exportTrainingPdf } from '../../lib/exportPdf';
 import { shareJson } from '../../lib/exportJson';
@@ -181,6 +183,8 @@ export default function SettingsScreen() {
             )}
           </ListGroup>
 
+          <NotificationSettings />
+
           <ListGroup title={t('st.challenge')}>
             <ListItem
               icon="play-outline"
@@ -250,8 +254,10 @@ export default function SettingsScreen() {
               title={t('st.logout')}
               onPress={async () => {
                 const q = session?.isAnonymous ? t('guest.logoutWarning') : `${t('st.logout')}?`;
-                if (await confirm(q, { ok: t('st.logout'), cancel: t('common.cancel'), destructive: !!session?.isAnonymous }))
+                if (await confirm(q, { ok: t('st.logout'), cancel: t('common.cancel'), destructive: !!session?.isAnonymous })) {
+                  await forgetDevice();
                   api.signOut();
+                }
               }}
             />
             <ListItem

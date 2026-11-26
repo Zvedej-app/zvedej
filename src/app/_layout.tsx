@@ -14,6 +14,7 @@ import { DialogHost } from '../components/DialogHost';
 import { ModerationNotices } from '../components/safety/ModerationNotices';
 import { TermsGate } from '../components/safety/TermsGate';
 import { RestNotificationBridge } from '../components/RestNotificationBridge';
+import { PushBridge } from '../components/PushBridge';
 import { HomeWidgetBridge } from '../components/HomeWidgetBridge';
 import { AuthProvider, useAuth } from '../providers/AuthProvider';
 import { SettingsProvider, useSettings } from '../providers/SettingsProvider';
@@ -114,6 +115,7 @@ function App() {
       {allReady && splashDone && <TermsGate />}
       <RestNotificationBridge />
       <HomeWidgetBridge />
+      <PushBridge />
       {!splashDone && <AnimatedSplash ready={allReady} onDone={done} />}
     </>
   );

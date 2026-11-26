@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { currentMonthKey, prevMonthKey } from '../date';
 import { uuid } from '../id';
+import { activePlan } from '../training';
 import { fallbackTheme } from '../../data/themes';
 import { ageOn, consentAge } from '../age';
 import type {
@@ -961,6 +962,7 @@ export function createDemoBackend(): Backend {
           createdAt: l.createdAt,
           maxes: d?.maxes ?? {},
           recentWellness: d?.wellnessShareCoach ? (d.wellness ?? []) : [],
+          planWeekdays: l.status === 'accepted' && d ? Array.from(new Set((activePlan(d)?.days ?? []).flatMap((x) => x.weekdays))) : [],
           recentLogs: (d?.logs ?? [])
             .filter((x) => x.date >= from)
             .map((x) => (l.shareBodyweight ? x : { ...x, bodyweight: null })),
@@ -968,6 +970,10 @@ export function createDemoBackend(): Backend {
       }
       return out.sort((a, b) => a.status.localeCompare(b.status) || a.profile.lastName.localeCompare(b.profile.lastName, 'cs'));
     },
+    async registerPushToken() {
+      // demo běží jen v zařízení – vzdálená oznámení nejsou
+    },
+    async unregisterPushToken() {},
     async inviteAthlete(athleteId) {
       const me = (await session())?.userId;
       if (!me) throw new Error('not signed in');
